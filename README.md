@@ -1,4 +1,9 @@
-# BalatroBot
+<div align="center">
+  <h1>BalatroBot</h1>
+  <p><em>A framework for Balatro bot development</em></p>
+</div>
+
+---
 
 A powerful botting framework for Balatro that provides both Lua and Python APIs for creating automated gameplay bots.
 
