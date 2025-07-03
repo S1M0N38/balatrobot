@@ -1,0 +1,18 @@
+site_name: BalatroBot
+site_description: A bot framework for Balatro
+repo_url: https://github.com/your-username/balatrobot
+
+theme:
+  name: material
+
+nav:
+  - Home: README.md
+  - Installation: docs/installation.md
+  - Configuration: docs/configuration.md
+  - Architecture: docs/architecture.md
+  - Bot Development: docs/bot-development.md
+  - Python API: docs/python-api.md
+  - Examples: docs/examples.md
+  - Troubleshooting: docs/troubleshooting.md
+
+docs_dir: . 
