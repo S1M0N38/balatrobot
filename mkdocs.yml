@@ -4,36 +4,29 @@ site_author: 'S1M0N38'
 repo_name: 'S1M0N38/balatrobot'
 repo_url: https://github.com/S1M0N38/balatrobot
 docs_dir: docs/
-
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   features:
     - content.code.copy
-
   palette:
-    - accent: black
-    - primary: red
-
-    - media: "(prefers-color-scheme)"
-      toggle:
-        icon: material/brightness-auto
-        name: Switch to light mode
-
-    - media: "(prefers-color-scheme: light)"
-      scheme: default 
+    # Palette toggle for light mode
+    - scheme: default
+      accent: black
+      primary: red
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+    # Palette toggle for dark mode
+    - scheme: slate
+      accent: white
+      primary: red
       toggle:
         icon: material/brightness-4
-        name: Switch to system preference
-
+        name: Switch to light mode
 plugins:
   - search
-
 nav:
   - Home: README.md
   - Installation: installation.md
@@ -50,7 +43,6 @@ nav:
   - Multi-Instance Setup: multi-instance.md
   - Logging & Replay: logging-replay.md
   - Troubleshooting: troubleshooting.md
-
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
