@@ -5,7 +5,6 @@
 
 ---
 
-A powerful botting framework for Balatro that provides both Lua and Python APIs for creating automated gameplay bots.
 
 ## Features
 
