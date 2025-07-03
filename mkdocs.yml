@@ -11,8 +11,8 @@ theme:
     - content.code.copy
 
   palette:
-    accent: black
-    primary: red
+    - accent: black
+    - primary: red
 
     - media: "(prefers-color-scheme)"
       toggle:
