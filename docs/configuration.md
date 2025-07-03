@@ -1,216 +1,79 @@
 # Configuration Guide
 
-Complete guide to configuring Balatrobot for optimal performance and functionality.
+Balatrobot configuration is controlled by `config.lua` in the mod directory.
 
-## Configuration File Overview
-
-The main configuration is stored in `config.lua` in the mod directory. This file controls all aspects of the Balatrobot mod behavior.
-
-### Default Configuration
+## Configuration File
 
 ```lua
 BALATRO_BOT_CONFIG = {
-    enabled = true,                           -- Master enable/disable switch
-    port = '12345',                          -- UDP port for communication
-    dt = 8.0/60.0,                          -- Game update speed multiplier
+    enabled = true,                           -- Enable/disable mod functionality
+    port = '12345',                          -- UDP port for bot communication
+    dt = 8.0/60.0,                          -- Game update speed (lower = faster)
     uncap_fps = true,                       -- Remove FPS limitations
     instant_move = true,                    -- Disable movement animations
     disable_vsync = true,                   -- Disable vertical sync
     disable_card_eval_status_text = true,   -- Hide card scoring text
-    frame_ratio = 100,                      -- Render frequency (1 = every frame)
+    frame_ratio = 100,                      -- Render every Nth frame (higher = faster)
 }
 ```
 
-## Core Settings
+## Configuration Options
 
 ### enabled
+**Type:** `boolean` | **Default:** `true`
 
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Master switch for all mod functionality.
-
-```lua
-enabled = true   -- Mod is active
-enabled = false  -- Mod is completely disabled
-```
-
-**Usage:**
-- Set to `false` to temporarily disable the mod without uninstalling
-- Useful for playing the game normally without bot interference
+Master switch for all mod functionality. Set to `false` to disable the mod without uninstalling.
 
 ### port
+**Type:** `string` | **Default:** `'12345'`
 
-**Type:** `string`  
-**Default:** `'12345'`  
-**Description:** UDP port for bot communication.
+UDP port for bot communication. Must match the port in your Python bot. Can be overridden by command line argument when launching Balatro.
 
-```lua
-port = '12345'   -- Default port
-port = '12346'   -- Alternative port to avoid conflicts
-```
+### dt
+**Type:** `number` | **Default:** `8.0/60.0`
 
-**Important Notes:**
-- Must match the port in your Python bot configuration
-- Change if multiple bot instances are running simultaneously
-- Can be overridden by command line argument when launching Balatro
-
-**Port Selection Guidelines:**
-- Use ports 12345-12355 for standard single-bot usage
-- For multiple instances, increment by 1 for each instance
-- Avoid system ports (1-1024) and common application ports
-
-## Performance Optimization
-
-### dt (Delta Time)
-
-**Type:** `number`  
-**Default:** `8.0/60.0` (~0.133)  
-**Description:** Game update interval in seconds. Lower values = faster game.
-
-```lua
-dt = 8.0/60.0    -- Default: ~7.5 FPS equivalent
-dt = 4.0/60.0    -- Faster: ~15 FPS equivalent
-dt = 16.0/60.0   -- Slower: ~3.75 FPS equivalent
-dt = 1.0/60.0    -- Maximum speed: ~60 FPS equivalent
-```
-
-**Performance Impact:**
-- **Lower values**: Faster game execution, higher CPU usage
-- **Higher values**: Slower execution, more visible for debugging
-- **Recommended range**: 4.0/60.0 to 16.0/60.0 for stability
-
-**Stability Considerations:**
-- Values below 4.0/60.0 may cause game instability
-- Very low values can overwhelm the networking stack
-- Test thoroughly when using extreme values
+Game update interval in seconds. Lower values make the game run faster but use more CPU.
 
 ### uncap_fps
+**Type:** `boolean` | **Default:** `true`
 
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Remove FPS limitations for maximum speed.
-
-```lua
-uncap_fps = true   -- Remove FPS cap (recommended for bots)
-uncap_fps = false  -- Keep normal FPS limits
-```
-
-**Effects:**
-- `true`: Game runs as fast as possible, better for bot performance
-- `false`: Game respects normal FPS limits, more stable visually
-
-### frame_ratio
-
-**Type:** `integer`  
-**Default:** `100`  
-**Description:** Render every Nth frame. Higher values = less rendering.
-
-```lua
-frame_ratio = 1    -- Render every frame (full visual)
-frame_ratio = 10   -- Render every 10th frame
-frame_ratio = 100  -- Render every 100th frame (minimal visual)
-frame_ratio = 200  -- Render every 200th frame (fastest)
-```
-
-**Performance vs Visual Quality:**
-
-| Value | Rendering | Performance | Use Case |
-|-------|-----------|-------------|----------|
-| 1 | Full visual | Slowest | Debugging, demonstrations |
-| 10 | Reduced visual | Moderate | Development testing |
-| 100 | Minimal visual | Fast | Production bots |
-| 200+ | Almost no visual | Fastest | Benchmark/batch runs |
-
-## Visual Settings
+Remove FPS limitations for maximum game speed. Recommended for bot performance.
 
 ### instant_move
+**Type:** `boolean` | **Default:** `true`
 
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Skip movement animations for instant card positioning.
-
-```lua
-instant_move = true   -- Cards move instantly (faster)
-instant_move = false  -- Cards use smooth animations (slower)
-```
-
-**Impact:**
-- `true`: Significant performance improvement, no smooth movements
-- `false`: Normal game animations, slower but more visually appealing
+Skip movement animations for instant card positioning. Provides significant performance improvement.
 
 ### disable_vsync
+**Type:** `boolean` | **Default:** `true`
 
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Disable vertical synchronization.
-
-```lua
-disable_vsync = true   -- Disable VSync (faster, may cause tearing)
-disable_vsync = false  -- Enable VSync (smoother, frame-rate limited)
-```
-
-**Considerations:**
-- `true`: Better performance, possible screen tearing
-- `false`: Smoother visuals, frame rate limited to monitor refresh
+Disable vertical synchronization for better performance.
 
 ### disable_card_eval_status_text
+**Type:** `boolean` | **Default:** `true`
 
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Hide floating text when cards are scored ("+10", etc.).
+Hide floating score text ("+10", etc.) when cards are scored for better performance.
+
+### frame_ratio
+**Type:** `integer` | **Default:** `100`
+
+Render every Nth frame. Higher values provide better performance with less visual output.
+
+## Multi-Instance Setup
+
+For multiple bot instances, use different ports:
 
 ```lua
-disable_card_eval_status_text = true   -- Hide score text (faster)
-disable_card_eval_status_text = false  -- Show score text (slower)
-```
-
-**Performance Impact:**
-- Disabling this text provides a small but measurable performance improvement
-- Recommended to keep `true` for production bots
-
-## Network Configuration
-
-### Command Line Port Override
-
-The port can be overridden when launching Balatro:
-
-```bash
-# Windows
-Balatro.exe 12346
-
-# Launch with specific port
-steam://rungameid/2379780//12346
-```
-
-### Multi-Instance Setup
-
-For running multiple bot instances:
-
-**Instance 1 (config.lua):**
-```lua
+-- Instance 1
 port = '12345'
-```
 
-**Instance 2 (config.lua):**
-```lua
+-- Instance 2  
 port = '12346'
 ```
 
-**Instance 3 (config.lua):**
-```lua
-port = '12347'
-```
-
-**Python Bot Configuration:**
-```python
-# Bot 1
-bot1 = Bot(deck="Red Deck", stake=1, bot_port=12345)
-
-# Bot 2  
-bot2 = Bot(deck="Blue Deck", stake=1, bot_port=12346)
-
-# Bot 3
-bot3 = Bot(deck="Yellow Deck", stake=1, bot_port=12347)
+Launch Balatro with specific port:
+```bash
+Balatro.exe 12346
 ```
 
 ## Bot-Specific Settings

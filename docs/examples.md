@@ -1,122 +1,32 @@
 # Examples
 
-This document provides detailed walkthroughs of the example bots included with Balatrobot, showing different strategies and implementation patterns.
+Working examples of bots included with Balatrobot.
 
-## Basic Example Bot
+## Basic Example Bot (`bot_example.py`)
 
-The `bot_example.py` demonstrates fundamental bot structure and simple decision-making logic.
+Simple bot demonstrating basic functionality:
 
-### Complete Implementation
+- **Blind Strategy**: Skip small/big blinds, play boss blinds
+- **Hand Strategy**: Use state tracking to discard first, then play specific cards
+- **Shop Strategy**: Buy cards on specific shop visits
 
-```python
-from bot import Bot, Actions
+Key concepts:
+- State persistence with `self.state`
+- Progressive decision making
+- Basic resource management
 
-def skip_or_select_blind(self, G):
-    if (
-        G["ante"]["blinds"]["ondeck"] == "Small"
-        or G["ante"]["blinds"]["ondeck"] == "Big"
-    ):
-        return [Actions.SKIP_BLIND]
-    else:
-        return [Actions.SELECT_BLIND]
+## Flush Bot (`flush_bot.py`)
 
-def select_cards_from_hand(self, G):
-    # State tracking for decision making
-    if "hands_played" not in self.state:
-        self.state["hands_played"] = 0
+More advanced bot with poker strategy:
 
-    self.state["hands_played"] += 1
+- **Strategy**: Build and play flush hands (5+ cards of same suit)
+- **Implementation**: Count suits, identify dominant suit, discard off-suit cards
+- **Fallback**: Play suboptimal hands when forced by game constraints
 
-    # Different strategies based on game progress
-    if self.state["hands_played"] == 1:
-        return [Actions.DISCARD_HAND, [2, 3, 6, 7]]
-    elif self.state["hands_played"] == 2:
-        return [Actions.PLAY_HAND, [1, 3, 4, 5, 8]]
-
-    return [Actions.PLAY_HAND, [1]]
-
-def select_shop_action(self, G):
-    if "num_shops" not in self.state:
-        self.state["num_shops"] = 0
-
-    self.state["num_shops"] += 1
-
-    # Buy cards at specific shop visits
-    if self.state["num_shops"] == 1:
-        return [Actions.BUY_CARD, [2]]
-    elif self.state["num_shops"] == 5:
-        return [Actions.BUY_CARD, [2]]
-
-    return [Actions.END_SHOP]
-
-# ... other methods with simple implementations
-
-# Bot initialization and execution
-if __name__ == "__main__":
-    mybot = Bot(deck="Plasma Deck", stake=1, seed="1OGB5WO")
-    
-    # Assign methods to bot instance
-    mybot.skip_or_select_blind = skip_or_select_blind
-    mybot.select_cards_from_hand = select_cards_from_hand
-    mybot.select_shop_action = select_shop_action
-    # ... assign other methods
-    
-    mybot.run()
-```
-
-### Key Concepts Demonstrated
-
-#### 1. State Persistence
-```python
-if "hands_played" not in self.state:
-    self.state["hands_played"] = 0
-```
-The bot uses `self.state` to track information across decisions, enabling more sophisticated strategies that adapt based on game progress.
-
-#### 2. Simple Blind Strategy
-```python
-if (G["ante"]["blinds"]["ondeck"] == "Small" or 
-    G["ante"]["blinds"]["ondeck"] == "Big"):
-    return [Actions.SKIP_BLIND]
-else:
-    return [Actions.SELECT_BLIND]
-```
-Basic strategy: Skip small and big blinds (low reward), play boss blinds (higher reward).
-
-#### 3. Progressive Hand Strategy
-```python
-if self.state["hands_played"] == 1:
-    return [Actions.DISCARD_HAND, [2, 3, 6, 7]]
-elif self.state["hands_played"] == 2:
-    return [Actions.PLAY_HAND, [1, 3, 4, 5, 8]]
-```
-Different actions based on game state - discard unwanted cards early, then play specific combinations.
-
-#### 4. Shop Timing
-```python
-if self.state["num_shops"] == 1:
-    return [Actions.BUY_CARD, [2]]
-elif self.state["num_shops"] == 5:
-    return [Actions.BUY_CARD, [2]]
-```
-Strategic purchasing at specific shop visits rather than random buying.
-
-## Flush Bot
-
-The `flush_bot.py` demonstrates a sophisticated strategy focused on building and playing flush hands.
-
-### Core Strategy
-
-The FlushBot implements a coherent poker strategy:
-1. **Identify the most common suit** in hand
-2. **Play flushes when possible** (5+ cards of same suit)
-3. **Discard off-suit cards** to improve flush chances
-4. **Fallback to best available hand** when flushes aren't possible
-
-### Implementation Analysis
-
-#### Flush Detection and Play
-```python
+Key features:
+- Class-based implementation
+- Sophisticated card analysis
+- Multi-instance benchmarking
 def play_flushes(self, G):
     # Count cards by suit
     suit_count = {

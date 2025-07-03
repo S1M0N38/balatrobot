@@ -18,281 +18,85 @@ The Lua API provides the game-side components that interface directly with Balat
 Entry point for the mod that initializes all components.
 
 ### config.lua
-Configuration file for bot settings.
-
-```lua
--- Example configuration
-return {
-    bot_port = 12346,
-    game_port = 12345,
-    bot_host = "127.0.0.1",
-    game_host = "127.0.0.1",
-    debug = true,
-    log_actions = true,
-    speed_factor = 10
-}
-```
+Configuration file for mod settings. See the actual `config.lua` file for available options.
 
 ## Bot Module
 
-Located in `src/bot.lua` - Main bot logic and game integration.
+Located in `src/bot.lua` - Defines actions and validation logic.
 
-### Key Functions
+### Key Components
 
-#### `extract_game_state()`
-Extracts current game state into a structured format.
-
-```lua
-local game_state = extract_game_state()
--- Returns table with hand, jokers, shop, etc.
-```
-
-#### `process_bot_command(cmd)`
-Processes commands received from the Python bot.
-
-```lua
-process_bot_command("play_hand:1,2,3")
-```
-
-#### `execute_action(action_type, params)`
-Executes game actions based on bot decisions.
-
-```lua
-execute_action("play_hand", {1, 2, 3})
-execute_action("buy_card", {1})
-execute_action("end_shop", {})
-```
+- Action definitions with validation rules
+- Bot settings configuration
+- Default bot behavior functions
 
 ## API Module
 
-Located in `src/api.lua` - Core game state and action APIs.
+Located in `src/api.lua` - Core UDP communication and game hooks.
 
-### Game State Functions
+### Key Functions
 
-#### `get_hand_info()`
-Returns information about cards in hand.
-
-```lua
-local hand = get_hand_info()
--- hand = {
---     {rank = "Ace", suit = "Spades", value = 11},
---     {rank = "King", suit = "Hearts", value = 10},
---     ...
--- }
-```
-
-#### `get_joker_info()`
-Returns information about active jokers.
-
-```lua
-local jokers = get_joker_info()
--- jokers = {
---     {name = "Joker", effect = "+4 Mult", rarity = "Common"},
---     ...
--- }
-```
-
-#### `get_shop_info()`
-Returns current shop contents and prices.
-
-```lua
-local shop = get_shop_info()
--- shop = {
---     cards = {...},
---     vouchers = {...},
---     boosters = {...},
---     reroll_cost = 5
--- }
-```
-
-#### `get_blind_info()`
-Returns information about current and upcoming blinds.
-
-```lua
-local blinds = get_blind_info()
--- blinds = {
---     current = "Small Blind",
---     ondeck = "Big Blind",
---     requirement = 300
--- }
-```
-
-### Action Functions
-
-#### `play_selected_cards(indices)`
-Play cards at specified positions.
-
-```lua
-play_selected_cards({1, 3, 5})
-```
-
-#### `discard_selected_cards(indices)`
-Discard cards at specified positions.
-
-```lua
-discard_selected_cards({2, 4})
-```
-
-#### `buy_shop_item(type, index)`
-Purchase item from shop.
-
-```lua
-buy_shop_item("card", 1)
-buy_shop_item("voucher", 1)
-buy_shop_item("booster", 2)
-```
-
-#### `sell_joker(index)`
-Sell joker at specified position.
-
-```lua
-sell_joker(2)
-```
+- `BalatrobotAPI.init()` - Initialize the API system
+- `BalatrobotAPI.update()` - Handle incoming UDP messages
+- `BalatrobotAPI.queueaction()` - Queue bot actions for execution
 
 ## Utils Module
 
-Located in `src/utils.lua` - Utility functions and helpers.
+Located in `src/utils.lua` - Game state extraction and utility functions.
 
-### Helper Functions
+### Game State Functions
 
-#### `table_to_string(tbl)`
-Convert table to string representation.
+#### `Utils.getGamestate()`
+Extract complete game state for bot processing.
 
 ```lua
-local str = table_to_string({a = 1, b = 2})
--- Returns "a:1,b:2"
+local game_state = Utils.getGamestate()
+-- Returns complete game state table
 ```
 
-#### `split_string(str, delimiter)`
-Split string by delimiter.
+#### `Utils.getHandData()`
+Get current hand cards.
 
 ```lua
-local parts = split_string("1,2,3", ",")
--- Returns {"1", "2", "3"}
+local hand = Utils.getHandData()
 ```
 
-#### `deep_copy(tbl)`
-Create deep copy of table.
+#### `Utils.getJokersData()`
+Get active jokers.
 
 ```lua
-local copy = deep_copy(original_table)
+local jokers = Utils.getJokersData()
 ```
 
-#### `find_card_by_rank(hand, rank)`
-Find cards in hand by rank.
+#### `Utils.getShopData()`
+Get shop contents (when in shop).
 
 ```lua
-local aces = find_card_by_rank(hand, "Ace")
+local shop = Utils.getShopData()
+```
+
+#### `Utils.parseaction(data)`
+Parse action string from bot commands.
+
+```lua
+local action = Utils.parseaction("PLAY_HAND|1,2,3")
 ```
 
 ## Middleware Module
 
-Located in `src/middleware.lua` - Request/response processing.
-
-### Functions
-
-#### `process_incoming_data(data)`
-Process data received from Python bot.
-
-```lua
-local result = process_incoming_data(json_data)
-```
-
-#### `format_outgoing_data(game_state)`
-Format game state for sending to bot.
-
-```lua
-local formatted = format_outgoing_data(G)
-```
+Located in `src/middleware.lua` - Handles game event hooks and action execution.
 
 ## Logger Module
 
-Located in `src/botlogger.lua` - Logging and debugging.
-
-### Functions
-
-#### `log_action(action, params)`
-Log bot actions for replay.
-
-```lua
-log_action("play_hand", {1, 2, 3})
-```
-
-#### `log_game_state(state)`
-Log current game state.
-
-```lua
-log_game_state(G)
-```
-
-#### `write_log_file()`
-Write accumulated logs to file.
-
-```lua
-write_log_file()
-```
+Located in `src/botlogger.lua` - Manages action logging and replay functionality.
 
 ## Configuration
 
-### Config Parameters
+Configuration options are defined in `config.lua`. See the actual file for current available settings.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `bot_port` | number | 12346 | UDP port for bot communication |
-| `game_port` | number | 12345 | UDP port for game communication |
-| `bot_host` | string | "127.0.0.1" | Bot host address |
-| `game_host` | string | "127.0.0.1" | Game host address |
-| `debug` | boolean | false | Enable debug logging |
-| `log_actions` | boolean | true | Log all actions |
-| `speed_factor` | number | 1 | Game speed multiplier |
+## Implementation Notes
 
-## Hooks
-
-### Game Event Hooks
-
-The Lua API uses hooks to intercept game events:
-
-#### `INIT`
-Called when game initializes.
-
-```lua
--- Hook into game initialization
-hook_init = function()
-    initialize_bot_communication()
-end
-```
-
-#### `UPDATE`
-Called every game frame.
-
-```lua
--- Hook into game updates
-hook_update = function()
-    check_bot_messages()
-end
-```
-
-#### `CARD_PLAY`
-Called when cards are played.
-
-```lua
--- Hook into card play events
-hook_card_play = function(cards)
-    log_action("card_play", cards)
-end
-```
-
-### Custom Hooks
-
-You can create custom hooks for specific events:
-
-```lua
--- Custom hook for shop interactions
-hook_shop_action = function(action, item)
-    log_action("shop_" .. action, item)
-    send_to_bot("shop_update", get_shop_info())
-end
-```
+The Lua API uses the Hook library to intercept game events and the middleware system to execute bot actions. Game state is extracted through the Utils module functions.
 
 ---
 

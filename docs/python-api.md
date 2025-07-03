@@ -262,56 +262,7 @@ class Actions(Enum):
 | `START_RUN` | 19 | Begin new game run | Deck, stake, seed |
 | `SEND_GAMESTATE` | 20 | Request game state (internal) | None |
 
-## State Enum
 
-Enumeration of game states for state tracking.
-
-```python
-class State(Enum):
-    SELECTING_HAND = 1
-    HAND_PLAYED = 2
-    DRAW_TO_HAND = 3
-    GAME_OVER = 4
-    SHOP = 5
-    PLAY_TAROT = 6
-    BLIND_SELECT = 7
-    ROUND_EVAL = 8
-    TAROT_PACK = 9
-    PLANET_PACK = 10
-    MENU = 11
-    TUTORIAL = 12
-    SPLASH = 13
-    SANDBOX = 14
-    SPECTRAL_PACK = 15
-    DEMO_CTA = 16
-    STANDARD_PACK = 17
-    BUFFOON_PACK = 18
-    NEW_ROUND = 19
-```
-
-### State Descriptions
-
-| State | Value | Description |
-|-------|-------|-------------|
-| `SELECTING_HAND` | 1 | Player choosing cards to play/discard |
-| `HAND_PLAYED` | 2 | Hand has been played, processing results |
-| `DRAW_TO_HAND` | 3 | Drawing new cards to hand |
-| `GAME_OVER` | 4 | Game has ended |
-| `SHOP` | 5 | In shop phase |
-| `PLAY_TAROT` | 6 | Using a tarot card |
-| `BLIND_SELECT` | 7 | Choosing whether to play blind |
-| `ROUND_EVAL` | 8 | Round results being calculated |
-| `TAROT_PACK` | 9 | Opening tarot booster pack |
-| `PLANET_PACK` | 10 | Opening planet booster pack |
-| `MENU` | 11 | In main menu |
-| `TUTORIAL` | 12 | In tutorial mode |
-| `SPLASH` | 13 | Splash screen |
-| `SANDBOX` | 14 | Sandbox mode |
-| `SPECTRAL_PACK` | 15 | Opening spectral pack |
-| `DEMO_CTA` | 16 | Demo call-to-action |
-| `STANDARD_PACK` | 17 | Opening standard pack |
-| `BUFFOON_PACK` | 18 | Opening buffoon pack |
-| `NEW_ROUND` | 19 | Starting new round |
 
 ## Helper Functions
 
@@ -343,13 +294,15 @@ The `gamestates.py` module provides state caching functionality.
 Save game state to JSON file with timestamp.
 
 **File Structure:**
-```
-gamestate_cache/
-├── card_selection/
-│   ├── 20231201120001123456.json
-│   └── 20231201120005234567.json
-└── shop_action/
-    └── 20231201120010345678.json
+```mermaid
+graph TD
+    A["gamestate_cache/"] --> B["card_selection/"]
+    A --> C["shop_action/"]
+    
+    B --> D["20231201120001123456.json"]
+    B --> E["20231201120005234567.json"]
+    
+    C --> F["20231201120010345678.json"]
 ```
 
 **JSON Format:**

@@ -4,52 +4,35 @@ Guide to optimizing Balatrobot performance for faster and more efficient bot exe
 
 ## Overview
 
-Performance optimization in Balatrobot involves several components:
+Performance optimization in Balatrobot involves:
 
-- **Game Speed**: Configuring Balatro's internal speed settings
+- **Game Speed**: Configuring Balatro's internal speed settings  
 - **Bot Logic**: Optimizing decision-making algorithms
 - **Network**: Minimizing UDP communication overhead
 - **Memory**: Efficient use of game state data
 
 ## Game Speed Settings
 
-### Speed Factor Configuration
-Adjust the speed multiplier in `config.lua`:
+### Configuration Options
+Adjust performance settings in `config.lua`:
 
 ```lua
-return {
-    speed_factor = 10,  -- 10x faster than normal
-    -- Other settings...
+BALATRO_BOT_CONFIG = {
+    enabled = true,
+    port = '12345',
+    dt = 4.0/60.0,                          -- Lower = faster (default: 8.0/60.0)
+    uncap_fps = true,                       -- Remove FPS limitations
+    instant_move = true,                    -- Skip movement animations  
+    disable_vsync = true,                   -- Disable vertical sync
+    disable_card_eval_status_text = true,   -- Hide score popups
+    frame_ratio = 200,                      -- Higher = less rendering
 }
 ```
 
 **Recommended Settings:**
-- **Development**: `speed_factor = 3-5` (easier to debug)
-- **Production**: `speed_factor = 10-20` (maximum speed)
-- **Very Fast**: `speed_factor = 50+` (use with caution)
-
-### Animation Skipping
-Disable unnecessary animations:
-
-```lua
--- In Lua configuration
-return {
-    skip_animations = true,
-    fast_mode = true,
-    auto_skip_non_essential = true
-}
-```
-
-### Frame Rate Optimization
-Configure optimal frame rates:
-
-```lua
--- Target 60 FPS for smooth operation
-G.SETTINGS.GRAPHICS.fps_target = 60
-
--- Reduce for maximum speed (may cause instability)
-G.SETTINGS.GRAPHICS.fps_target = 120
-```
+- **Development**: `dt = 8.0/60.0, frame_ratio = 10` (visible for debugging)
+- **Production**: `dt = 4.0/60.0, frame_ratio = 100` (balanced performance)
+- **Maximum Speed**: `dt = 2.0/60.0, frame_ratio = 200` (fastest, may be unstable)
 
 ## Bot Optimization
 
@@ -61,8 +44,7 @@ class OptimizedBot(Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Pre-calculate constants
-        self.CARD_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
-        self.RANK_VALUES = {rank: i for i, rank in enumerate(self.CARD_RANKS)}
+        self.SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"]
     
     def select_cards_from_hand(self, G):
         # Fast lookup instead of complex calculations
@@ -80,14 +62,12 @@ class CachedBot(Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._hand_cache = {}
-        self._shop_cache = {}
     
     def _analyze_hand(self, hand):
         # Create cache key from hand
-        hand_key = tuple(sorted([(c["rank"], c["suit"]) for c in hand]))
+        hand_key = tuple(sorted([(c["value"], c["suit"]) for c in hand]))
         
         if hand_key not in self._hand_cache:
-            # Expensive analysis only when needed
             self._hand_cache[hand_key] = self._compute_hand_value(hand)
         
         return self._hand_cache[hand_key]
@@ -98,56 +78,17 @@ Skip unnecessary work:
 
 ```python
 def select_shop_action(self, G):
-    money = G["player"]["money"]
+    dollars = G.get("dollars", 0)
     
     # Quick exit for no money
-    if money < 5:
+    if dollars < 5:
         return [Actions.END_SHOP]
     
     # Only analyze if we have reasonable money
-    if money >= 20:
+    if dollars >= 20:
         return self._full_shop_analysis(G)
     
-    # Simple logic for medium money
-    return self._simple_shop_logic(G)
-```
-
-## Network Performance
-
-### UDP Optimization
-Minimize network overhead:
-
-```python
-class NetworkOptimizedBot(Bot):
-    def sendcmd(self, cmd, **kwargs):
-        # Compress commands when possible
-        if len(cmd) > 100:
-            cmd = self._compress_command(cmd)
-        super().sendcmd(cmd, **kwargs)
-    
-    def _compress_command(self, cmd):
-        # Simple compression for repeated commands
-        return cmd.replace("play_hand", "ph").replace("buy_card", "bc")
-```
-
-### Batching Commands
-Send multiple commands together when possible:
-
-```python
-def batch_actions(self, actions):
-    # Combine multiple actions into single network call
-    batch_cmd = ";".join(actions)
-    self.sendcmd(batch_cmd)
-```
-
-### Connection Pooling
-Reuse network connections:
-
-```python
-def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    # Keep socket alive
-    self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    return [Actions.END_SHOP]
 ```
 
 ## Memory Management
@@ -159,10 +100,10 @@ Avoid copying large game state objects:
 def select_cards_from_hand(self, G):
     # Access directly instead of copying
     hand_size = len(G["hand"])
-    player_money = G["player"]["money"]
+    dollars = G.get("dollars", 0)
     
     # Don't do: hand_copy = G["hand"].copy()
-    # Do: work with references when possible
+    # Work with references when possible
 ```
 
 ### Cleanup Strategies
@@ -170,26 +111,9 @@ Clear caches periodically:
 
 ```python
 def cleanup_caches(self):
-    # Clear caches every 100 rounds
-    if self.state.get('rounds_played', 0) % 100 == 0:
+    # Clear caches every 100 actions
+    if len(self._hand_cache) > 1000:
         self._hand_cache.clear()
-        self._shop_cache.clear()
-```
-
-### Memory Monitoring
-Track memory usage:
-
-```python
-import psutil
-import os
-
-def monitor_memory(self):
-    process = psutil.Process(os.getpid())
-    memory_mb = process.memory_info().rss / 1024 / 1024
-    
-    if memory_mb > 500:  # 500MB threshold
-        print(f"High memory usage: {memory_mb:.1f}MB")
-        self.cleanup_caches()
 ```
 
 ## Profiling
@@ -207,7 +131,9 @@ def profile_bot():
     
     # Run bot for a few rounds
     bot = MyBot(deck="Red Deck", stake=1)
-    bot.run()
+    for _ in range(100):
+        mock_G = {"hand": [], "dollars": 10}
+        bot.select_cards_from_hand(mock_G)
     
     profiler.disable()
     stats = pstats.Stats(profiler)
@@ -223,7 +149,6 @@ import time
 def timed_method(self, G):
     start_time = time.time()
     
-    # Your bot logic here
     result = self._complex_decision(G)
     
     elapsed = time.time() - start_time
@@ -233,35 +158,22 @@ def timed_method(self, G):
     return result
 ```
 
-### Memory Profiling
-Track memory usage patterns:
-
-```python
-from memory_profiler import profile
-
-@profile
-def memory_intensive_method(self, G):
-    # This will show line-by-line memory usage
-    large_calculation = self._analyze_all_possibilities(G)
-    return large_calculation
-```
-
 ## Common Performance Issues
 
 ### 1. Slow Game State Access
-**Problem**: Repeatedly accessing nested dictionary values
+**Problem**: Repeatedly accessing nested values
 ```python
 # Slow
 for i in range(100):
-    money = G["player"]["stats"]["current"]["money"]
+    blind = G["ante"]["blinds"]["ondeck"]
 ```
 
 **Solution**: Cache frequently accessed values
 ```python
 # Fast
-money = G["player"]["stats"]["current"]["money"]
+blind = G["ante"]["blinds"]["ondeck"]
 for i in range(100):
-    # Use cached 'money' value
+    # Use cached 'blind' value
 ```
 
 ### 2. Inefficient String Operations
@@ -273,7 +185,7 @@ for card in cards:
     cmd += str(card) + ","
 ```
 
-**Solution**: Use join() or f-strings
+**Solution**: Use join()
 ```python
 # Fast
 cmd = ",".join(str(card) for card in cards)
@@ -285,8 +197,8 @@ cmd = ",".join(str(card) for card in cards)
 # Slow
 def select_cards_from_hand(self, G):
     if self._calculate_hand_value(G["hand"]) > 100:
-        # ... later in same method
         if self._calculate_hand_value(G["hand"]) > 200:
+            # ...
 ```
 
 **Solution**: Calculate once, store result
@@ -295,27 +207,8 @@ def select_cards_from_hand(self, G):
 def select_cards_from_hand(self, G):
     hand_value = self._calculate_hand_value(G["hand"])
     if hand_value > 100:
-        # ... later in same method
         if hand_value > 200:
-```
-
-### 4. Large Object Creation
-**Problem**: Creating large temporary objects
-```python
-# Memory intensive
-all_possibilities = self._generate_all_combinations(G)
-best = max(all_possibilities, key=lambda x: x.score)
-```
-
-**Solution**: Use generators or iterative approaches
-```python
-# Memory efficient
-best_score = 0
-best_action = None
-for possibility in self._generate_combinations_iter(G):
-    if possibility.score > best_score:
-        best_score = possibility.score
-        best_action = possibility
+            # ...
 ```
 
 ## Benchmarking
@@ -324,51 +217,25 @@ for possibility in self._generate_combinations_iter(G):
 Create standardized benchmarks:
 
 ```python
-def benchmark_bot(bot_class, rounds=100):
+def benchmark_bot(bot_class, iterations=1000):
     start_time = time.time()
     
     bot = bot_class(deck="Red Deck", stake=1)
     
-    # Simulate game rounds
-    for _ in range(rounds):
-        mock_G = create_mock_game_state()
+    # Simulate decisions
+    mock_G = {
+        "hand": [{"suit": "Hearts", "value": 10, "name": "10 of Hearts"}],
+        "dollars": 50,
+        "ante": {"blinds": {"ondeck": "Small"}}
+    }
+    
+    for _ in range(iterations):
         bot.select_cards_from_hand(mock_G)
         bot.select_shop_action(mock_G)
     
     elapsed = time.time() - start_time
-    print(f"Bot completed {rounds} rounds in {elapsed:.2f}s")
-    print(f"Average: {elapsed/rounds*1000:.1f}ms per round")
-```
-
-### Speed Comparisons
-Compare different optimization approaches:
-
-```python
-def compare_implementations():
-    bots = [
-        ("Basic Bot", BasicBot),
-        ("Optimized Bot", OptimizedBot),
-        ("Cached Bot", CachedBot)
-    ]
-    
-    for name, bot_class in bots:
-        print(f"Testing {name}:")
-        benchmark_bot(bot_class, rounds=1000)
-        print()
-```
-
-### Real-World Testing
-Test with actual game instances:
-
-```python
-def real_world_benchmark():
-    bot = OptimizedBot(deck="Red Deck", stake=1)
-    
-    start_time = time.time()
-    bot.run()  # Play complete game
-    
-    total_time = time.time() - start_time
-    print(f"Complete game: {total_time:.1f}s")
+    print(f"Bot completed {iterations} decisions in {elapsed:.2f}s")
+    print(f"Average: {elapsed/iterations*1000:.1f}ms per decision")
 ```
 
 ---

@@ -89,16 +89,17 @@ cp -r balatrobot "/path/to/Balatro/Mods/Balatrobot-v0.3"
 ```
 
 Your directory structure should look like:
-```
-Balatro/Mods/
-└── Balatrobot-v0.3/
-    ├── main.lua
-    ├── config.lua
-    ├── lib/
-    ├── src/
-    ├── bot.py
-    ├── bot_example.py
-    └── flush_bot.py
+
+```mermaid
+graph TD
+    A["Balatro/Mods/"] --> B["Balatrobot-v0.3/"]
+    B --> C["main.lua"]
+    B --> D["config.lua"]
+    B --> E["lib/"]
+    B --> F["src/"]
+    B --> G["bot.py"]
+    B --> H["bot_example.py"]
+    B --> I["flush_bot.py"]
 ```
 
 ## Step 3: Configure Balatrobot
@@ -185,10 +186,9 @@ Create a simple test script to verify everything works:
 
 ```python
 # test_setup.py
-from bot import Bot, Actions, State
+from bot import Bot, Actions
 
 print("Balatrobot Python components loaded successfully!")
-print(f"Available states: {len(State)}")
 print(f"Available actions: {len(Actions)}")
 ```
 

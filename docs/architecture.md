@@ -11,11 +11,9 @@ Balatrobot consists of two main components working together:
 
 These components communicate via UDP sockets to achieve real-time bot control.
 
-```
-┌─────────────────┐    UDP Socket    ┌─────────────────┐
-│   Balatro Game  │ ◄──────────────► │   Python Bot    │
-│   (Lua Mod)     │   Port 12345+    │   (Bot Logic)   │
-└─────────────────┘                  └─────────────────┘
+```mermaid
+graph LR
+    A["Balatro Game<br/>(Lua Mod)"] <-->|"UDP Socket<br/>Port 12345+"| B["Python Bot<br/>(Bot Logic)"]
 ```
 
 ## Component Architecture
@@ -24,21 +22,23 @@ These components communicate via UDP sockets to achieve real-time bot control.
 
 The Lua mod consists of several interconnected modules:
 
-```
-main.lua
-├── config.lua (Configuration)
-├── lib/ (External Libraries)
-│   ├── hook.lua (Function hooking)
-│   ├── sock.lua (UDP networking)
-│   ├── json.lua (JSON serialization)
-│   ├── list.lua (Data structures)
-│   └── bitser.lua (Binary serialization)
-└── src/ (Core Modules)
-    ├── api.lua (UDP API server)
-    ├── bot.lua (Action definitions)
-    ├── middleware.lua (Game hooks)
-    ├── botlogger.lua (Logging/replay)
-    └── utils.lua (Utility functions)
+```mermaid
+graph TD
+    A["main.lua"] --> B["config.lua (Configuration)"]
+    A --> C["lib/ (External Libraries)"]
+    A --> D["src/ (Core Modules)"]
+    
+    C --> E["hook.lua (Function hooking)"]
+    C --> F["sock.lua (UDP networking)"]
+    C --> G["json.lua (JSON serialization)"]
+    C --> H["list.lua (Data structures)"]
+    C --> I["bitser.lua (Binary serialization)"]
+    
+    D --> J["api.lua (UDP API server)"]
+    D --> K["bot.lua (Action definitions)"]
+    D --> L["middleware.lua (Game hooks)"]
+    D --> M["botlogger.lua (Logging/replay)"]
+    D --> N["utils.lua (Utility functions)"]
 ```
 
 #### Key Modules
@@ -53,12 +53,12 @@ main.lua
 
 The Python side provides the bot framework and decision-making logic:
 
-```
-Bot Framework
-├── bot.py (Base Bot class)
-├── gamestates.py (State caching)
-├── bot_example.py (Simple example)
-└── flush_bot.py (Advanced example)
+```mermaid
+graph TD
+    A["Bot Framework"] --> B["bot.py (Base Bot class)"]
+    A --> C["gamestates.py (State caching)"]
+    A --> D["bot_example.py (Simple example)"]
+    A --> E["flush_bot.py (Advanced example)"]
 ```
 
 #### Base Bot Class
@@ -75,29 +75,30 @@ The communication between components follows this pattern:
 
 ### 1. Initialization
 
-```
-Python Bot                    Lua Mod
-    │                           │
-    ├─── HELLO ──────────────►  │
-    │                           ├─── Game State ───►
-    ◄─── Game State ───────────┤
-    │                           │
+```mermaid
+sequenceDiagram
+    participant PB as Python Bot
+    participant LM as Lua Mod
+    
+    PB->>LM: HELLO
+    LM->>PB: Game State
 ```
 
 ### 2. Decision Loop
 
-```
-Python Bot                    Lua Mod
-    │                           │
-    │                           ├─── Wait for Action
-    │                           ├─── Send Game State ──►
-    ◄─── Game State ───────────┤
-    ├─── Process State          │
-    ├─── Make Decision          │
-    ├─── Send Action ────────►  │
-    │                           ├─── Execute Action
-    │                           ├─── Update Game
-    │                           └─── Loop
+```mermaid
+sequenceDiagram
+    participant PB as Python Bot
+    participant LM as Lua Mod
+    
+    LM->>LM: Wait for Action
+    LM->>PB: Send Game State
+    PB->>PB: Process State
+    PB->>PB: Make Decision
+    PB->>LM: Send Action
+    LM->>LM: Execute Action
+    LM->>LM: Update Game
+    LM->>LM: Loop
 ```
 
 ### 3. Game State Structure
