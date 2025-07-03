@@ -5,6 +5,7 @@ repo_name: 'S1M0N38/balatrobot'
 repo_url: https://github.com/S1M0N38/balatrobot
 docs_dir: docs/
 theme:
+  logo: assets/logo.png
   name: material
   icon:
     repo: fontawesome/brands/github
