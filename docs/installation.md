@@ -17,9 +17,9 @@ Before installing Balatrobot, ensure you have:
 - **Disk Space**: 100MB for mod files
 
 ### Important Notes
-- ⚠️ **Steam Version Required**: The Epic Games Store version is not supported
-- ⚠️ **Mod Warning**: This mod may not work with other Balatro mods
-- ⚠️ **Risk**: Use at your own risk as with any game modification
+- **Steam Version Required**: The Epic Games Store version is not supported
+- **Mod Warning**: This mod may not work with other Balatro mods
+- **Risk**: Use at your own risk as with any game modification
 
 ## Step 1: Install Steamodded
 
@@ -228,19 +228,13 @@ python bot_example.py
 
 #### Expected Behavior
 
-- Balatro should start a new run automatically
-- The bot should make decisions (skip small/big blinds, play cards)
-- You should see the game progressing automatically
-
-#### Success Indicators
-
-✅ **Working correctly if you see:**
+**Working correctly if you see:**
 - Game starts automatically
 - Cards are played/discarded automatically
 - Shop actions occur without user input
 - Game progresses through rounds
 
-❌ **Check troubleshooting if:**
+**Check troubleshooting if:**
 - Bot script hangs or shows errors
 - Game doesn't start automatically
 - No automatic actions occur

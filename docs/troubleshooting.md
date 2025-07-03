@@ -8,19 +8,19 @@ Comprehensive guide to diagnosing and fixing common issues with Balatrobot.
 
 Before troubleshooting, verify these basics:
 
-✅ **Prerequisites Met**
+**Prerequisites Met**
 - [ ] Balatro (Steam version) installed
 - [ ] Steamodded v0.9.3+ installed and working
 - [ ] Python 3.7+ installed
 - [ ] Balatrobot mod copied to correct directory
 
-✅ **Configuration Basics**
+**Configuration Basics**
 - [ ] `config.lua` has `enabled = true`
 - [ ] Port numbers match between Lua config and Python bot
 - [ ] No firewall blocking the port
 - [ ] Balatro launched with mod enabled
 
-✅ **Connection Test**
+**Connection Test**
 - [ ] Balatro shows "Balatrobot v0.3 loaded" message
 - [ ] Python script runs without import errors
 - [ ] Bot sends "HELLO" message on startup
@@ -63,9 +63,9 @@ except socket.timeout:
    ```
    Balatro/Mods/
    └── Balatrobot-v0.3/
-       ├── main.lua ✓
-       ├── config.lua ✓
-       └── src/ ✓
+       ├── main.lua
+       ├── config.lua
+       └── src/
    ```
 
 2. **Verify Steamodded Installation**

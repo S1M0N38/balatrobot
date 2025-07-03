@@ -42,26 +42,26 @@ mybot.run()
 
 ## Documentation Sections
 
-### 📚 Core Documentation
+### Core Documentation
 - **[Architecture](architecture.md)** - System design and component interaction
 - **[Installation](installation.md)** - Complete setup guide
 - **[Configuration](configuration.md)** - Configuration options and settings
 
-### 🤖 Bot Development
+### Bot Development
 - **[Bot Development Guide](bot-development.md)** - How to create your own bots
 - **[Game State Reference](game-state.md)** - Understanding the game state object
 - **[Actions Reference](actions.md)** - Complete list of available actions
 
-### 📖 API Reference
+### API Reference
 - **[Python API](python-api.md)** - Python classes and methods
 - **[Lua API](lua-api.md)** - Lua modules and functions
 
-### 💡 Examples & Guides
+### Examples & Guides
 - **[Examples](examples.md)** - Working bot examples with explanations
 - **[Best Practices](best-practices.md)** - Tips for effective bot development
 - **[Performance Optimization](performance.md)** - Making your bots run faster
 
-### 🔧 Advanced Topics
+### Advanced Topics
 - **[Multi-Instance Setup](multi-instance.md)** - Running multiple bots
 - **[Logging & Replay](logging-replay.md)** - Recording and replaying games
 - **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
