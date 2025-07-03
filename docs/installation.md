@@ -2,16 +2,6 @@
 
 This guide will walk you through installing and setting up Balatrobot for automated Balatro gameplay.
 
-## 📋 Table of Contents
-
-- [Prerequisites](#prerequisites)
-- [Step 1: Install Steamodded](#step-1-install-steamodded)
-- [Step 2: Install Balatrobot Mod](#step-2-install-balatrobot-mod)
-- [Step 3: Configure Balatrobot](#step-3-configure-balatrobot)
-- [Step 4: Set Up Python Environment](#step-4-set-up-python-environment)
-- [Step 5: Test Installation](#step-5-test-installation)
-- [Troubleshooting](#troubleshooting)
-
 ## Prerequisites
 
 Before installing Balatrobot, ensure you have:

@@ -2,18 +2,6 @@
 
 Complete reference for the Lua components of Balatrobot.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Core Modules](#core-modules)
-- [Bot Module](#bot-module)
-- [API Module](#api-module)
-- [Utils Module](#utils-module)
-- [Middleware Module](#middleware-module)
-- [Logger Module](#logger-module)
-- [Configuration](#configuration)
-- [Hooks](#hooks)
-
 ## Overview
 
 The Lua API provides the game-side components that interface directly with Balatro. These modules handle:

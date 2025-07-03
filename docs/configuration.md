@@ -2,16 +2,6 @@
 
 Complete guide to configuring Balatrobot for optimal performance and functionality.
 
-## 📋 Table of Contents
-
-- [Configuration File Overview](#configuration-file-overview)
-- [Core Settings](#core-settings)
-- [Performance Optimization](#performance-optimization)
-- [Visual Settings](#visual-settings)
-- [Network Configuration](#network-configuration)
-- [Bot-Specific Settings](#bot-specific-settings)
-- [Configuration Examples](#configuration-examples)
-
 ## Configuration File Overview
 
 The main configuration is stored in `config.lua` in the mod directory. This file controls all aspects of the Balatrobot mod behavior.

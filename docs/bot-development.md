@@ -2,16 +2,6 @@
 
 This guide teaches you how to create custom bots for Balatro using the Balatrobot framework.
 
-## 📋 Table of Contents
-
-- [Bot Development Basics](#bot-development-basics)
-- [Creating Your First Bot](#creating-your-first-bot)
-- [Understanding Game States](#understanding-game-states)
-- [Implementing Bot Methods](#implementing-bot-methods)
-- [Action Reference](#action-reference)
-- [Advanced Techniques](#advanced-techniques)
-- [Testing and Debugging](#testing-and-debugging)
-
 ## Bot Development Basics
 
 ### Bot Architecture

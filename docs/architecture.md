@@ -2,15 +2,6 @@
 
 This document explains the architecture and design of the Balatrobot system, including how components interact and communicate.
 
-## 📋 Table of Contents
-
-- [System Overview](#system-overview)
-- [Component Architecture](#component-architecture)
-- [Communication Flow](#communication-flow)
-- [Game State Management](#game-state-management)
-- [Action Processing](#action-processing)
-- [Performance Optimizations](#performance-optimizations)
-
 ## System Overview
 
 Balatrobot consists of two main components working together:

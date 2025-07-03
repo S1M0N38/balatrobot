@@ -2,16 +2,6 @@
 
 Comprehensive guide to diagnosing and fixing common issues with Balatrobot.
 
-## 📋 Table of Contents
-
-- [Quick Diagnostics](#quick-diagnostics)
-- [Installation Issues](#installation-issues)
-- [Connection Problems](#connection-problems)
-- [Bot Behavior Issues](#bot-behavior-issues)
-- [Performance Problems](#performance-problems)
-- [Game Crashes](#game-crashes)
-- [Debug Tools](#debug-tools)
-
 ## Quick Diagnostics
 
 ### Pre-Flight Checklist

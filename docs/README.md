@@ -2,14 +2,6 @@
 
 Welcome to the comprehensive documentation for **Balatrobot** - A powerful botting API for the game Balatro.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Quick Start](#quick-start)
-- [Documentation Sections](#documentation-sections)
-- [Requirements](#requirements)
-- [Support](#support)
-
 ## Overview
 
 Balatrobot is a sophisticated modding framework that provides a complete API for creating automated bots for the card game Balatro. It consists of both Lua components (that run within the game) and Python components (for bot logic implementation).

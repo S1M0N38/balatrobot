@@ -2,17 +2,6 @@
 
 Guide to running multiple Balatrobot instances simultaneously for parallel bot testing and development.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Configuration](#configuration)
-- [Port Management](#port-management)
-- [Instance Coordination](#instance-coordination)
-- [Resource Management](#resource-management)
-- [Monitoring](#monitoring)
-- [Common Use Cases](#common-use-cases)
-- [Troubleshooting](#troubleshooting)
-
 ## Overview
 
 Multi-instance setup allows you to run multiple bot instances simultaneously, enabling:

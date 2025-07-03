@@ -2,14 +2,6 @@
 
 This document provides detailed walkthroughs of the example bots included with Balatrobot, showing different strategies and implementation patterns.
 
-## 📋 Table of Contents
-
-- [Basic Example Bot](#basic-example-bot)
-- [Flush Bot](#flush-bot)
-- [Strategy Patterns](#strategy-patterns)
-- [Custom Bot Examples](#custom-bot-examples)
-- [Performance Considerations](#performance-considerations)
-
 ## Basic Example Bot
 
 The `bot_example.py` demonstrates fundamental bot structure and simple decision-making logic.

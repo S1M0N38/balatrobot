@@ -2,17 +2,6 @@
 
 Complete reference for understanding the game state object provided to bot methods.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Game State Structure](#game-state-structure)
-- [Hand Information](#hand-information)
-- [Jokers](#jokers)
-- [Shop](#shop)
-- [Blinds](#blinds)
-- [Consumables](#consumables)
-- [Examples](#examples)
-
 ## Overview
 
 The game state object (`G`) is a comprehensive dictionary containing all information about the current state of the Balatro game. This object is passed to all bot methods and provides access to:

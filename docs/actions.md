@@ -2,19 +2,6 @@
 
 Complete reference for all available actions in Balatrobot.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Action Format](#action-format)
-- [Blind Actions](#blind-actions)
-- [Hand Actions](#hand-actions)
-- [Shop Actions](#shop-actions)
-- [Joker Actions](#joker-actions)
-- [Consumable Actions](#consumable-actions)
-- [Booster Actions](#booster-actions)
-- [Arrangement Actions](#arrangement-actions)
-- [Examples](#examples)
-
 ## Overview
 
 Actions in Balatrobot are represented as lists that tell the game what to do. Each action follows a specific format and is returned from bot methods to control game behavior.

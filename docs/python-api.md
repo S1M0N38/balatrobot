@@ -2,14 +2,6 @@
 
 Complete reference for the Python components of Balatrobot.
 
-## 📋 Table of Contents
-
-- [Bot Class](#bot-class)
-- [Actions Enum](#actions-enum)
-- [State Enum](#state-enum)
-- [Helper Functions](#helper-functions)
-- [Game State Module](#game-state-module)
-
 ## Bot Class
 
 The base `Bot` class provides the foundation for all bot implementations.

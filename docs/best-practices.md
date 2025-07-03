@@ -2,17 +2,6 @@
 
 Guidelines and best practices for developing effective Balatrobot bots.
 
-## 📋 Table of Contents
-
-- [General Principles](#general-principles)
-- [Code Organization](#code-organization)
-- [Decision Making](#decision-making)
-- [Performance](#performance)
-- [Debugging](#debugging)
-- [Testing](#testing)
-- [Common Patterns](#common-patterns)
-- [Pitfalls to Avoid](#pitfalls-to-avoid)
-
 ## General Principles
 
 ### 1. Keep It Simple

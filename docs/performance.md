@@ -2,17 +2,6 @@
 
 Guide to optimizing Balatrobot performance for faster and more efficient bot execution.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Game Speed Settings](#game-speed-settings)
-- [Bot Optimization](#bot-optimization)
-- [Network Performance](#network-performance)
-- [Memory Management](#memory-management)
-- [Profiling](#profiling)
-- [Common Performance Issues](#common-performance-issues)
-- [Benchmarking](#benchmarking)
-
 ## Overview
 
 Performance optimization in Balatrobot involves several components:

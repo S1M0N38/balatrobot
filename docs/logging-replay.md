@@ -2,18 +2,6 @@
 
 Complete guide to logging bot actions and replaying games for analysis and debugging.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Action Logging](#action-logging)
-- [Game State Logging](#game-state-logging)
-- [Log Formats](#log-formats)
-- [Replay System](#replay-system)
-- [Analysis Tools](#analysis-tools)
-- [Performance Monitoring](#performance-monitoring)
-- [Debugging with Logs](#debugging-with-logs)
-- [Best Practices](#best-practices)
-
 ## Overview
 
 The logging and replay system in Balatrobot provides comprehensive tracking of:
