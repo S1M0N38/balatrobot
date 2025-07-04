@@ -2,3 +2,4 @@ __pycache__
 Balatro
 gamestate_cache
 .envrc
+.luarc.json

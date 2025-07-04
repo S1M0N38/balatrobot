@@ -49,8 +49,8 @@ function Utils.getConsumablesData()
     local _consumables = { }
 
     if G and G.consumables and G.consumables.cards then
-        for i = 1, #G.consumeables.cards do
-            local _card = Utils.getCardData(G.consumeables.cards[i])
+        for i = 1, #G.consumables.cards do
+            local _card = Utils.getCardData(G.consumables.cards[i])
             _consumables[i] = _card
         end
     end
@@ -61,7 +61,7 @@ end
 function Utils.getBlindData()
     local _blinds = { }
 
-    if G and G.GAME then
+    if G and G.GAME and G.GAME.blind_on_deck then
         _blinds.ondeck = G.GAME.blind_on_deck
     end
 
@@ -85,7 +85,9 @@ function Utils.getShopData()
     local _shop = { }
     if not G or not G.shop then return _shop end
     
-    _shop.reroll_cost = G.GAME.current_round.reroll_cost
+    if G.GAME and G.GAME.current_round then
+        _shop.reroll_cost = G.GAME.current_round.reroll_cost
+    end
     _shop.cards = { }
     _shop.boosters = { }
     _shop.vouchers = { }
@@ -130,7 +132,7 @@ end
 function Utils.getGameData()
     local _game = { }
 
-    if G and G.STATE then
+    if G and G.STATE and G.GAME then
         _game.state = G.STATE
         _game.num_hands_played = G.GAME.hands_played
         _game.num_skips = G.GAME.Skips
@@ -141,7 +143,7 @@ function Utils.getGameData()
         _game.dollars = G.GAME.dollars
         _game.max_jokers = G.GAME.max_jokers
         _game.bankrupt_at = G.GAME.bankrupt_at
-        _game.chips = _game.chips
+        _game.chips = G.GAME.chips
     end
 
     return _game

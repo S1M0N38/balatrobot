@@ -187,10 +187,14 @@ end
 
 function Middleware.c_select_blind()
 
+    if not G or not G.GAME or not G.GAME.blind_on_deck then
+        return
+    end
+
     local _blind_on_deck = G.GAME.blind_on_deck
 
     firewhenready(function()
-        if G.GAME.blind_on_deck == 'Small' or G.GAME.blind_on_deck == 'Big' or G.GAME.blind_on_deck == 'Boss' then
+        if G.GAME and G.GAME.blind_on_deck and (G.GAME.blind_on_deck == 'Small' or G.GAME.blind_on_deck == 'Big' or G.GAME.blind_on_deck == 'Boss') then
             local _action = Bot.skip_or_select_blind(_blind_on_deck)
             if _action then
                 return true, _action
@@ -525,11 +529,13 @@ local function w_gamestate(...)
 
     -- If we lose a run, we want to go back to the main menu
     -- Before we try to start a new run
-    if _k == 'STATE' and _v == G.STATES.GAME_OVER then
-        G.FUNCS.go_to_menu({})
+    if _k == 'STATE' and _v and G and G.STATES and _v == G.STATES.GAME_OVER then
+        if G.FUNCS and G.FUNCS.go_to_menu then
+            G.FUNCS.go_to_menu({})
+        end
     end
 
-    if _k == 'STATE' and _v == G.STATES.MENU then
+    if _k == 'STATE' and _v and G and G.STATES and _v == G.STATES.MENU then
         Middleware.c_start_run()
     end
 end
@@ -537,20 +543,24 @@ end
 local function c_initgamehooks()
 
     -- Hooks break SAVE_MANAGER.channel:push so disable saving. Who needs it when you are botting anyway...
-    G.SAVE_MANAGER = {
-        channel = {
-            push = function() end
+    if G and G.SAVE_MANAGER then
+        G.SAVE_MANAGER = {
+            channel = {
+                push = function() end
+            }
         }
-    }
+    end
 
     -- Detect when hand has been drawn
-    G.GAME.blind.drawn_to_hand = Hook.addcallback(G.GAME.blind.drawn_to_hand, function(...)
-        firewhenready(function()
-            return G.buttons and G.STATE_COMPLETE and G.STATE == G.STATES.SELECTING_HAND
-        end, function()
-            Middleware.c_sell_jokers()
+    if G and G.GAME and G.GAME.blind and G.GAME.blind.drawn_to_hand then
+        G.GAME.blind.drawn_to_hand = Hook.addcallback(G.GAME.blind.drawn_to_hand, function(...)
+            firewhenready(function()
+                return G.buttons and G.STATE_COMPLETE and G.STATE == G.STATES.SELECTING_HAND
+            end, function()
+                Middleware.c_sell_jokers()
+            end)
         end)
-    end)
+    end
 
     -- Hook button snaps
     G.CONTROLLER.snap_to = Hook.addcallback(G.CONTROLLER.snap_to, function(...)

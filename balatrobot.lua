@@ -15,7 +15,7 @@
 ---@type BalatrobotConfig
 BALATRO_BOT_CONFIG = {
 	enabled = true,
-	port = "12345",
+	port = "12346",
 	dt = 1.0 / 60.0,
 	uncap_fps = false,
 	instant_move = false,
