@@ -3,14 +3,32 @@ name = "balatrobot"
 version = "0.1.0"
 description = "A framework for Balatro bot development"
 readme = "README.md"
+authors = [
+  { name = "S1M0N38", email = "bertolottosimone@gmail.com" },
+  { name = "giewev", email = "giewev@gmail.com" },
+  { name = "besteon" },
+  { name = "phughesion" },
+]
 requires-python = ">=3.12"
 dependencies = []
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Framework :: Pytest",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
 
 [project.urls]
 Homepage = "https://github.com/S1M0N38/balatrobot"
 Issues = "https://github.com/S1M0N38/balatrobot/issues"
 Repository = "https://github.com/S1M0N38/balatrobot"
 Changelog = "https://github.com/S1M0N38/balatrobot/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 lint.extend-select = ["I"]
