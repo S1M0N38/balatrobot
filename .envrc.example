@@ -1,0 +1,9 @@
+# Example .envrc file for direnv
+# Copy this file to .envrc and fill the missing values.
+
+# Load the virtual environment
+source .venv/bin/activate
+
+# Python-specific variables
+export PYTHONUNBUFFERED="1"
+export PYTHONPATH="${PWD}/src:${PYTHONPATH}"

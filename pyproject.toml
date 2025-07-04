@@ -1,0 +1,23 @@
+[project]
+name = "balatrobot"
+version = "0.1.0"
+description = "A framework for Balatro bot development"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/S1M0N38/balatrobot"
+Issues = "https://github.com/S1M0N38/balatrobot/issues"
+Repository = "https://github.com/S1M0N38/balatrobot"
+Changelog = "https://github.com/S1M0N38/balatrobot/blob/main/CHANGELOG.md"
+
+[tool.ruff]
+lint.extend-select = ["I"]
+lint.task-tags = ["FIX", "TODO", "HACK", "WARN", "PERF", "NOTE", "TEST"]
+
+[tool.pyright]
+typeCheckingMode = "basic"
+
+[dependency-groups]
+dev = ["basedpyright>=1.29.5", "mkdocs-material>=9.6.15", "ruff>=0.12.2"]
