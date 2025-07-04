@@ -32,18 +32,7 @@ plugins:
 nav:
   - Home: README.md
   - Installation: installation.md
-  - Configuration: configuration.md
-  - Architecture: architecture.md
   - Bot Development: bot-development.md
-  - Game State Reference: game-state.md
-  - Actions Reference: actions.md
-  - Python API: python-api.md
-  - Lua API: lua-api.md
-  - Examples: examples.md
-  - Best Practices: best-practices.md
-  - Performance: performance.md
-  - Multi-Instance Setup: multi-instance.md
-  - Logging & Replay: logging-replay.md
   - Troubleshooting: troubleshooting.md
 markdown_extensions:
   - admonition
