@@ -1,15 +1,22 @@
 #!/usr/bin/python3
 
 import json
+import os
 import random
 import socket
 import subprocess
 import sys
-import time
+from datetime import datetime
 from enum import Enum
-from weakref import proxy
 
-from gamestates import cache_state
+
+def cache_state(game_step, G):
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    if not os.path.exists(f"gamestate_cache/{game_step}/"):
+        os.makedirs(f"gamestate_cache/{game_step}/")
+    filename = f"gamestate_cache/{game_step}/{timestamp}.json"
+    with open(filename, "w") as f:
+        f.write(json.dumps(G, indent=4))
 
 
 class State(Enum):
@@ -62,7 +69,7 @@ class Bot:
         self,
         deck: str,
         stake: int = 1,
-        seed: str = None,
+        seed: str = "",
         challenge: str = None,
         bot_port: int = 12346,
     ):
@@ -177,9 +184,9 @@ class Bot:
         match self.G["waitingFor"]:
             case "start_run":
                 print("Starting run with deck:", self.deck)
-                seed = self.seed
-                if seed is None:
-                    seed = self.random_seed()
+                seed = self.seed or "".join(
+                    random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=7)
+                )
                 return [
                     Actions.START_RUN,
                     self.stake,

@@ -3,17 +3,17 @@ local unpack = unpack or table.unpack
 Hook = {}
 
 Hook.FUNCTYPES = {
-	BREAKPOINT = '__breakpoints',
-	CALLBACK = '__callbacks',
-	ONWRITE = '__onwrites',
-	ONREAD = '__onreads'
+	BREAKPOINT = "__breakpoints",
+	CALLBACK = "__callbacks",
+	ONWRITE = "__onwrites",
+	ONREAD = "__onreads",
 }
 
 local function _callfuncs(obj, which, ...)
-	local _result = {...}
+	local _result = { ... }
 
 	for i = 1, #obj[which], 1 do
-		_result = {obj[which][i](unpack(_result))}
+		_result = { obj[which][i](unpack(_result)) }
 	end
 
 	if _result ~= nil and #_result > 0 then
@@ -21,35 +21,37 @@ local function _callfuncs(obj, which, ...)
 	end
 end
 
-local function _inithook(obj)	
+local function _inithook(obj)
 	local typ = type(obj)
 
 	-- Return if already initialized
-	if typ == 'table' and obj.__inithook then return obj end
+	if typ == "table" and obj.__inithook then
+		return obj
+	end
 
-	local hook = { }
+	local hook = {}
 	hook.__inithook = true
-	hook.__breakpoints = { }
-	hook.__callbacks = { }
-	hook.__onreads = { }
-	hook.__onwrites = { }
+	hook.__breakpoints = {}
+	hook.__callbacks = {}
+	hook.__onreads = {}
+	hook.__onwrites = {}
 	hook.__orig = obj
 
-	local _metatable = { }
+	local _metatable = {}
 
-	if typ == 'function' then
-		_metatable['__call'] = function(obj, ...)
+	if typ == "function" then
+		_metatable["__call"] = function(obj, ...)
 			-- Call the breakpoints with original arguments
-			local _r1 = {_callfuncs(hook, Hook.FUNCTYPES.BREAKPOINT, ...)}
+			local _r1 = { _callfuncs(hook, Hook.FUNCTYPES.BREAKPOINT, ...) }
 
 			-- Call the original function with arguments modified by breakpoints OR
 			-- with the original arguments if no modifications were made (no returns)
-			local _r2 = (_r1 and #_r1 > 0 and {hook.__orig(unpack(_r1))}) or {hook.__orig(...)}
-			
+			local _r2 = (_r1 and #_r1 > 0 and { hook.__orig(unpack(_r1)) }) or { hook.__orig(...) }
+
 			-- Call the callbacks with the return value of the original function OR
 			-- with the original arguments if original function returned null
-			local _r3 = (_r2 and #_r2 > 0 and {_callfuncs(hook, Hook.FUNCTYPES.CALLBACK, unpack(_r2))}) or {_callfuncs(hook, Hook.FUNCTYPES.CALLBACK, ...)}
-			
+			local _r3 = (_r2 and #_r2 > 0 and { _callfuncs(hook, Hook.FUNCTYPES.CALLBACK, unpack(_r2)) })
+				or { _callfuncs(hook, Hook.FUNCTYPES.CALLBACK, ...) }
 
 			-- The final return value is the return value of the callbacks OR
 			-- the return value of the original function if null
@@ -58,18 +60,18 @@ local function _inithook(obj)
 		end
 	end
 
-	if typ == 'table' then
-		_metatable['__index'] = function (...)
+	if typ == "table" then
+		_metatable["__index"] = function(...)
 			local _t, _k = ...
 			-- Optionally return a new key to read from
 			local _r = _callfuncs(hook, Hook.FUNCTYPES.ONREAD, ...)
 			return (_r ~= nil and hook.__orig[_r]) or hook.__orig[_k]
 		end
 
-		_metatable['__newindex'] = function (...)
+		_metatable["__newindex"] = function(...)
 			local _t, _k, _v = ...
 			-- Optionally return a new key and value to write
-			local _r = {_callfuncs(hook, Hook.FUNCTYPES.ONWRITE, ...)}
+			local _r = { _callfuncs(hook, Hook.FUNCTYPES.ONWRITE, ...) }
 			local _k1, _v1 = nil, nil
 			if _r ~= nil and #_r > 0 then
 				_k1, _v1 = unpack(_r)
@@ -81,36 +83,43 @@ local function _inithook(obj)
 	end
 
 	setmetatable(hook, _metatable)
-	
+
 	return hook
 end
 
 local function _addfunc(obj, which, func, ephemeral)
-	if func == nil then	return obj	end
+	if func == nil then
+		return obj
+	end
 	obj = _inithook(obj)
 
 	local _f_index = #obj[which] + 1
 
-	obj[which][_f_index] = ephemeral and
-		function(...)
-			local _ret = func(...)
-			if _ret == nil or _ret == true then
-				obj = _clearfunc(obj, which, _f_index)
+	obj[which][_f_index] = ephemeral
+			and function(...)
+				local _ret = func(...)
+				if _ret == nil or _ret == true then
+					obj = _clearfunc(obj, which, _f_index)
+				end
+				return _ret
 			end
-			return _ret
-		end or func
+		or func
 
 	return obj
 end
 
 function _clearfunc(obj, which, func_index)
-	if obj == nil then return obj end
+	if obj == nil then
+		return obj
+	end
 	obj[which][func_index] = nil
 	return obj
 end
 
 function Hook.ishooked(obj)
-	if type(obj) == 'table' and obj.__inithook then return true end
+	if type(obj) == "table" and obj.__inithook then
+		return true
+	end
 	return false
 end
 
@@ -133,7 +142,7 @@ end
 function Hook.clear(obj)
 	if Hook.ishooked(obj) then
 		for i = 1, #Hook.FUNCTYPES, 1 do
-			obj[Hook.FUNCTYPES[i]] = { }
+			obj[Hook.FUNCTYPES[i]] = {}
 		end
 	end
 

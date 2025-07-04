@@ -1,10 +1,22 @@
-# my_first_bot.py
-from bot import Actions, Bot
+import itertools
+
+from balatrobot import Actions, Bot
+
+plays = itertools.cycle(
+    [
+        # This sequence of plays is winning for the first round
+        # for the seed "EXAMPLE" and the deck "Red Deck" with stake 1.
+        [Actions.DISCARD_HAND, [2, 3, 4, 6]],
+        [Actions.DISCARD_HAND, [1, 2, 6, 8]],
+        [Actions.PLAY_HAND, [2, 3, 5, 6, 7]],
+        [Actions.PLAY_HAND, [3, 4, 7, 8]],
+    ]
+)
 
 
 class MyFirstBot(Bot):
-    def __init__(self, deck="Red Deck", stake=1):
-        super().__init__(deck=deck, stake=stake, seed="EXAMPLE")
+    def __init__(self, deck="Red Deck", stake=1, seed="EXAMPLE"):
+        super().__init__(deck=deck, stake=stake, seed=seed)
         self.round_count = 0
 
     def skip_or_select_blind(self, G):
@@ -13,7 +25,7 @@ class MyFirstBot(Bot):
 
     def select_cards_from_hand(self, G):
         """Simple strategy: play the first card"""
-        return [Actions.PLAY_HAND, [1]]
+        return next(plays)
 
     def select_shop_action(self, G):
         """Always leave the shop immediately"""
@@ -48,8 +60,4 @@ class MyFirstBot(Bot):
 if __name__ == "__main__":
     bot = MyFirstBot()
     bot.running = True
-    print("Starting MyFirstBot...")
-    print("Running: ", bot.running)
-    while True:
-        input("Press Enter to simulate a game step...")
-        bot.run_step()
+    bot.run()

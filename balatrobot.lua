@@ -24,27 +24,13 @@ BALATRO_BOT_CONFIG = {
 	frame_ratio = 1,
 }
 
--- External libraries
----@type List
-assert(SMODS.load_file("lib/list.lua"))()
----@type Hook
-assert(SMODS.load_file("lib/hook.lua"))()
----@type table
-assert(SMODS.load_file("lib/bitser.lua"))()
----@type table
-assert(SMODS.load_file("lib/sock.lua"))()
-
--- Mod specific files
----@type Utils
-assert(SMODS.load_file("src/utils.lua"))()
----@type Bot
-assert(SMODS.load_file("src/bot.lua"))()
----@type Middleware
-assert(SMODS.load_file("src/middleware.lua"))()
----@type Botlogger
-assert(SMODS.load_file("src/botlogger.lua"))()
----@type BalatrobotAPI
-assert(SMODS.load_file("src/api.lua"))()
+assert(SMODS.load_file("src/lua/list.lua"))()
+assert(SMODS.load_file("src/lua/hook.lua"))()
+assert(SMODS.load_file("src/lua/utils.lua"))()
+assert(SMODS.load_file("src/lua/bot.lua"))()
+assert(SMODS.load_file("src/lua/middleware.lua"))()
+assert(SMODS.load_file("src/lua/botlogger.lua"))()
+assert(SMODS.load_file("src/lua/api.lua"))()
 
 -- Init middleware
 Middleware.hookbalatro()
