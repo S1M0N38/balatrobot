@@ -43,7 +43,7 @@ function BalatrobotAPI.update(dt)
         sendDebugMessage('new socket')
         BalatrobotAPI.socket = socket.udp()
         BalatrobotAPI.socket:settimeout(0)
-        local port = arg[1] or BALATRO_BOT_CONFIG.port
+        local port = BALATRO_BOT_CONFIG.port
         BalatrobotAPI.socket:setsockname('127.0.0.1', tonumber(port))
     end
 
@@ -129,7 +129,6 @@ function BalatrobotAPI.init()
         end
     end
     
-    sendDebugMessage('init api')
     if Bot.SETTINGS.api == true then
         Middleware.c_play_hand = Hook.addbreakpoint(Middleware.c_play_hand, function()
             BalatrobotAPI.waitingFor = 'select_cards_from_hand'

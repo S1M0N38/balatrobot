@@ -1,0 +1,21 @@
+{
+  "id": "balatrobot",
+  "name": "BalatroBot",
+  "author": [
+    "S1M0N38",
+    "phughesion",
+    "besteon",
+    "giewev"
+  ],
+  "description": "BalatroBot API opening balatro to bot.",
+  "prefix": "BB",
+  "main_file": "balatrobot.lua",
+  "priority": 0,
+  "badge_colour": "4CAF50",
+  "badge_text_colour": "FFFFFF",
+  "display_name": "BB",
+  "version": "0.1.0",
+  "dependencies": [
+    "Steamodded (>=1.*)"
+  ]
+}
