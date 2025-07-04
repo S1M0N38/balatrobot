@@ -54,7 +54,7 @@ Balatrobot is installed like any other Steamodded mod.
         # Clone repository to a custom location
         cd C:\your\custom\path
         git clone https://github.com/S1M0N38/balatrobot.git
-        
+
         # Create symlink in Mods directory
         cd %AppData%/Balatro/Mods
         mklink /D balatrobot C:\your\custom\path\balatrobot
@@ -66,7 +66,7 @@ Balatrobot is installed like any other Steamodded mod.
         # Clone repository to a custom location
         cd /your/custom/path
         git clone https://github.com/S1M0N38/balatrobot.git
-        
+
         # Create symlink in Mods directory
         cd "/Users/$USER/Library/Application Support/Balatro/Mods"
         ln -s /your/custom/path/balatrobot balatrobot
@@ -78,7 +78,7 @@ Balatrobot is installed like any other Steamodded mod.
         # Clone repository to a custom location
         cd /your/custom/path
         git clone https://github.com/S1M0N38/balatrobot.git
-        
+
         # Create symlink in Mods directory
         cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods
         ln -s /your/custom/path/balatrobot balatrobot
@@ -223,27 +223,27 @@ With Balatro running and the mod enabled, you can quickly test if everything is 
 
     ``` sh
     cd %AppData%/Balatro/Mods/balatrobot
-    uv run bot_example.py
+    uv run examples/my_first_bot.py.py
     ```
 
 === "MacOS"
 
     ``` sh
     cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
-    uv run bot_example.py
+    uv run examples/my_first_bot.py.py
     ```
 
 === "Linux"
 
     ``` sh
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
-    uv run bot_example.py
+    uv run examples/my_first_bot.py.py
     ```
 
-!!! tip 
+!!! tip
 
     You can also navigate to the `balatrobot` directory, activate the Python
-    environment and run the bot with `python bot_example.py` if you prefer.
+    environment and run the bot with `python example/my_first_bot.py` if you prefer.
     However, remember to always activate the virtual environment first.
 
 
@@ -251,7 +251,7 @@ The bot is working correctly if:
 
 1. Game starts automatically
 2. Cards are played/discarded automatically
-3. Shop actions occur without user input
+3. Win the first round
 4. Game progresses through rounds
 
 ## Troubleshooting
