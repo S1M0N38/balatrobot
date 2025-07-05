@@ -2,7 +2,6 @@ import json
 import os
 import random
 import socket
-import subprocess
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum, unique
@@ -128,18 +127,6 @@ class Bot(ABC):
     @abstractmethod
     def rearrange_hand(self):
         pass
-
-    def start_balatro_instance(self):
-        balatro_exec_path = (
-            r"C:\Program Files (x86)\Steam\steamapps\common\Balatro\Balatro.exe"
-        )
-        self.balatro_instance = subprocess.Popen(
-            [balatro_exec_path, str(self.bot_port)]
-        )
-
-    def stop_balatro_instance(self):
-        if self.balatro_instance:
-            self.balatro_instance.kill()
 
     def sendcmd(self, cmd, **kwargs):
         msg = bytes(cmd, "utf-8")
