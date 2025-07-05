@@ -7,6 +7,7 @@ This document provides the UDP protocol reference for developing bots that inter
 The Balatro Bot API uses UDP sockets for real-time communication between the game and external bot clients.
 
 **Connection Details:**
+
 - **Host:** `127.0.0.1` (localhost)
 - **Port:** `12346` (default)
 - **Protocol:** UDP
