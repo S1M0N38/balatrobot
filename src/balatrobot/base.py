@@ -1,13 +1,11 @@
-#!/usr/bin/python3
-
 import json
 import os
 import random
 import socket
 import subprocess
-import sys
+from abc import ABC, abstractmethod
 from datetime import datetime
-from enum import Enum
+from enum import Enum, unique
 
 
 def cache_state(game_step, G):
@@ -19,7 +17,10 @@ def cache_state(game_step, G):
         f.write(json.dumps(G, indent=4))
 
 
+@unique
 class State(Enum):
+    """Represents the current state of the game."""
+
     SELECTING_HAND = 1
     HAND_PLAYED = 2
     DRAW_TO_HAND = 3
@@ -41,7 +42,10 @@ class State(Enum):
     NEW_ROUND = 19
 
 
+@unique
 class Actions(Enum):
+    """Represents the available actions that can be performed."""
+
     SELECT_BLIND = 1
     SKIP_BLIND = 2
     PLAY_HAND = 3
@@ -64,7 +68,7 @@ class Actions(Enum):
     SEND_GAMESTATE = 20
 
 
-class Bot:
+class Bot(ABC):
     def __init__(
         self,
         deck: str,
@@ -89,42 +93,41 @@ class Bot:
 
         self.state = {}
 
+    @abstractmethod
     def skip_or_select_blind(self):
-        raise NotImplementedError(
-            "Error: Bot.skip_or_select_blind must be implemented."
-        )
+        pass
 
+    @abstractmethod
     def select_cards_from_hand(self):
-        raise NotImplementedError(
-            "Error: Bot.select_cards_from_hand must be implemented."
-        )
+        pass
 
+    @abstractmethod
     def select_shop_action(self):
-        raise NotImplementedError("Error: Bot.select_shop_action must be implemented.")
+        pass
 
+    @abstractmethod
     def select_booster_action(self):
-        raise NotImplementedError(
-            "Error: Bot.select_booster_action must be implemented."
-        )
+        pass
 
+    @abstractmethod
     def sell_jokers(self):
-        raise NotImplementedError("Error: Bot.sell_jokers must be implemented.")
+        pass
 
+    @abstractmethod
     def rearrange_jokers(self):
-        raise NotImplementedError("Error: Bot.rearrange_jokers must be implemented.")
+        pass
 
+    @abstractmethod
     def use_or_sell_consumables(self):
-        raise NotImplementedError(
-            "Error: Bot.use_or_sell_consumables must be implemented."
-        )
+        pass
 
+    @abstractmethod
     def rearrange_consumables(self):
-        raise NotImplementedError(
-            "Error: Bot.rearrange_consumables must be implemented."
-        )
+        pass
 
+    @abstractmethod
     def rearrange_hand(self):
-        raise NotImplementedError("Error: Bot.rearrange_hand must be implemented.")
+        pass
 
     def start_balatro_instance(self):
         balatro_exec_path = (
@@ -154,23 +157,6 @@ class Bot:
                 result.append(str(x))
 
         return "|".join(result)
-
-    def verifyimplemented(self):
-        try:
-            self.skip_or_select_blind({})
-            self.select_cards_from_hand({})
-            self.select_shop_action({})
-            self.select_booster_action({})
-            self.sell_jokers({})
-            self.rearrange_jokers({})
-            self.use_or_sell_consumables({})
-            self.rearrange_consumables({})
-            self.rearrange_hand({})
-        except NotImplementedError as e:
-            print(e)
-            sys.exit(0)
-        except:
-            pass
 
     def random_seed(self):
         # e.g. 1OGB5WO
@@ -224,7 +210,6 @@ class Bot:
 
     def run_step(self):
         if self.sock is None:
-            self.verifyimplemented()
             self.state = {}
             self.G = None
 
