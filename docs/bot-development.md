@@ -2,474 +2,281 @@
 
 This guide teaches you how to create custom bots for Balatro using the Balatrobot framework.
 
-## Bot Development Basics
+## Overview
 
-### Bot Architecture
+Balatrobot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a socket connection, receiving game state information and sending back actions to perform.
 
-Every bot in Balatrobot extends the base `Bot` class and implements specific decision-making methods:
+A bot is essentially a Python class that inherits from the `Bot` base class and implements specific methods that get called at different points during gameplay.
 
-```python
-from bot import Bot, Actions
+## Bot Architecture
 
-class MyBot(Bot):
-    def __init__(self, deck, stake=1, seed=None, challenge=None, bot_port=12346):
-        super().__init__(deck, stake, seed, challenge, bot_port)
-        # Initialize bot-specific state
-        self.strategy = "aggressive"
-        
-    # Required: Implement all decision methods
-    def skip_or_select_blind(self, G):
-        # Decision: Skip or play the current blind
-        
-    def select_cards_from_hand(self, G):
-        # Decision: Play or discard cards from hand
-        
-    # ... implement other required methods
+### Game State Flow
+
+This diagram shows the main game states and the bot actions available in each state:
+
+```mermaid
+graph TD
+    A[MENU<br/>start_run] --> B[BLIND_SELECT<br/>skip_or_select_blind]
+    B --> C[SELECTING_HAND<br/>sell_jokers<br/>rearrange_jokers<br/>use_or_sell_consumables<br/>rearrange_consumables<br/>rearrange_hand<br/>select_cards_from_hand]
+    
+    C --> H{Round Complete?<br/>Blind defeated or<br/>hands/discards exhausted}
+    H -->|No<br/>Continue playing| C
+    H -->|Yes<br/>Round won| D[SHOP<br/>select_shop_action]
+    
+    D --> I{Shop Action}
+    I -->|END_SHOP| E[BOOSTER_PACK<br/>select_booster_action]
+    I -->|BUY_BOOSTER| E
+    I -->|REROLL_SHOP<br/>BUY_CARD<br/>BUY_VOUCHER| D
+    
+    E --> J{Game Over?<br/>All antes completed<br/>or run failed}
+    J -->|No<br/>Continue run| B
+    J -->|Yes<br/>Run ended| K[GAME_OVER]
 ```
-
-### Required Methods
-
-Every bot must implement these methods:
-
-| Method | Purpose | Return Value |
-|--------|---------|--------------|
-| `skip_or_select_blind(self, G)` | Choose whether to skip or play blind | `[Actions.SELECT_BLIND]` or `[Actions.SKIP_BLIND]` |
-| `select_cards_from_hand(self, G)` | Select cards to play or discard | `[Actions.PLAY_HAND, [indices]]` |
-| `select_shop_action(self, G)` | Choose shop action | `[Actions.BUY_CARD, [index]]` etc. |
-| `select_booster_action(self, G)` | Handle booster pack choices | `[Actions.SELECT_BOOSTER_CARD, ...]` |
-| `sell_jokers(self, G)` | Decide which jokers to sell | `[Actions.SELL_JOKER, [index]]` |
-| `rearrange_jokers(self, G)` | Reorder jokers | `[Actions.REARRANGE_JOKERS, []]` |
-| `use_or_sell_consumables(self, G)` | Use tarot/planet cards | `[Actions.USE_CONSUMABLE, []]` |
-| `rearrange_consumables(self, G)` | Reorder consumables | `[Actions.REARRANGE_CONSUMABLES, []]` |
-| `rearrange_hand(self, G)` | Reorder hand cards | `[Actions.REARRANGE_HAND, []]` |
 
 ## Creating Your First Bot
 
-### Step 1: Basic Bot Structure
-
-Create a new Python file for your bot:
+Let's examine the example bot to understand how to implement your own:
 
 ```python
-# my_first_bot.py
-from bot import Bot, Actions
+import itertools
+from balatrobot import Actions, Bot
 
 class MyFirstBot(Bot):
-    def __init__(self, deck="Red Deck", stake=1):
-        super().__init__(deck, stake)
+    def __init__(self, deck="Red Deck", stake=1, seed="EXAMPLE"):
+        super().__init__(deck=deck, stake=stake, seed=seed)
         self.round_count = 0
-        
-    def skip_or_select_blind(self, G):
-        """Always select blinds to play them"""
-        return [Actions.SELECT_BLIND]
-    
-    def select_cards_from_hand(self, G):
-        """Simple strategy: play the first card"""
-        return [Actions.PLAY_HAND, [1]]
-    
-    def select_shop_action(self, G):
-        """Always leave the shop immediately"""
-        return [Actions.END_SHOP]
-    
-    def select_booster_action(self, G):
-        """Skip all booster packs"""
-        return [Actions.SKIP_BOOSTER_PACK]
-    
-    def sell_jokers(self, G):
-        """Don't sell any jokers"""
-        return [Actions.SELL_JOKER, []]
-    
-    def rearrange_jokers(self, G):
-        """Don't rearrange jokers"""
-        return [Actions.REARRANGE_JOKERS, []]
-    
-    def use_or_sell_consumables(self, G):
-        """Don't use consumables"""
-        return [Actions.USE_CONSUMABLE, []]
-    
-    def rearrange_consumables(self, G):
-        """Don't rearrange consumables"""
-        return [Actions.REARRANGE_CONSUMABLES, []]
-    
-    def rearrange_hand(self, G):
-        """Don't rearrange hand"""
-        return [Actions.REARRANGE_HAND, []]
 
-# Run the bot
-if __name__ == "__main__":
-    bot = MyFirstBot()
-    bot.run()
+    # ... method implementations
 ```
 
-### Step 2: Run Your Bot
+### Bot Class Structure
 
-```bash
-# Make sure Balatro is running with the mod enabled
-python my_first_bot.py
-```
+1. **Inheritance**: Your bot must inherit from the `Bot` base class
+2. **Constructor**: Call `super().__init__()` with your desired game parameters
+3. **Method Implementation**: Implement all required methods (the framework will verify this)
 
-## Understanding Game States
+### Constructor Parameters
 
-The `G` parameter passed to each method contains the complete game state:
+- `deck`: The deck to use (e.g., "Red Deck", "Blue Deck", etc.)
+- `stake`: Difficulty level (1-8)
+- `seed`: Random seed for reproducible games (optional)
+- `challenge`: Challenge mode (optional)
 
-### Game State Structure
+## Required Methods
 
-```python
-def analyze_game_state(self, G):
-    # Basic game information
-    current_state = G["state"]  # Current game state enum
-    waiting_for = G["waitingFor"]  # What decision is needed
-    
-    # Hand information
-    hand_cards = G["hand"]  # List of cards in hand
-    for card in hand_cards:
-        print(f"Card: {card['name']} ({card['suit']} {card['value']})")
-    
-    # Jokers
-    jokers = G["jokers"]  # Active jokers
-    
-    # Shop (when in shop)
-    if "shop" in G:
-        shop_cards = G["shop"]["cards"]
-        shop_cost = G["shop"]["reroll_cost"]
-    
-    # Round information
-    round_info = G["current_round"]
-    discards_left = round_info["discards_left"]
-    
-    # Ante information
-    blind_name = G["ante"]["blinds"]["ondeck"]  # "Small", "Big", or boss name
-```
+All bot methods receive a `G` parameter containing the current game state. The game state contains all information about the current situation, including cards in hand, jokers, consumables, blind information, and more.
 
-### Card Properties
+!!! note
+    For detailed information about the game state structure, see the [Game State Reference](game-state.md) page.
 
-Each card in the game state has these properties:
+### skip_or_select_blind(G)
 
-```python
-card = {
-    "label": "base_card",      # Card type identifier
-    "name": "3 of Hearts",     # Display name
-    "suit": "Hearts",          # Hearts, Diamonds, Clubs, Spades
-    "value": 3,                # Card value (1-13)
-    "card_key": "H_3"          # Unique identifier
-}
-```
-
-## Implementing Bot Methods
-
-### Skip or Select Blind
-
-Decide whether to play or skip the current blind:
+Called when the bot needs to choose whether to skip or select a blind.
 
 ```python
 def skip_or_select_blind(self, G):
-    blind_name = G["ante"]["blinds"]["ondeck"]
-    
-    # Skip small and big blinds, play boss blinds
-    if blind_name in ["Small", "Big"]:
-        return [Actions.SKIP_BLIND]
-    else:
-        return [Actions.SELECT_BLIND]
+    """Always select blinds to play them"""
+    return [Actions.SELECT_BLIND]
 ```
 
-### Select Cards from Hand
+**When called:** At the start of each blind selection phase
 
-Choose which cards to play or discard:
+**Return value:** List containing either `Actions.SELECT_BLIND` or `Actions.SKIP_BLIND`
+
+### select_cards_from_hand(G)
+
+Called when the bot needs to choose cards to play or discard during a round.
 
 ```python
 def select_cards_from_hand(self, G):
-    hand = G["hand"]
-    round_info = G["current_round"]
-    
-    # Strategy: Look for pairs
-    card_values = {}
-    for i, card in enumerate(hand):
-        value = card["value"]
-        if value not in card_values:
-            card_values[value] = []
-        card_values[value].append(i + 1)  # 1-indexed
-    
-    # Find pairs
-    for value, indices in card_values.items():
-        if len(indices) >= 2:
-            return [Actions.PLAY_HAND, indices[:2]]
-    
-    # No pairs found, discard lowest cards
-    if round_info["discards_left"] > 0:
-        # Sort by value and discard lowest
-        sorted_cards = sorted(enumerate(hand), key=lambda x: x[1]["value"])
-        discard_indices = [i + 1 for i, _ in sorted_cards[:3]]
-        return [Actions.DISCARD_HAND, discard_indices]
-    
-    # No discards left, play first card
-    return [Actions.PLAY_HAND, [1]]
+    """Simple strategy: play the first card"""
+    return [Actions.PLAY_HAND, [1, 2, 3, 4, 5]]
 ```
 
-### Shop Actions
+**When called:** During the playing phase when you need to make a hand
 
-Make decisions in the shop:
+**Return value:** List containing either:
+- `[Actions.PLAY_HAND, [card_indices]]` - Play specified cards
+- `[Actions.DISCARD_HAND, [card_indices]]` - Discard specified cards
+
+!!! tip
+    Card indices are 1-based (first card is 1, not 0)
+
+### select_shop_action(G)
+
+Called when the bot is in the shop and needs to decide what to do.
 
 ```python
 def select_shop_action(self, G):
-    shop = G.get("shop", {})
-    dollars = G.get("dollars", 0)
-    
-    if not shop:
-        return [Actions.END_SHOP]
-    
-    # Look for useful jokers
-    for i, card in enumerate(shop.get("cards", [])):
-        if card["name"] == "Joker" and dollars >= card.get("cost", 0):
-            return [Actions.BUY_CARD, [i + 1]]
-    
-    # Reroll if we have money and nothing good
-    reroll_cost = shop.get("reroll_cost", 5)
-    if dollars >= reroll_cost * 2:  # Keep some money in reserve
-        return [Actions.REROLL_SHOP]
-    
+    """Always leave the shop immediately"""
     return [Actions.END_SHOP]
 ```
 
-### Advanced Card Selection
+**When called:** During the shop phase between rounds
 
-Implement poker hand detection:
+**Return value:** List containing one of:
+- `[Actions.END_SHOP]` - Leave the shop
+- `[Actions.REROLL_SHOP]` - Reroll shop items
+- `[Actions.BUY_CARD, card_index]` - Buy a joker
+- `[Actions.BUY_VOUCHER, voucher_index]` - Buy a voucher
+- `[Actions.BUY_BOOSTER, booster_index]` - Buy a booster pack
+
+### select_booster_action(G)
+
+Called when the bot encounters a booster pack and needs to choose cards or skip.
 
 ```python
-def find_best_hand(self, hand):
-    """Find the best poker hand from available cards"""
-    
-    # Group by suit and value
-    suits = {}
-    values = {}
-    
-    for i, card in enumerate(hand):
-        suit = card["suit"]
-        value = card["value"]
-        
-        if suit not in suits:
-            suits[suit] = []
-        suits[suit].append((i + 1, value))
-        
-        if value not in values:
-            values[value] = []
-        values[value].append(i + 1)
-    
-    # Check for flush (5+ cards of same suit)
-    for suit, cards in suits.items():
-        if len(cards) >= 5:
-            # Sort by value and take best 5
-            cards.sort(key=lambda x: x[1], reverse=True)
-            return [Actions.PLAY_HAND, [idx for idx, _ in cards[:5]]]
-    
-    # Check for four of a kind
-    for value, indices in values.items():
-        if len(indices) >= 4:
-            return [Actions.PLAY_HAND, indices[:4]]
-    
-    # Check for full house
-    three_kind = None
-    pair = None
-    for value, indices in values.items():
-        if len(indices) >= 3 and three_kind is None:
-            three_kind = indices[:3]
-        elif len(indices) >= 2 and pair is None:
-            pair = indices[:2]
-    
-    if three_kind and pair:
-        return [Actions.PLAY_HAND, three_kind + pair]
-    
-    # Check for straight
-    sorted_values = sorted(set(card["value"] for card in hand))
-    for i in range(len(sorted_values) - 4):
-        if sorted_values[i+4] - sorted_values[i] == 4:
-            # Found straight
-            straight_cards = []
-            for val in sorted_values[i:i+5]:
-                for j, card in enumerate(hand):
-                    if card["value"] == val and j + 1 not in straight_cards:
-                        straight_cards.append(j + 1)
-                        break
-            return [Actions.PLAY_HAND, straight_cards]
-    
-    # Check for three of a kind
-    if three_kind:
-        return [Actions.PLAY_HAND, three_kind]
-    
-    # Check for pairs
-    for value, indices in values.items():
-        if len(indices) >= 2:
-            return [Actions.PLAY_HAND, indices[:2]]
-    
-    # High card
-    best_card = max(enumerate(hand), key=lambda x: x[1]["value"])
-    return [Actions.PLAY_HAND, [best_card[0] + 1]]
+def select_booster_action(self, G):
+    """Skip all booster packs"""
+    return [Actions.SKIP_BOOSTER_PACK]
 ```
 
-## Action Reference
+**When called:** When opening booster packs
 
-### Action Format
+**Return value:** List containing either:
+- `[Actions.SKIP_BOOSTER_PACK]` - Skip the pack
+- `[Actions.SELECT_BOOSTER_CARD, [card_indices]]` - Select specific cards
 
-All actions follow the format: `[Action, parameters...]`
+### sell_jokers(G)
 
-### Common Actions
+Called when the bot can sell jokers for money.
 
 ```python
-# Blind selection
-[Actions.SELECT_BLIND]  # Play the blind
-[Actions.SKIP_BLIND]    # Skip the blind
-
-# Hand actions
-[Actions.PLAY_HAND, [1, 2, 3]]     # Play cards at indices 1, 2, 3
-[Actions.DISCARD_HAND, [4, 5]]     # Discard cards at indices 4, 5
-
-# Shop actions
-[Actions.BUY_CARD, [1]]           # Buy first shop card
-[Actions.BUY_VOUCHER, [1]]        # Buy first voucher
-[Actions.BUY_BOOSTER, [1]]        # Buy first booster pack
-[Actions.REROLL_SHOP]             # Reroll shop contents
-[Actions.END_SHOP]                # Leave shop
-
-# Booster actions
-[Actions.SELECT_BOOSTER_CARD, [1], [2, 3]]  # Use card 1 on targets 2, 3
-[Actions.SKIP_BOOSTER_PACK]                  # Skip booster pack
-
-# Joker management
-[Actions.SELL_JOKER, [2]]         # Sell joker at index 2
-[Actions.SELL_JOKER, []]          # Don't sell any jokers
-
-# Card management
-[Actions.USE_CONSUMABLE, [1], [2, 3]]  # Use consumable 1 on targets 2, 3
-[Actions.SELL_CONSUMABLE, [1]]         # Sell consumable at index 1
-
-# Rearrangement (typically return empty lists)
-[Actions.REARRANGE_JOKERS, []]
-[Actions.REARRANGE_CONSUMABLES, []]
-[Actions.REARRANGE_HAND, []]
+def sell_jokers(self, G):
+    """Don't sell any jokers"""
+    return [Actions.SELL_JOKER, []]
 ```
 
-## Advanced Techniques
+**When called:** During joker management phases
 
-### State Persistence
+**Return value:** List containing `[Actions.SELL_JOKER, [joker_indices]]`
 
-Use the bot's `self.state` dictionary to remember information:
+### rearrange_jokers(G)
+
+Called when the bot can rearrange the order of jokers.
 
 ```python
-def select_cards_from_hand(self, G):
-    # Initialize state tracking
-    if "hands_played" not in self.state:
-        self.state["hands_played"] = 0
-        self.state["strategy"] = "conservative"
-    
-    self.state["hands_played"] += 1
-    
-    # Change strategy based on progress
-    if self.state["hands_played"] > 10:
-        self.state["strategy"] = "aggressive"
-    
-    # Use strategy in decision making
-    if self.state["strategy"] == "aggressive":
-        return self.play_aggressively(G)
-    else:
-        return self.play_conservatively(G)
+def rearrange_jokers(self, G):
+    """Don't rearrange jokers"""
+    return [Actions.REARRANGE_JOKERS, []]
 ```
 
-### Multi-Round Planning
+**When called:** During joker management phases
+
+**Return value:** List containing `[Actions.REARRANGE_JOKERS, [new_order]]`
+
+### use_or_sell_consumables(G)
+
+Called when the bot can use or sell consumable cards (Tarot, Planet, Spectral).
 
 ```python
-def skip_or_select_blind(self, G):
-    blind_name = G["ante"]["blinds"]["ondeck"]
-    round_num = G.get("round", 1)
-    
-    # Skip early small blinds to save discards
-    if round_num <= 2 and blind_name == "Small":
-        return [Actions.SKIP_BLIND]
-    
-    # Always play boss blinds for rewards
-    if blind_name not in ["Small", "Big"]:
+def use_or_sell_consumables(self, G):
+    """Don't use consumables"""
+    return [Actions.USE_CONSUMABLE, []]
+```
+
+**When called:** During consumable management phases
+
+**Return value:** List containing either:
+- `[Actions.USE_CONSUMABLE, []]` - Don't use any consumables
+- `[Actions.USE_CONSUMABLE, [card_index, target_indices]]` - Use a consumable
+- `[Actions.SELL_CONSUMABLE, [card_indices]]` - Sell consumables
+
+### rearrange_consumables(G)
+
+Called when the bot can rearrange the order of consumable cards.
+
+```python
+def rearrange_consumables(self, G):
+    """Don't rearrange consumables"""
+    return [Actions.REARRANGE_CONSUMABLES, []]
+```
+
+**When called:** During consumable management phases
+
+**Return value:** List containing `[Actions.REARRANGE_CONSUMABLES, [new_order]]`
+
+### rearrange_hand(G)
+
+Called when the bot can rearrange cards in hand.
+
+```python
+def rearrange_hand(self, G):
+    """Don't rearrange hand"""
+    return [Actions.REARRANGE_HAND, []]
+```
+
+**When called:** During hand management phases
+
+**Return value:** List containing `[Actions.REARRANGE_HAND, [new_order]]`
+
+## Running Your Bot
+
+Once you've implemented all required methods, you can run your bot:
+
+```python
+# Run the bot
+if __name__ == "__main__":
+    bot = MyFirstBot()
+    bot.running = True
+    bot.run()
+```
+
+### Basic Bot Template
+
+Here's a minimal bot template you can use as a starting point:
+
+```python
+from balatrobot import Actions, Bot
+
+class MyBot(Bot):
+    def __init__(self, deck="Red Deck", stake=1, seed=""):
+        super().__init__(deck=deck, stake=stake, seed=seed)
+
+    def skip_or_select_blind(self, G):
         return [Actions.SELECT_BLIND]
-    
-    # Adaptive strategy based on current strength
-    joker_count = len(G.get("jokers", []))
-    if joker_count >= 3:  # Strong position
-        return [Actions.SELECT_BLIND]
-    else:
-        return [Actions.SKIP_BLIND]
-```
 
-### Error Handling
-
-```python
-def select_cards_from_hand(self, G):
-    try:
-        hand = G.get("hand", [])
-        if not hand:
-            return [Actions.PLAY_HAND, []]
-        
-        # Your strategy logic here
-        return self.find_best_hand(hand)
-        
-    except Exception as e:
-        print(f"Error in card selection: {e}")
-        # Fallback: play first card
-        return [Actions.PLAY_HAND, [1]] if G.get("hand") else [Actions.PLAY_HAND, []]
-```
-
-## Testing and Debugging
-
-### Debug Output
-
-Add logging to understand bot behavior:
-
-```python
-class DebugBot(Bot):
     def select_cards_from_hand(self, G):
-        hand = G.get("hand", [])
-        print(f"Hand: {[card['name'] for card in hand]}")
-        
-        action = self.choose_hand_action(G)
-        print(f"Chosen action: {action}")
-        
-        return action
-```
+        # Always play the first 5 cards
+        return [Actions.PLAY_HAND, [1, 2, 3, 4, 5]]
 
-### State Caching
+    def select_shop_action(self, G):
+        return [Actions.END_SHOP]
 
-Use the provided state caching for analysis:
+    def select_booster_action(self, G):
+        return [Actions.SKIP_BOOSTER_PACK]
 
-```python
-from gamestates import cache_state
+    def sell_jokers(self, G):
+        return [Actions.SELL_JOKER, []]
 
-def select_cards_from_hand(self, G):
-    # Cache state for later analysis
-    cache_state("hand_selection", G)
-    
-    # Your decision logic
-    return [Actions.PLAY_HAND, [1]]
-```
+    def rearrange_jokers(self, G):
+        return [Actions.REARRANGE_JOKERS, []]
 
-### Testing Framework
+    def use_or_sell_consumables(self, G):
+        return [Actions.USE_CONSUMABLE, []]
 
-Create test cases for your bot:
+    def rearrange_consumables(self, G):
+        return [Actions.REARRANGE_CONSUMABLES, []]
 
-```python
-# test_bot.py
-def test_blind_selection():
-    bot = MyBot("Red Deck")
-    
-    # Test case: Small blind
-    test_state = {"ante": {"blinds": {"ondeck": "Small"}}}
-    action = bot.skip_or_select_blind(test_state)
-    assert action == [Actions.SKIP_BLIND]
-    
-    # Test case: Boss blind
-    test_state = {"ante": {"blinds": {"ondeck": "The Hook"}}}
-    action = bot.skip_or_select_blind(test_state)
-    assert action == [Actions.SELECT_BLIND]
+    def rearrange_hand(self, G):
+        return [Actions.REARRANGE_HAND, []]
 
 if __name__ == "__main__":
-    test_blind_selection()
-    print("All tests passed!")
+    bot = MyBot()
+    bot.running = True
+    bot.run()
 ```
+
+## Next Steps
+
+- **Game State Reference**: Learn about the structure of the `G` parameter passed to your methods
+- **Actions Reference**: Explore all available actions and their parameters
+- **Advanced Strategies**: Implement more sophisticated decision-making logic
+- **Debugging**: Use the game state cache to analyze your bot's decisions
+
+!!! tip
+    Start simple! Copy the basic template above and gradually add more sophisticated logic as you understand the game flow better.
 
 ---
 
-*Ready to create more sophisticated bots? Check out the [Examples](examples.md) for advanced implementations!* 
+*Ready to create more advanced bots? Check out the [Game State Reference](game-state.md) and [Actions Reference](actions.md) for detailed information about available data and actions.*
