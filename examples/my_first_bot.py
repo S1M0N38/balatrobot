@@ -1,6 +1,6 @@
 import itertools
 
-from balatrobot import Actions, Bot
+from balatrobot import Actions, Bot, Decks, Stakes
 
 plays = itertools.cycle(
     [
@@ -15,7 +15,7 @@ plays = itertools.cycle(
 
 
 class MyFirstBot(Bot):
-    def __init__(self, deck="Red Deck", stake=1, seed="EXAMPLE"):
+    def __init__(self, deck=Decks.RED, stake=Stakes.WHITE, seed="EXAMPLE"):
         super().__init__(deck=deck, stake=stake, seed=seed)
         self.round_count = 0
 
