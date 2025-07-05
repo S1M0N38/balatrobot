@@ -29,19 +29,13 @@ assert(SMODS.load_file("src/lua/hook.lua"))()
 assert(SMODS.load_file("src/lua/utils.lua"))()
 assert(SMODS.load_file("src/lua/bot.lua"))()
 assert(SMODS.load_file("src/lua/middleware.lua"))()
-assert(SMODS.load_file("src/lua/botlogger.lua"))()
 assert(SMODS.load_file("src/lua/api.lua"))()
 
 -- Init middleware
 Middleware.hookbalatro()
 sendDebugMessage("Middleware loaded", "BALATROBOT")
 
--- Init logger
-Botlogger.path = "balatrobot.log"
-Botlogger.init()
-sendDebugMessage("Logger loaded", "BALATROBOT")
-
--- Init API
+-- Init API (includes queue initialization)
 BalatrobotAPI.init()
 sendDebugMessage("API loaded", "BALATROBOT")
 

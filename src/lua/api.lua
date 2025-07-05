@@ -9,8 +9,20 @@ BalatrobotAPI.socket = nil
 BalatrobotAPI.waitingFor = nil
 BalatrobotAPI.waitingForAction = true
 
+-- Action queues for Python bot commands
+BalatrobotAPI.q_skip_or_select_blind = nil
+BalatrobotAPI.q_select_cards_from_hand = nil
+BalatrobotAPI.q_select_shop_action = nil
+BalatrobotAPI.q_select_booster_action = nil
+BalatrobotAPI.q_sell_jokers = nil
+BalatrobotAPI.q_rearrange_jokers = nil
+BalatrobotAPI.q_use_or_sell_consumables = nil
+BalatrobotAPI.q_rearrange_consumables = nil
+BalatrobotAPI.q_rearrange_hand = nil
+BalatrobotAPI.q_start_run = nil
+
 function BalatrobotAPI.notifyapiclient()
-	-- TODO Generate gamestate json object
+	-- Generate gamestate json object
 	local _gamestate = Utils.getGamestate()
 	_gamestate.waitingFor = BalatrobotAPI.waitingFor
 	sendDebugMessage("WaitingFor " .. tostring(BalatrobotAPI.waitingFor))
@@ -35,7 +47,7 @@ end
 
 function BalatrobotAPI.queueaction(action)
 	local _params = Bot.ACTIONPARAMS[action[1]]
-	List.pushleft(Botlogger["q_" .. _params.func], { 0, action })
+	List.pushleft(BalatrobotAPI["q_" .. _params.func], { 0, action })
 end
 
 function BalatrobotAPI.update(dt)
@@ -76,6 +88,18 @@ function BalatrobotAPI.update(dt)
 end
 
 function BalatrobotAPI.init()
+	-- Initialize action queues for Python bot commands
+	BalatrobotAPI.q_skip_or_select_blind = List.new()
+	BalatrobotAPI.q_select_cards_from_hand = List.new()
+	BalatrobotAPI.q_select_shop_action = List.new()
+	BalatrobotAPI.q_select_booster_action = List.new()
+	BalatrobotAPI.q_sell_jokers = List.new()
+	BalatrobotAPI.q_rearrange_jokers = List.new()
+	BalatrobotAPI.q_use_or_sell_consumables = List.new()
+	BalatrobotAPI.q_rearrange_consumables = List.new()
+	BalatrobotAPI.q_rearrange_hand = List.new()
+	BalatrobotAPI.q_start_run = List.new()
+
 	love.update = Hook.addcallback(love.update, BalatrobotAPI.update)
 
 	-- Tell the game engine that every frame is 8/60 seconds long
@@ -128,48 +152,47 @@ function BalatrobotAPI.init()
 		end
 	end
 
-	if Bot.SETTINGS.api == true then
-		Middleware.c_play_hand = Hook.addbreakpoint(Middleware.c_play_hand, function()
-			BalatrobotAPI.waitingFor = "select_cards_from_hand"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_select_blind = Hook.addbreakpoint(Middleware.c_select_blind, function()
-			BalatrobotAPI.waitingFor = "skip_or_select_blind"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_choose_booster_cards = Hook.addbreakpoint(Middleware.c_choose_booster_cards, function()
-			BalatrobotAPI.waitingFor = "select_booster_action"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_shop = Hook.addbreakpoint(Middleware.c_shop, function()
-			BalatrobotAPI.waitingFor = "select_shop_action"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_rearrange_hand = Hook.addbreakpoint(Middleware.c_rearrange_hand, function()
-			BalatrobotAPI.waitingFor = "rearrange_hand"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_rearrange_consumables = Hook.addbreakpoint(Middleware.c_rearrange_consumables, function()
-			BalatrobotAPI.waitingFor = "rearrange_consumables"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_use_or_sell_consumables = Hook.addbreakpoint(Middleware.c_use_or_sell_consumables, function()
-			BalatrobotAPI.waitingFor = "use_or_sell_consumables"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_rearrange_jokers = Hook.addbreakpoint(Middleware.c_rearrange_jokers, function()
-			BalatrobotAPI.waitingFor = "rearrange_jokers"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_sell_jokers = Hook.addbreakpoint(Middleware.c_sell_jokers, function()
-			BalatrobotAPI.waitingFor = "sell_jokers"
-			BalatrobotAPI.waitingForAction = true
-		end)
-		Middleware.c_start_run = Hook.addbreakpoint(Middleware.c_start_run, function()
-			BalatrobotAPI.waitingFor = "start_run"
-			BalatrobotAPI.waitingForAction = true
-		end)
-	end
+	-- Set up waiting states for Python bot
+	Middleware.c_play_hand = Hook.addbreakpoint(Middleware.c_play_hand, function()
+		BalatrobotAPI.waitingFor = "select_cards_from_hand"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_select_blind = Hook.addbreakpoint(Middleware.c_select_blind, function()
+		BalatrobotAPI.waitingFor = "skip_or_select_blind"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_choose_booster_cards = Hook.addbreakpoint(Middleware.c_choose_booster_cards, function()
+		BalatrobotAPI.waitingFor = "select_booster_action"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_shop = Hook.addbreakpoint(Middleware.c_shop, function()
+		BalatrobotAPI.waitingFor = "select_shop_action"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_rearrange_hand = Hook.addbreakpoint(Middleware.c_rearrange_hand, function()
+		BalatrobotAPI.waitingFor = "rearrange_hand"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_rearrange_consumables = Hook.addbreakpoint(Middleware.c_rearrange_consumables, function()
+		BalatrobotAPI.waitingFor = "rearrange_consumables"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_use_or_sell_consumables = Hook.addbreakpoint(Middleware.c_use_or_sell_consumables, function()
+		BalatrobotAPI.waitingFor = "use_or_sell_consumables"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_rearrange_jokers = Hook.addbreakpoint(Middleware.c_rearrange_jokers, function()
+		BalatrobotAPI.waitingFor = "rearrange_jokers"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_sell_jokers = Hook.addbreakpoint(Middleware.c_sell_jokers, function()
+		BalatrobotAPI.waitingFor = "sell_jokers"
+		BalatrobotAPI.waitingForAction = true
+	end)
+	Middleware.c_start_run = Hook.addbreakpoint(Middleware.c_start_run, function()
+		BalatrobotAPI.waitingFor = "start_run"
+		BalatrobotAPI.waitingForAction = true
+	end)
 end
 
 return BalatrobotAPI
