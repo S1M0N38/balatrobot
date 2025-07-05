@@ -2,9 +2,11 @@ import json
 import os
 import random
 import socket
+import string
 from abc import ABC, abstractmethod
 from datetime import datetime
-from enum import Enum, unique
+
+from .enums import Actions, Decks, Stakes, State
 
 
 def cache_state(game_step, G):
@@ -16,64 +18,13 @@ def cache_state(game_step, G):
         f.write(json.dumps(G, indent=4))
 
 
-@unique
-class State(Enum):
-    """Represents the current state of the game."""
-
-    SELECTING_HAND = 1
-    HAND_PLAYED = 2
-    DRAW_TO_HAND = 3
-    GAME_OVER = 4
-    SHOP = 5
-    PLAY_TAROT = 6
-    BLIND_SELECT = 7
-    ROUND_EVAL = 8
-    TAROT_PACK = 9
-    PLANET_PACK = 10
-    MENU = 11
-    TUTORIAL = 12
-    SPLASH = 13
-    SANDBOX = 14
-    SPECTRAL_PACK = 15
-    DEMO_CTA = 16
-    STANDARD_PACK = 17
-    BUFFOON_PACK = 18
-    NEW_ROUND = 19
-
-
-@unique
-class Actions(Enum):
-    """Represents the available actions that can be performed."""
-
-    SELECT_BLIND = 1
-    SKIP_BLIND = 2
-    PLAY_HAND = 3
-    DISCARD_HAND = 4
-    END_SHOP = 5
-    REROLL_SHOP = 6
-    BUY_CARD = 7
-    BUY_VOUCHER = 8
-    BUY_BOOSTER = 9
-    SELECT_BOOSTER_CARD = 10
-    SKIP_BOOSTER_PACK = 11
-    SELL_JOKER = 12
-    USE_CONSUMABLE = 13
-    SELL_CONSUMABLE = 14
-    REARRANGE_JOKERS = 15
-    REARRANGE_CONSUMABLES = 16
-    REARRANGE_HAND = 17
-    PASS = 18
-    START_RUN = 19
-    SEND_GAMESTATE = 20
-
-
 class Bot(ABC):
     def __init__(
         self,
-        deck: str,
-        stake: int = 1,
+        deck: Decks,
+        stake: Stakes = Stakes.WHITE,
         seed: str = "",
-        challenge: str = None,
+        challenge: str | None = None,
         bot_port: int = 12346,
     ):
         self.G = None
@@ -92,47 +43,47 @@ class Bot(ABC):
 
         self.state = {}
 
+    @staticmethod
+    def random_seed():
+        return "".join(random.choices(string.digits + string.ascii_uppercase, k=7))
+
     @abstractmethod
-    def skip_or_select_blind(self):
+    def skip_or_select_blind(self, env: dict):
         pass
 
     @abstractmethod
-    def select_cards_from_hand(self):
+    def select_cards_from_hand(self, env: dict):
         pass
 
     @abstractmethod
-    def select_shop_action(self):
+    def select_shop_action(self, env: dict):
         pass
 
     @abstractmethod
-    def select_booster_action(self):
+    def select_booster_action(self, env: dict):
         pass
 
     @abstractmethod
-    def sell_jokers(self):
+    def sell_jokers(self, env: dict):
         pass
 
     @abstractmethod
-    def rearrange_jokers(self):
+    def rearrange_jokers(self, env: dict):
         pass
 
     @abstractmethod
-    def use_or_sell_consumables(self):
+    def use_or_sell_consumables(self, env: dict):
         pass
 
     @abstractmethod
-    def rearrange_consumables(self):
+    def rearrange_consumables(self, env: dict):
         pass
 
     @abstractmethod
-    def rearrange_hand(self):
+    def rearrange_hand(self, env: dict):
         pass
 
-    def sendcmd(self, cmd, **kwargs):
-        msg = bytes(cmd, "utf-8")
-        self.sock.send(msg)
-
-    def actionToCmd(self, action):
+    def _action_to_action_str(self, action):
         result = []
 
         for x in action:
@@ -145,55 +96,49 @@ class Bot(ABC):
 
         return "|".join(result)
 
-    def random_seed(self):
-        # e.g. 1OGB5WO
-        return "".join(random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=7))
-
-    def chooseaction(self):
-        print("Choosing action based on game state:", self.G["state"])
-        if self.G["state"] == State.GAME_OVER:
+    def chooseaction(self, env: dict):
+        print("Choosing action based on game state:", env["state"])
+        if env["state"] == State.GAME_OVER:
             self.running = False
 
-        match self.G["waitingFor"]:
+        match env["waitingFor"]:
             case "start_run":
                 print("Starting run with deck:", self.deck)
-                seed = self.seed or "".join(
-                    random.choices("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", k=7)
-                )
+                seed = self.seed or self.random_seed()
                 return [
                     Actions.START_RUN,
-                    self.stake,
-                    self.deck,
+                    self.stake.value,
+                    self.deck.value,
                     seed,
                     self.challenge,
                 ]
             case "skip_or_select_blind":
                 print("Choosing action: skip_or_select_blind")
-                return self.skip_or_select_blind(self.G)
+                return self.skip_or_select_blind(env)
             case "select_cards_from_hand":
                 print("Choosing action: select_cards_from_hand")
-                return self.select_cards_from_hand(self.G)
+                return self.select_cards_from_hand(env)
             case "select_shop_action":
                 print("Choosing action: select_shop_action")
-                return self.select_shop_action(self.G)
+                return self.select_shop_action(env)
             case "select_booster_action":
                 print("Choosing action: select_booster_action")
-                return self.select_booster_action(self.G)
+                return self.select_booster_action(env)
             case "sell_jokers":
                 print("Choosing action: sell_jokers")
-                return self.sell_jokers(self.G)
+                return self.sell_jokers(env)
             case "rearrange_jokers":
                 print("Choosing action: rearrange_jokers")
-                return self.rearrange_jokers(self.G)
+                return self.rearrange_jokers(env)
             case "use_or_sell_consumables":
                 print("Choosing action: use_or_sell_consumables")
-                return self.use_or_sell_consumables(self.G)
+                return self.use_or_sell_consumables(env)
             case "rearrange_consumables":
                 print("Choosing action: rearrange_consumables")
-                return self.rearrange_consumables(self.G)
+                return self.rearrange_consumables(env)
             case "rearrange_hand":
                 print("Choosing action: rearrange_hand")
-                return self.rearrange_hand(self.G)
+                return self.rearrange_hand(env)
 
     def run_step(self):
         if self.sock is None:
@@ -206,25 +151,24 @@ class Bot(ABC):
             self.sock.connect(self.addr)
 
         if self.running:
-            self.sendcmd("HELLO")
+            self.sock.send(bytes("HELLO", "utf-8"))
 
-            jsondata = {}
             try:
                 data = self.sock.recv(65536)
-                jsondata = json.loads(data)
+                env = json.loads(data)
 
-                if "response" in jsondata:
-                    print(jsondata["response"])
+                if "response" in env:
+                    print(env["response"])
                 else:
-                    self.G = jsondata
-                    if self.G["waitingForAction"]:
-                        cache_state(self.G["waitingFor"], self.G)
-                        action = self.chooseaction()
-                        if action == None:
+                    if env["waitingForAction"]:
+                        cache_state(env["waitingFor"], env)
+                        action = self.chooseaction(env)
+                        if action:
+                            action_str = self._action_to_action_str(action)
+                            self.sock.send(bytes(action_str, "utf-8"))
+                        else:
                             raise ValueError("All actions must return a value!")
 
-                        cmdstr = self.actionToCmd(action)
-                        self.sendcmd(cmdstr)
             except socket.error as e:
                 print(e)
                 print("Socket error, reconnecting...")
