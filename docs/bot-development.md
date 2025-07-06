@@ -117,8 +117,7 @@ a predefined sequence of actions.
 import itertools
 from typing import Any, Iterator
 
-from balatrobot import Actions, Bot, Decks, Stakes
-from balatrobot.base import ActionSchema
+from balatrobot import ActionSchema, Actions, Bot, Decks, Stakes
 
 # Predefined sequence of actions using the ActionSchema format
 plays: Iterator[ActionSchema] = itertools.cycle(
@@ -545,7 +544,7 @@ Always use proper type hints for better code quality:
 
 ```python
 from typing import Any
-from balatrobot.base import ActionSchema
+from balatrobot import ActionSchema
 
 def select_shop_action(self, env: dict[str, Any]) -> ActionSchema:
     """Type hints help catch errors early."""

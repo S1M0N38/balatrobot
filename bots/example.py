@@ -7,8 +7,7 @@ a predefined sequence of actions.
 import itertools
 from typing import Any, Iterator
 
-from balatrobot import Actions, Bot, Decks, Stakes
-from balatrobot.base import ActionSchema
+from balatrobot import Actions, ActionSchema, Bot, Decks, Stakes
 
 # Predefined sequence of actions using the ActionSchema format
 plays: Iterator[ActionSchema] = itertools.cycle(

@@ -1,7 +1,8 @@
-from .base import Bot
+from .base import ActionSchema, Bot
 from .enums import Actions, Decks, Stakes, State
 
 __all__ = [
+    "ActionSchema",
     "Actions",
     "Bot",
     "Decks",
