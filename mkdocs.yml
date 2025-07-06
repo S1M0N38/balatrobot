@@ -30,10 +30,9 @@ theme:
 plugins:
   - search
 nav:
-  - Home: README.md
   - Installation: installation.md
+  - Bot Development: bot-development.md
   - API Protocol: api-protocol.md
-  # - Bot Development: bot-development.md # WIP
   - Troubleshooting: troubleshooting.md
 markdown_extensions:
   - admonition
