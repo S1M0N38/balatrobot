@@ -3,3 +3,4 @@ Balatro
 gamestate_cache
 .envrc
 .luarc.json
+*.log
