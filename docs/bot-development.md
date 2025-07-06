@@ -8,12 +8,7 @@ Balatrobot allows you to create automated players (bots) that can play Balatro b
 
 A bot is essentially a Python class that inherits from the `Bot` base class and implements specific methods that get called at different points during gameplay. The framework uses an **ActionSchema** API that returns structured dictionaries, making the code readable and type-safe.
 
-## Key Concepts
-
-- **ActionSchema**: A structured dictionary format for bot actions with `action` and `args` fields
-- **Game State (`env`)**: Complete information about the current game situation
-- **Actions Enum**: Predefined action types your bot can perform
-- **Type Safety**: Modern Python type hints ensure your bot is robust and maintainable
+A complete working example bot is available at `bots/example.py` which you can reference while building your own bot.
 
 ## Development Environment Setup
 
@@ -46,17 +41,67 @@ The repository contains extensive documentation and reference materials:
 - **Example Implementations**: Working bot examples to learn from and build upon
 
 !!! tip "Enhanced LLM Development Experience"
-    This rich documentation ecosystem is particularly beneficial when working with Large Language Models (LLMs) for bot development. The complete source code, comprehensive documentation, and Steamodded wiki provide extensive context that helps LLMs understand the framework and generate more accurate, contextually-aware code suggestions.
+    This rich documentation ecosystem is particularly beneficial when working
+    with Large Language Models (LLMs) for bot development. The complete source
+    code, comprehensive documentation, and Steamodded wiki provide extensive
+    context that helps LLMs understand the framework and generate more accurate,
+    contextually-aware code suggestions.
 
 ### Getting Started
 
 To begin developing your bot:
 
 1. Navigate to the `bots/` directory
-2. Create your bot file using the recommended naming convention
-3. Use the existing Python environment (balatrobot is already installed)
-4. Leverage the code quality tools and CI pipeline for professional development
-5. Reference the extensive documentation and source code for guidance
+2. Set up your development environment by copying and sourcing the environment file
+3. Create your bot file using the recommended naming convention
+4. Use the existing Python environment (balatrobot is already installed)
+5. Leverage the code quality tools and CI pipeline for professional development
+6. Reference the extensive documentation and source code for guidance
+
+### Environment Setup
+
+Before developing or running bots, you need to set up the development environment by configuring the `.envrc` file:
+
+=== "Windows"
+
+    ``` sh
+    cd %AppData%/Balatro/Mods/balatrobot
+    copy .envrc.example .envrc
+    .envrc
+    ```
+
+=== "MacOS"
+
+    ``` sh
+    cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
+    cp .envrc.example .envrc
+    source .envrc
+    ```
+
+=== "Linux"
+
+    ``` sh
+    cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
+    cp .envrc.example .envrc
+    source .envrc
+    ```
+
+!!! warning "Always Source Environment"
+
+    Remember to source the `.envrc` file every time you start a new terminal session before developing or running bots. The environment variables are essential for proper bot functionality.
+
+!!! tip "Automatic Environment Loading with direnv"
+
+    For a better development experience, consider using [direnv](https://direnv.net/) to automatically load and unload environment variables when entering and leaving the project directory.
+
+    After installing direnv and hooking it into your shell:
+
+    ```sh
+    # Allow direnv to load the .envrc file automatically
+    direnv allow .
+    ```
+
+    This eliminates the need to manually source `.envrc` every time you work on the project.
 
 ## Creating Your First Bot
 
@@ -159,12 +204,6 @@ The ActionSchema API uses a consistent format for all actions:
 }
 ```
 
-**Key Benefits:**
-- **Type Safety**: Clear structure with defined types
-- **Readability**: Explicit action and arguments
-- **Consistency**: Same format across all methods
-- **Extensibility**: Easy to add new action types
-
 ## Bot Class Structure
 
 1. **Inheritance**: Your bot must inherit from the `Bot` base class
@@ -189,269 +228,278 @@ def __init__(
 
 **Available Decks:**
 
-- `Decks.RED`, `Decks.BLUE`, `Decks.YELLOW`, `Decks.GREEN`, `Decks.BLACK`
-- `Decks.MAGIC`, `Decks.NEBULA`, `Decks.GHOST`, `Decks.ABANDONED`
-- `Decks.CHECKERED`, `Decks.ZODIAC`, `Decks.PAINTED`, `Decks.ANAGLYPH`
-- `Decks.PLASMA`, `Decks.ERRATIC`
+`Decks.RED`, `Decks.BLUE`, `Decks.YELLOW`, `Decks.GREEN`, `Decks.BLACK`,
+`Decks.MAGIC`, `Decks.NEBULA`, `Decks.GHOST`, `Decks.ABANDONED`,
+`Decks.CHECKERED`, `Decks.ZODIAC`, `Decks.PAINTED`, `Decks.ANAGLYPH`,
+`Decks.PLASMA`, `Decks.ERRATIC`.
 
 **Available Stakes:**
 
-- `Stakes.WHITE` (1), `Stakes.RED` (2), `Stakes.GREEN` (3), `Stakes.BLACK` (4)
-- `Stakes.BLUE` (5), `Stakes.PURPLE` (6), `Stakes.ORANGE` (7), `Stakes.GOLD` (8)
+`Stakes.WHITE` (1), `Stakes.RED` (2), `Stakes.GREEN` (3), `Stakes.BLACK` (4),
+`Stakes.BLUE` (5), `Stakes.PURPLE` (6), `Stakes.ORANGE` (7), `Stakes.GOLD` (8).
 
 ## Required Methods
 
 All bot methods receive an `env` parameter containing the current game state. The game state contains all information about the current situation, including cards in hand, jokers, consumables, blind information, and more.
 
-**skip_or_select_blind(env)**
+### `skip_or_select_blind`
 
 Called when the bot needs to choose whether to skip or select a blind.
 
 ```python
 def skip_or_select_blind(self, env: dict[str, Any]) -> ActionSchema:
     """Decide whether to skip or select a blind.
-    
+
     Args:
         env: Current game state containing blind information
-        
+
     Returns:
         ActionSchema with SELECT_BLIND or SKIP_BLIND action
     """
     # Always select blinds to play them
     return {"action": Actions.SELECT_BLIND, "args": None}
-    
+
     # Or to skip a blind:
     # return {"action": Actions.SKIP_BLIND, "args": None}
 ```
 
-**When called:** At the start of each blind selection phase
+This method is called at the start of each blind selection phase.
 
 **Available Actions:**
+
 - `Actions.SELECT_BLIND` - Choose to play the blind
 - `Actions.SKIP_BLIND` - Skip the blind (costs money)
 
-**select_cards_from_hand(env)**
+### `select_cards_from_hand`
 
 Called when the bot needs to choose cards to play or discard during a round.
 
 ```python
 def select_cards_from_hand(self, env: dict[str, Any]) -> ActionSchema:
     """Select cards from hand to play or discard.
-    
+
     Args:
         env: Current game state with hand information
-        
+
     Returns:
         ActionSchema with PLAY_HAND or DISCARD_HAND action
     """
     # Play the first 5 cards
     return {"action": Actions.PLAY_HAND, "args": [1, 2, 3, 4, 5]}
-    
+
     # Or discard specific cards:
     # return {"action": Actions.DISCARD_HAND, "args": [1, 3, 5]}
 ```
 
-**When called:** During the playing phase when you need to make a hand
+This method is called during the playing phase when you need to make a hand.
 
 **Available Actions:**
+
 - `Actions.PLAY_HAND` - Play specified cards as a poker hand
 - `Actions.DISCARD_HAND` - Discard specified cards to draw new ones
 
 !!! warning 1-based indices
     Card indices are 1-based (first card is 1, not 0). You can access hand information through `env['hand']` to make intelligent decisions.
 
-**select_shop_action(env)**
+### `select_shop_action`
 
 Called when the bot is in the shop and needs to decide what to do.
 
 ```python
 def select_shop_action(self, env: dict[str, Any]) -> ActionSchema:
     """Select an action to perform in the shop.
-    
+
     Args:
         env: Current game state with shop information
-        
+
     Returns:
         ActionSchema with shop action
     """
     # Leave the shop immediately
     return {"action": Actions.END_SHOP, "args": None}
-    
+
     # Or buy a joker (index 0):
     # return {"action": Actions.BUY_CARD, "args": [0]}
-    
+
     # Or reroll the shop:
     # return {"action": Actions.REROLL_SHOP, "args": None}
 ```
 
-**When called:** During the shop phase between rounds
+This method is called during the shop phase between rounds.
 
 **Available Actions:**
+
 - `Actions.END_SHOP` - Leave the shop
 - `Actions.REROLL_SHOP` - Reroll shop items (costs money)
 - `Actions.BUY_CARD` - Buy a joker card (provide index)
 - `Actions.BUY_VOUCHER` - Buy a voucher (provide index)
 - `Actions.BUY_BOOSTER` - Buy a booster pack (provide index)
 
-**select_booster_action(env)**
+### `select_booster_action`
 
 Called when the bot encounters a booster pack and needs to choose cards or skip.
 
 ```python
 def select_booster_action(self, env: dict[str, Any]) -> ActionSchema:
     """Select an action for booster packs.
-    
+
     Args:
         env: Current game state with booster pack information
-        
+
     Returns:
         ActionSchema with booster action
     """
     # Skip all booster packs
     return {"action": Actions.SKIP_BOOSTER_PACK, "args": None}
-    
+
     # Or select specific cards from the pack:
     # return {"action": Actions.SELECT_BOOSTER_CARD, "args": [0, 1]}
 ```
 
-**When called:** When opening booster packs
+This method is called when opening booster packs.
 
 **Available Actions:**
+
 - `Actions.SKIP_BOOSTER_PACK` - Skip the pack without taking cards
 - `Actions.SELECT_BOOSTER_CARD` - Select specific cards from the pack
 
-**sell_jokers(env)**
+### `sell_jokers`
 
 Called when the bot can sell jokers for money.
 
 ```python
 def sell_jokers(self, env: dict[str, Any]) -> ActionSchema:
     """Sell jokers from your collection.
-    
+
     Args:
         env: Current game state with joker information
-        
+
     Returns:
         ActionSchema with SELL_JOKER action
     """
     # Don't sell any jokers
     return {"action": Actions.SELL_JOKER, "args": []}
-    
+
     # Or sell specific jokers (indices 0 and 2):
     # return {"action": Actions.SELL_JOKER, "args": [0, 2]}
 ```
 
-**When called:** During joker management phases
+This method is called during joker management phases.
 
 **Available Actions:**
+
 - `Actions.SELL_JOKER` - Sell specific jokers (provide indices list)
 
-**rearrange_jokers(env)**
+### `rearrange_jokers`
 
 Called when the bot can rearrange the order of jokers.
 
 ```python
 def rearrange_jokers(self, env: dict[str, Any]) -> ActionSchema:
     """Rearrange jokers in your collection.
-    
+
     Args:
         env: Current game state with joker information
-        
+
     Returns:
         ActionSchema with REARRANGE_JOKERS action
     """
     # Don't rearrange jokers
     return {"action": Actions.REARRANGE_JOKERS, "args": []}
-    
+
     # Or specify new order:
     # return {"action": Actions.REARRANGE_JOKERS, "args": [2, 0, 1]}
 ```
 
-**When called:** During joker management phases
+This method is called during joker management phases.
 
 **Available Actions:**
+
 - `Actions.REARRANGE_JOKERS` - Rearrange jokers (provide new order)
 
-**use_or_sell_consumables(env)**
+### `use_or_sell_consumables`
 
 Called when the bot can use or sell consumable cards (Tarot, Planet, Spectral).
 
 ```python
 def use_or_sell_consumables(self, env: dict[str, Any]) -> ActionSchema:
     """Use or sell consumable cards.
-    
+
     Args:
         env: Current game state with consumable information
-        
+
     Returns:
         ActionSchema with consumable action
     """
     # Don't use consumables
     return {"action": Actions.USE_CONSUMABLE, "args": []}
-    
+
     # Or use a specific consumable:
     # return {"action": Actions.USE_CONSUMABLE, "args": [0]}
-    
+ 
     # Or sell consumables:
     # return {"action": Actions.SELL_CONSUMABLE, "args": [0, 1]}
 ```
 
-**When called:** During consumable management phases
+This method is called during consumable management phases.
 
 **Available Actions:**
+
 - `Actions.USE_CONSUMABLE` - Use specific consumable cards
 - `Actions.SELL_CONSUMABLE` - Sell specific consumable cards
 
-**rearrange_consumables(env)**
+### `rearrange_consumables`
 
 Called when the bot can rearrange the order of consumable cards.
 
 ```python
 def rearrange_consumables(self, env: dict[str, Any]) -> ActionSchema:
     """Rearrange consumable cards.
-    
+
     Args:
         env: Current game state with consumable information
-        
+
     Returns:
         ActionSchema with REARRANGE_CONSUMABLES action
     """
     # Don't rearrange consumables
     return {"action": Actions.REARRANGE_CONSUMABLES, "args": []}
-    
+
     # Or specify new order:
     # return {"action": Actions.REARRANGE_CONSUMABLES, "args": [1, 0, 2]}
 ```
 
-**When called:** During consumable management phases
+This method is called during consumable management phases.
 
 **Available Actions:**
+
 - `Actions.REARRANGE_CONSUMABLES` - Rearrange consumables (provide new order)
 
-**rearrange_hand(env)**
+### `rearrange_hand`
 
 Called when the bot can rearrange cards in hand.
 
 ```python
 def rearrange_hand(self, env: dict[str, Any]) -> ActionSchema:
     """Rearrange cards in your hand.
-    
+
     Args:
         env: Current game state with hand information
-        
+
     Returns:
         ActionSchema with REARRANGE_HAND action
     """
     # Don't rearrange hand
     return {"action": Actions.REARRANGE_HAND, "args": []}
-    
+
     # Or specify new order:
     # return {"action": Actions.REARRANGE_HAND, "args": [4, 3, 2, 1, 0]}
 ```
 
-**When called:** During hand management phases
+This method is called during hand management phases.
 
 **Available Actions:**
+
 - `Actions.REARRANGE_HAND` - Rearrange hand cards (provide new order)
 
 ## Running Your Bot
@@ -462,91 +510,11 @@ Once you've implemented all required methods, you can run your bot:
 if __name__ == "__main__":
     # Create bot instance
     bot = MyFirstBot()
-    
+
     # Set it to running state
     bot.running = True
-    
+
     # Start the bot
-    bot.run()
-```
-
-## Bot Configuration Examples
-
-```python
-# Basic bot with default settings
-bot = MyFirstBot()
-
-# Bot with custom deck and stake
-bot = MyFirstBot(deck=Decks.BLUE, stake=Stakes.RED)
-
-# Bot with random seed
-bot = MyFirstBot(seed=Bot.random_seed())
-
-# Bot with specific seed for testing
-bot = MyFirstBot(seed="EXAMPLE")
-```
-
-## Basic Bot Template
-
-Here's a minimal bot template you can use as a starting point:
-
-```python
-from typing import Any
-from balatrobot import Actions, Bot, Decks, Stakes
-from balatrobot.base import ActionSchema
-
-
-class MyBot(Bot):
-    """A simple bot template for getting started."""
-
-    def __init__(
-        self,
-        deck: Decks = Decks.RED,
-        stake: Stakes = Stakes.WHITE,
-        seed: str = "",
-    ) -> None:
-        super().__init__(deck=deck, stake=stake, seed=seed)
-
-    def skip_or_select_blind(self, env: dict[str, Any]) -> ActionSchema:
-        """Always select blinds to play them."""
-        return {"action": Actions.SELECT_BLIND, "args": None}
-
-    def select_cards_from_hand(self, env: dict[str, Any]) -> ActionSchema:
-        """Always play the first 5 cards."""
-        return {"action": Actions.PLAY_HAND, "args": [1, 2, 3, 4, 5]}
-
-    def select_shop_action(self, env: dict[str, Any]) -> ActionSchema:
-        """Always leave the shop immediately."""
-        return {"action": Actions.END_SHOP, "args": None}
-
-    def select_booster_action(self, env: dict[str, Any]) -> ActionSchema:
-        """Skip all booster packs."""
-        return {"action": Actions.SKIP_BOOSTER_PACK, "args": None}
-
-    def sell_jokers(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't sell any jokers."""
-        return {"action": Actions.SELL_JOKER, "args": []}
-
-    def rearrange_jokers(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't rearrange jokers."""
-        return {"action": Actions.REARRANGE_JOKERS, "args": []}
-
-    def use_or_sell_consumables(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't use consumables."""
-        return {"action": Actions.USE_CONSUMABLE, "args": []}
-
-    def rearrange_consumables(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't rearrange consumables."""
-        return {"action": Actions.REARRANGE_CONSUMABLES, "args": []}
-
-    def rearrange_hand(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't rearrange hand."""
-        return {"action": Actions.REARRANGE_HAND, "args": []}
-
-
-if __name__ == "__main__":
-    bot = MyBot()
-    bot.running = True
     bot.run()
 ```
 
@@ -554,15 +522,15 @@ if __name__ == "__main__":
 
 **1. Start Simple**
 
-Begin with the basic template above and gradually add more sophisticated logic:
+Begin with simple logic and gradually add more sophisticated behavior:
 
 ```python
 def select_cards_from_hand(self, env: dict[str, Any]) -> ActionSchema:
     """Start with simple logic, then improve."""
-    
+
     # Version 1: Always play first 5 cards
     return {"action": Actions.PLAY_HAND, "args": [1, 2, 3, 4, 5]}
-    
+
     # Version 2: Add basic hand evaluation
     # hand_cards = env.get('hand', [])
     # if len(hand_cards) >= 5:
