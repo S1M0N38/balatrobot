@@ -223,27 +223,27 @@ With Balatro running and the mod enabled, you can quickly test if everything is 
 
     ``` sh
     cd %AppData%/Balatro/Mods/balatrobot
-    uv run examples/my_first_bot.py.py
+    uv run bots/example.py
     ```
 
 === "MacOS"
 
     ``` sh
     cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
-    uv run examples/my_first_bot.py.py
+    uv run bots/example.py
     ```
 
 === "Linux"
 
     ``` sh
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
-    uv run examples/my_first_bot.py.py
+    uv run bots/example.py
     ```
 
 !!! tip
 
     You can also navigate to the `balatrobot` directory, activate the Python
-    environment and run the bot with `python example/my_first_bot.py` if you prefer.
+    environment and run the bot with `python bots/example.py` if you prefer.
     However, remember to always activate the virtual environment first.
 
 
