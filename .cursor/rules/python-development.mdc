@@ -1,0 +1,602 @@
+---
+globs: *.py
+alwaysApply: false
+description: Modern Python development standards for type annotations, docstrings, and code style targeting Python 3.12+
+---
+
+# Python Development Standards
+
+Modern Python development guide targeting Python 3.12+ with ruff formatting/linting and basedright type checking.
+
+## Type Annotations
+
+### Modern Collection Types (Python 3.12+)
+
+Use built-in collection types with modern syntax:
+
+**Preferred:**
+```python
+def process_data(items: list[str]) -> dict[str, int]:
+    return {item: len(item) for item in items}
+
+def handle_config(data: dict[str, str | int | None]) -> bool:
+    return bool(data)
+```
+
+**Avoid:**
+```python
+from typing import Dict, List, Optional, Union
+
+def process_data(items: List[str]) -> Dict[str, int]:
+    return {item: len(item) for item in items}
+
+def handle_config(data: Dict[str, Union[str, int, Optional[str]]]) -> bool:
+    return bool(data)
+```
+
+### Union Types and Optional Values
+
+Use pipe operator `|` for unions:
+
+**Preferred:**
+```python
+def get_user(user_id: int) -> dict[str, str] | None:
+    # Returns user data or None if not found
+    pass
+
+def process_value(value: str | int | float) -> str:
+    return str(value)
+```
+
+**Avoid:**
+```python
+from typing import Optional, Union
+
+def get_user(user_id: int) -> Optional[Dict[str, str]]:
+    pass
+
+def process_value(value: Union[str, int, float]) -> str:
+    return str(value)
+```
+
+### Type Aliases (Python 3.12+)
+
+Use the `type` statement for type aliases:
+
+**Preferred:**
+```python
+type UserId = int
+type UserData = dict[str, str | int]
+type ProcessorFunc = callable[[str], str | None]
+
+def create_user(user_id: UserId, data: UserData) -> bool:
+    pass
+```
+
+**Avoid:**
+```python
+from typing import TypeAlias, Callable
+
+UserId: TypeAlias = int
+UserData: TypeAlias = Dict[str, Union[str, int]]
+```
+
+### Generic Classes (Python 3.12+)
+
+Use modern generic syntax:
+
+**Preferred:**
+```python
+class Container[T]:
+    def __init__(self, value: T) -> None:
+        self.value = value
+    
+    def get(self) -> T:
+        return self.value
+```
+
+**Avoid:**
+```python
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+
+class Container(Generic[T]):
+    def __init__(self, value: T) -> None:
+        self.value = value
+```
+
+### When to Import from typing
+
+Only import from typing for:
+- `Protocol`, `TypedDict`, `Literal`
+- `Any`, `Never`, `NoReturn`
+- `Final`, `ClassVar`
+- `Self` (when not using Python 3.11+ `typing_extensions`)
+
+## Docstrings (Google Style)
+
+### Function Docstrings with Type Annotations
+
+When using type annotations, omit types from docstring Args and Returns:
+
+**Preferred:**
+```python
+def process_items(items: list[str], max_count: int | None = None) -> dict[str, int]:
+    """Process a list of items and return their lengths.
+
+    Args:
+        items: List of strings to process.
+        max_count: Maximum number of items to process. Defaults to None.
+
+    Returns:
+        Dictionary mapping each item to its length.
+
+    Raises:
+        ValueError: If items list is empty.
+    """
+    if not items:
+        raise ValueError("Items list cannot be empty")
+    
+    result = {item: len(item) for item in items}
+    if max_count:
+        result = dict(list(result.items())[:max_count])
+    
+    return result
+```
+
+### Class Docstrings
+
+**Preferred:**
+```python
+class DataProcessor[T]:
+    """Processes data items of generic type T.
+
+    Attributes:
+        items: List of items being processed.
+        processed_count: Number of items processed so far.
+    """
+
+    def __init__(self, initial_items: list[T]) -> None:
+        """Initialize processor with initial items.
+
+        Args:
+            initial_items: Initial list of items to process.
+        """
+        self.items = initial_items
+        self.processed_count = 0
+
+    def process_next(self) -> T | None:
+        """Process the next item in the queue.
+
+        Returns:
+            The next processed item, or None if queue is empty.
+        """
+        if self.processed_count >= len(self.items):
+            return None
+        
+        item = self.items[self.processed_count]
+        self.processed_count += 1
+        return item
+```
+
+### Generator Functions
+
+Use `Yields` instead of `Returns`:
+
+**Preferred:**
+```python
+def generate_items(data: list[dict[str, str]]) -> Iterator[str]:
+    """Generate processed items from raw data.
+
+    Args:
+        data: List of dictionaries containing raw data.
+
+    Yields:
+        Processed string items.
+    """
+    for item in data:
+        yield item.get("name", "unknown")
+```
+
+### Property Documentation
+
+Document properties in the getter method only:
+
+**Preferred:**
+```python
+@property
+def status(self) -> str:
+    """Current processing status.
+    
+    Returns 'active' when processing, 'idle' when waiting,
+    or 'complete' when finished.
+    """
+    return self._status
+
+@status.setter
+def status(self, value: str) -> None:
+    # No docstring needed for setter
+    self._status = value
+```
+
+## Integration Patterns
+
+### TypedDict with Docstrings
+
+**Preferred:**
+```python
+from typing import TypedDict
+
+class UserConfig(TypedDict):
+    """Configuration for user account settings.
+    
+    Attributes:
+        name: User's display name.
+        email: User's email address.
+        active: Whether the account is active.
+    """
+    name: str
+    email: str
+    active: bool
+
+def update_user(config: UserConfig) -> bool:
+    """Update user with provided configuration.
+
+    Args:
+        config: User configuration data.
+
+    Returns:
+        True if update successful, False otherwise.
+    """
+    # Implementation here
+    return True
+```
+
+### Protocol with Docstrings
+
+**Preferred:**
+```python
+from typing import Protocol
+
+class Processable(Protocol):
+    """Protocol for objects that can be processed."""
+    
+    def process(self) -> dict[str, str]:
+        """Process the object and return results.
+        
+        Returns:
+            Dictionary containing processing results.
+        """
+        ...
+
+def handle_processable(item: Processable) -> dict[str, str]:
+    """Handle any processable item.
+
+    Args:
+        item: Object that implements Processable protocol.
+
+    Returns:
+        Processing results from the item.
+    """
+    return item.process()
+```
+
+## Key Requirements
+
+### Docstring Structure
+- Use triple double quotes (`"""`)
+- First line: brief summary ending with period
+- Leave blank line before detailed description
+- Use proper section order: Args, Returns/Yields, Raises, Example
+
+### Type Annotation Rules
+- Always use modern Python 3.12+ syntax
+- Prefer built-in types over typing module imports
+- Use `|` for unions instead of `Union`
+- Use `type` statement for type aliases
+- Use modern generic class syntax `[T]`
+
+### Integration
+- With type annotations: omit types from docstring Args/Returns
+- Without type annotations: include types in docstring
+- Always document complex return types and exceptions
+- Use consistent naming between type aliases and docstrings
+# Python Development Standards
+
+Modern Python development guide targeting Python 3.12+ with ruff formatting/linting and basedright type checking.
+
+## Type Annotations
+
+### Modern Collection Types (Python 3.12+)
+
+Use built-in collection types with modern syntax:
+
+**Preferred:**
+```python
+def process_data(items: list[str]) -> dict[str, int]:
+    return {item: len(item) for item in items}
+
+def handle_config(data: dict[str, str | int | None]) -> bool:
+    return bool(data)
+```
+
+**Avoid:**
+```python
+from typing import Dict, List, Optional, Union
+
+def process_data(items: List[str]) -> Dict[str, int]:
+    return {item: len(item) for item in items}
+
+def handle_config(data: Dict[str, Union[str, int, Optional[str]]]) -> bool:
+    return bool(data)
+```
+
+### Union Types and Optional Values
+
+Use pipe operator `|` for unions:
+
+**Preferred:**
+```python
+def get_user(user_id: int) -> dict[str, str] | None:
+    # Returns user data or None if not found
+    pass
+
+def process_value(value: str | int | float) -> str:
+    return str(value)
+```
+
+**Avoid:**
+```python
+from typing import Optional, Union
+
+def get_user(user_id: int) -> Optional[Dict[str, str]]:
+    pass
+
+def process_value(value: Union[str, int, float]) -> str:
+    return str(value)
+```
+
+### Type Aliases (Python 3.12+)
+
+Use the `type` statement for type aliases:
+
+**Preferred:**
+```python
+type UserId = int
+type UserData = dict[str, str | int]
+type ProcessorFunc = callable[[str], str | None]
+
+def create_user(user_id: UserId, data: UserData) -> bool:
+    pass
+```
+
+**Avoid:**
+```python
+from typing import TypeAlias, Callable
+
+UserId: TypeAlias = int
+UserData: TypeAlias = Dict[str, Union[str, int]]
+```
+
+### Generic Classes (Python 3.12+)
+
+Use modern generic syntax:
+
+**Preferred:**
+```python
+class Container[T]:
+    def __init__(self, value: T) -> None:
+        self.value = value
+    
+    def get(self) -> T:
+        return self.value
+```
+
+**Avoid:**
+```python
+from typing import TypeVar, Generic
+
+T = TypeVar('T')
+
+class Container(Generic[T]):
+    def __init__(self, value: T) -> None:
+        self.value = value
+```
+
+### When to Import from typing
+
+Only import from typing for:
+- `Protocol`, `TypedDict`, `Literal`
+- `Any`, `Never`, `NoReturn`
+- `Final`, `ClassVar`
+- `Self` (when not using Python 3.11+ `typing_extensions`)
+
+## Docstrings (Google Style)
+
+### Function Docstrings with Type Annotations
+
+When using type annotations, omit types from docstring Args and Returns:
+
+**Preferred:**
+```python
+def process_items(items: list[str], max_count: int | None = None) -> dict[str, int]:
+    """Process a list of items and return their lengths.
+
+    Args:
+        items: List of strings to process.
+        max_count: Maximum number of items to process. Defaults to None.
+
+    Returns:
+        Dictionary mapping each item to its length.
+
+    Raises:
+        ValueError: If items list is empty.
+    """
+    if not items:
+        raise ValueError("Items list cannot be empty")
+    
+    result = {item: len(item) for item in items}
+    if max_count:
+        result = dict(list(result.items())[:max_count])
+    
+    return result
+```
+
+### Class Docstrings
+
+**Preferred:**
+```python
+class DataProcessor[T]:
+    """Processes data items of generic type T.
+
+    Attributes:
+        items: List of items being processed.
+        processed_count: Number of items processed so far.
+    """
+
+    def __init__(self, initial_items: list[T]) -> None:
+        """Initialize processor with initial items.
+
+        Args:
+            initial_items: Initial list of items to process.
+        """
+        self.items = initial_items
+        self.processed_count = 0
+
+    def process_next(self) -> T | None:
+        """Process the next item in the queue.
+
+        Returns:
+            The next processed item, or None if queue is empty.
+        """
+        if self.processed_count >= len(self.items):
+            return None
+        
+        item = self.items[self.processed_count]
+        self.processed_count += 1
+        return item
+```
+
+### Generator Functions
+
+Use `Yields` instead of `Returns`:
+
+**Preferred:**
+```python
+def generate_items(data: list[dict[str, str]]) -> Iterator[str]:
+    """Generate processed items from raw data.
+
+    Args:
+        data: List of dictionaries containing raw data.
+
+    Yields:
+        Processed string items.
+    """
+    for item in data:
+        yield item.get("name", "unknown")
+```
+
+### Property Documentation
+
+Document properties in the getter method only:
+
+**Preferred:**
+```python
+@property
+def status(self) -> str:
+    """Current processing status.
+    
+    Returns 'active' when processing, 'idle' when waiting,
+    or 'complete' when finished.
+    """
+    return self._status
+
+@status.setter
+def status(self, value: str) -> None:
+    # No docstring needed for setter
+    self._status = value
+```
+
+## Integration Patterns
+
+### TypedDict with Docstrings
+
+**Preferred:**
+```python
+from typing import TypedDict
+
+class UserConfig(TypedDict):
+    """Configuration for user account settings.
+    
+    Attributes:
+        name: User's display name.
+        email: User's email address.
+        active: Whether the account is active.
+    """
+    name: str
+    email: str
+    active: bool
+
+def update_user(config: UserConfig) -> bool:
+    """Update user with provided configuration.
+
+    Args:
+        config: User configuration data.
+
+    Returns:
+        True if update successful, False otherwise.
+    """
+    # Implementation here
+    return True
+```
+
+### Protocol with Docstrings
+
+**Preferred:**
+```python
+from typing import Protocol
+
+class Processable(Protocol):
+    """Protocol for objects that can be processed."""
+    
+    def process(self) -> dict[str, str]:
+        """Process the object and return results.
+        
+        Returns:
+            Dictionary containing processing results.
+        """
+        ...
+
+def handle_processable(item: Processable) -> dict[str, str]:
+    """Handle any processable item.
+
+    Args:
+        item: Object that implements Processable protocol.
+
+    Returns:
+        Processing results from the item.
+    """
+    return item.process()
+```
+
+## Key Requirements
+
+### Docstring Structure
+- Use triple double quotes (`"""`)
+- First line: brief summary ending with period
+- Leave blank line before detailed description
+- Use proper section order: Args, Returns/Yields, Raises, Example
+
+### Type Annotation Rules
+- Always use modern Python 3.12+ syntax
+- Prefer built-in types over typing module imports
+- Use `|` for unions instead of `Union`
+- Use `type` statement for type aliases
+- Use modern generic class syntax `[T]`
+
+### Integration
+- With type annotations: omit types from docstring Args/Returns
+- Without type annotations: include types in docstring
+- Always document complex return types and exceptions
+- Use consistent naming between type aliases and docstrings

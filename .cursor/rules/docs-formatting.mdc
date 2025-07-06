@@ -1,0 +1,51 @@
+---
+globs: docs/**/*.md
+alwaysApply: false
+description: Documentation formatting guidelines for files in the docs directory
+---
+
+# Documentation Formatting Guidelines
+
+When writing documentation files in the docs directory:
+
+## Header Structure
+
+- Use minimal header nesting - prefer level 1 (`#`) and level 2 (`##`) headers
+- Level 3 headers (`###`) are allowed when they significantly improve readability and document structure
+- **Method names, function signatures, and similar structured content** should use level 3 headers (`###`) for better navigation and clarity
+- For other sub-sections that would normally be level 3 or deeper, consider using **bold text** or other formatting instead
+- Preserve logical hierarchy and importance in your header structure
+
+## Spacing Requirements
+
+- Always leave a blank line after any title/header
+- Always leave a blank line before any list (bulleted or numbered)
+- This ensures proper visual separation and readability
+
+## Examples
+
+Good formatting:
+```markdown
+# Main Title
+
+Content here...
+
+## Section Title
+
+More content...
+
+### Method Name or Structured Content
+
+Detailed information...
+
+- List item 1
+- List item 2
+```
+
+Avoid:
+```markdown
+# Main Title
+Content immediately after title...
+#### Excessive nesting
+- List without spacing above
+``` 
