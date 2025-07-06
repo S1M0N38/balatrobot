@@ -30,11 +30,15 @@ theme:
 plugins:
   - search
 nav:
+  - index.md
   - Installation: installation.md
   - Bot Development: bot-development.md
   - API Protocol: api-protocol.md
   - Troubleshooting: troubleshooting.md
 markdown_extensions:
+  - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption
   - admonition
   - pymdownx.details
   - pymdownx.highlight:
@@ -50,3 +54,6 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
