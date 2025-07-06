@@ -6,7 +6,7 @@ This guide teaches you how to create custom bots for Balatro using the Balatrobo
 
 Balatrobot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a socket connection, receiving game state information and sending back actions to perform.
 
-A bot is essentially a Python class that inherits from the `Bot` base class and implements specific methods that get called at different points during gameplay. The framework uses a modern **ActionSchema** API that returns structured dictionaries instead of plain lists, making the code more readable and type-safe.
+A bot is essentially a Python class that inherits from the `Bot` base class and implements specific methods that get called at different points during gameplay. The framework uses an **ActionSchema** API that returns structured dictionaries, making the code readable and type-safe.
 
 ## Key Concepts
 
@@ -14,6 +14,49 @@ A bot is essentially a Python class that inherits from the `Bot` base class and 
 - **Game State (`env`)**: Complete information about the current game situation
 - **Actions Enum**: Predefined action types your bot can perform
 - **Type Safety**: Modern Python type hints ensure your bot is robust and maintainable
+
+## Development Environment Setup
+
+The Balatrobot project provides a complete development environment with all necessary tools and resources for building bots.
+
+### Bot File Location
+
+When creating new bots, place your files in the `bots/` directory using one of these recommended patterns:
+
+- **Single file bots**: `bots/my_new_bot.py`
+- **Complex bots**: `bots/my_new_bot/main.py` (for bots with multiple modules)
+
+Both approaches are considered best practices and allow for easy organization and discovery of your bot implementations.
+
+### Pre-configured Development Environment
+
+The project comes with a fully configured Python development environment:
+
+- **Python Virtual Environment**: Pre-installed with the balatrobot package and all dependencies
+- **Code Quality Tools**: Linting, type checking, and formatting configured in `pyproject.toml`
+- **Continuous Integration**: Working CI pipeline ensures code quality standards
+
+### Available Documentation and Resources
+
+The repository contains extensive documentation and reference materials:
+
+- **Comprehensive API Documentation**: Complete guides for bot development and API usage
+- **Steamodded Wiki**: Included as a git submodule (clone with `--recurse-submodules` for LLM-friendly context)
+- **Source Code Access**: Full balatrobot Python source code and Lua implementation for reference
+- **Example Implementations**: Working bot examples to learn from and build upon
+
+!!! tip "Enhanced LLM Development Experience"
+    This rich documentation ecosystem is particularly beneficial when working with Large Language Models (LLMs) for bot development. The complete source code, comprehensive documentation, and Steamodded wiki provide extensive context that helps LLMs understand the framework and generate more accurate, contextually-aware code suggestions.
+
+### Getting Started
+
+To begin developing your bot:
+
+1. Navigate to the `bots/` directory
+2. Create your bot file using the recommended naming convention
+3. Use the existing Python environment (balatrobot is already installed)
+4. Leverage the code quality tools and CI pipeline for professional development
+5. Reference the extensive documentation and source code for guidance
 
 ## Creating Your First Bot
 
@@ -106,7 +149,7 @@ if __name__ == "__main__":
 
 ## ActionSchema Format
 
-The new API uses a consistent format for all actions:
+The ActionSchema API uses a consistent format for all actions:
 
 ```python
 # ActionSchema structure
@@ -159,9 +202,6 @@ def __init__(
 ## Required Methods
 
 All bot methods receive an `env` parameter containing the current game state. The game state contains all information about the current situation, including cards in hand, jokers, consumables, blind information, and more.
-
-!!! note
-    For detailed information about the game state structure, see the [Game State Reference](game-state.md) page.
 
 **skip_or_select_blind(env)**
 
@@ -217,7 +257,7 @@ def select_cards_from_hand(self, env: dict[str, Any]) -> ActionSchema:
 - `Actions.PLAY_HAND` - Play specified cards as a poker hand
 - `Actions.DISCARD_HAND` - Discard specified cards to draw new ones
 
-!!! tip
+!!! warning 1-based indices
     Card indices are 1-based (first card is 1, not 0). You can access hand information through `env['hand']` to make intelligent decisions.
 
 **select_shop_action(env)**
@@ -582,9 +622,6 @@ Once you have a basic bot working:
 2. **Implement Smart Logic**: Add decision-making based on game state
 3. **Test Different Scenarios**: Try different decks, stakes, and seeds
 4. **Debug and Iterate**: Use the game state cache to analyze decisions
-
-!!! tip
-    The best way to learn is by experimenting! Start with the basic template and gradually add features as you understand the game better.
 
 ---
 
