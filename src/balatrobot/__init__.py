@@ -1,5 +1,6 @@
 from .base import ActionSchema, Bot
 from .enums import Actions, Decks, Stakes, State
+from .utils import configure_bot_logging, get_logger, setup_logging
 
 __all__ = [
     "ActionSchema",
@@ -8,6 +9,9 @@ __all__ = [
     "Decks",
     "Stakes",
     "State",
+    "configure_bot_logging",
+    "get_logger",
+    "setup_logging",
 ]
 
 __version__ = "0.1.0"

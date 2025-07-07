@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import Any, TypedDict
 
 from .enums import Actions, Decks, Stakes, State
+from .utils import get_logger
 
 
 class ActionSchema(TypedDict):
@@ -67,6 +68,23 @@ class Bot(ABC):
         self.sock: socket.socket | None = None
 
         self.state: dict[str, Any] = {}
+        self.logger = get_logger("bot")
+
+        # Initialize socket connection
+        self._initialize_socket()
+
+    def _initialize_socket(self) -> None:
+        """Initialize the socket connection for bot communication.
+
+        Sets up the UDP socket with timeout and connects to the game instance.
+        """
+        self.state = {}
+        self.G = None
+        self.running = True
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(1)
+        self.sock.connect(self.addr)
+        self.logger.debug("Socket initialized and connected to %s:%d", *self.addr)
 
     @staticmethod
     def random_seed() -> str:
@@ -214,44 +232,48 @@ class Bot(ABC):
         Returns:
             ActionSchema: The action to perform with 'action' and optional 'args'.
         """
-        print("Choosing action based on game state:", env["state"])
+        try:
+            state_name = State(env["state"]).name
+        except ValueError:
+            state_name = f"UNKNOWN({env['state']})"
+        self.logger.debug("Choosing action based on game state: %s", state_name)
         if env["state"] == State.GAME_OVER:
             self.running = False
 
         match env["waitingFor"]:
             case "start_run":
-                print("Starting run with deck:", self.deck)
+                self.logger.info("Starting run with deck: %s", self.deck)
                 seed = self.seed or self.random_seed()
                 return {
                     "action": Actions.START_RUN,
                     "args": [self.stake.value, self.deck.value, seed, self.challenge],
                 }
             case "skip_or_select_blind":
-                print("Choosing action: skip_or_select_blind")
+                self.logger.debug("Choosing action: skip_or_select_blind")
                 return self.skip_or_select_blind(env)
             case "select_cards_from_hand":
-                print("Choosing action: select_cards_from_hand")
+                self.logger.debug("Choosing action: select_cards_from_hand")
                 return self.select_cards_from_hand(env)
             case "select_shop_action":
-                print("Choosing action: select_shop_action")
+                self.logger.debug("Choosing action: select_shop_action")
                 return self.select_shop_action(env)
             case "select_booster_action":
-                print("Choosing action: select_booster_action")
+                self.logger.debug("Choosing action: select_booster_action")
                 return self.select_booster_action(env)
             case "sell_jokers":
-                print("Choosing action: sell_jokers")
+                self.logger.debug("Choosing action: sell_jokers")
                 return self.sell_jokers(env)
             case "rearrange_jokers":
-                print("Choosing action: rearrange_jokers")
+                self.logger.debug("Choosing action: rearrange_jokers")
                 return self.rearrange_jokers(env)
             case "use_or_sell_consumables":
-                print("Choosing action: use_or_sell_consumables")
+                self.logger.debug("Choosing action: use_or_sell_consumables")
                 return self.use_or_sell_consumables(env)
             case "rearrange_consumables":
-                print("Choosing action: rearrange_consumables")
+                self.logger.debug("Choosing action: rearrange_consumables")
                 return self.rearrange_consumables(env)
             case "rearrange_hand":
-                print("Choosing action: rearrange_hand")
+                self.logger.debug("Choosing action: rearrange_hand")
                 return self.rearrange_hand(env)
             case _:
                 raise ValueError(f"Unhandled waitingFor state: {env['waitingFor']}")
@@ -262,14 +284,8 @@ class Bot(ABC):
         This method handles socket communication, receives game state updates,
         and sends actions back to the game.
         """
-        if self.sock is None:
-            self.state = {}
-            self.G = None
-
-            self.running = True
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock.settimeout(1)
-            self.sock.connect(self.addr)
+        if not self.running or self.sock is None:
+            return
 
         if self.running:
             self.sock.send(bytes("HELLO", "utf-8"))
@@ -279,7 +295,7 @@ class Bot(ABC):
                 env = json.loads(data)
 
                 if "response" in env:
-                    print(env["response"])
+                    self.logger.info("Game response: %s", env["response"])
                 else:
                     if env["waitingForAction"]:
                         action = self.chooseaction(env)
@@ -290,11 +306,9 @@ class Bot(ABC):
                             raise ValueError("All actions must return a value!")
 
             except socket.error as e:
-                print(e)
-                print("Socket error, reconnecting...")
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self.sock.settimeout(1)
-                self.sock.connect(self.addr)
+                self.logger.error("Socket error: %s", e)
+                self.logger.warning("Socket error, reconnecting...")
+                self._initialize_socket()
 
     def run(self) -> None:
         """Run the bot's main game loop.

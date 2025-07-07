@@ -4,12 +4,13 @@ This example shows how to create a basic bot that plays Balatro using
 a predefined sequence of actions.
 """
 
+import argparse
 import itertools
 from typing import Any, Iterator
 
-from balatrobot import Actions, ActionSchema, Bot, Decks, Stakes
+from balatrobot import Actions, ActionSchema, Bot, Decks, Stakes, configure_bot_logging
 
-# Predefined sequence of actions using the ActionSchema format
+# Predefined sequence of actions using the ActionCall format
 plays: Iterator[ActionSchema] = itertools.cycle(
     [
         # This sequence of plays is winning for the first round
@@ -22,8 +23,8 @@ plays: Iterator[ActionSchema] = itertools.cycle(
 )
 
 
-class MyFirstBot(Bot):
-    """Example bot implementation using the ActionSchema API.
+class ExampleBot(Bot):
+    """Example bot implementation using the ActionCall API.
 
     This bot demonstrates a simple strategy using predefined actions.
     It always selects blinds, uses a fixed sequence of plays, and
@@ -42,9 +43,9 @@ class MyFirstBot(Bot):
         """Initialize the bot with default settings.
 
         Args:
-            deck (Decks): The deck type to use.
-            stake (Stakes): The stake level to play at.
-            seed (str): The random seed for the game.
+            deck: The deck type to use.
+            stake: The stake level to play at.
+            seed: The random seed for the game.
         """
         super().__init__(deck=deck, stake=stake, seed=seed)
         self.round_count: int = 0
@@ -56,7 +57,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to select blind.
+            ActionCall: Action to select blind.
         """
         return {"action": Actions.SELECT_BLIND, "args": None}
 
@@ -67,7 +68,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action with card selection from predefined sequence.
+            ActionCall: Action with card selection from predefined sequence.
         """
         return next(plays)
 
@@ -78,7 +79,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to end shop.
+            ActionCall: Action to end shop.
         """
         return {"action": Actions.END_SHOP, "args": None}
 
@@ -89,7 +90,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to skip booster pack.
+            ActionCall: Action to skip booster pack.
         """
         return {"action": Actions.SKIP_BOOSTER_PACK, "args": None}
 
@@ -100,7 +101,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to sell jokers with empty list.
+            ActionCall: Action to sell jokers with empty list.
         """
         return {"action": Actions.SELL_JOKER, "args": []}
 
@@ -111,7 +112,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to rearrange jokers with empty list.
+            ActionCall: Action to rearrange jokers with empty list.
         """
         return {"action": Actions.REARRANGE_JOKERS, "args": []}
 
@@ -122,7 +123,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to use consumables with empty list.
+            ActionCall: Action to use consumables with empty list.
         """
         return {"action": Actions.USE_CONSUMABLE, "args": []}
 
@@ -133,7 +134,7 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to rearrange consumables with empty list.
+            ActionCall: Action to rearrange consumables with empty list.
         """
         return {"action": Actions.REARRANGE_CONSUMABLES, "args": []}
 
@@ -144,13 +145,27 @@ class MyFirstBot(Bot):
             env (dict[str, Any]): The current game environment state.
 
         Returns:
-            ActionSchema: Action to rearrange hand with empty list.
+            ActionCall: Action to rearrange hand with empty list.
         """
         return {"action": Actions.REARRANGE_HAND, "args": []}
 
 
 def main() -> None:
-    bot = MyFirstBot()
+    """Main function to run the example bot with command-line argument support."""
+    parser = argparse.ArgumentParser(description="Run the example Balatro bot")
+    parser.add_argument(
+        "--log",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        default="DEBUG",
+        help="Set the console logging level (default: DEBUG)",
+    )
+
+    args = parser.parse_args()
+
+    # Configure logging with the specified level
+    configure_bot_logging(args.log)
+
+    bot = ExampleBot()
     bot.running = True
     bot.run()
 
