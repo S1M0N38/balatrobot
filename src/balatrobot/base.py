@@ -13,7 +13,7 @@ class ActionSchema(TypedDict):
     """Schema for action dictionary with name and arguments fields."""
 
     action: Actions
-    args: list[Any] | None
+    args: list[list[Any] | Any] | None
 
 
 class Bot(ABC):
@@ -216,10 +216,11 @@ class Bot(ABC):
         # Add arguments if present
         args = action.get("args")
         if args:
-            if isinstance(args, list):
-                result.append(",".join([str(arg) for arg in args]))
-            else:
-                result.append(str(args))
+            for arg in args:
+                if isinstance(arg, list):
+                    result.append(",".join([str(a) for a in arg]))
+                else:
+                    result.append(str(arg))
 
         return "|".join(result)
 
@@ -301,6 +302,7 @@ class Bot(ABC):
                         action = self.chooseaction(env)
                         if action:
                             action_str = self._action_to_action_str(action)
+                            self.logger.debug("Sending action: %s", action_str)
                             self.sock.send(bytes(action_str, "utf-8"))
                         else:
                             raise ValueError("All actions must return a value!")

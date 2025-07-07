@@ -15,10 +15,10 @@ plays: Iterator[ActionSchema] = itertools.cycle(
     [
         # This sequence of plays is winning for the first round
         # for the seed "EXAMPLE" and the deck "Red Deck" with stake 1.
-        {"action": Actions.DISCARD_HAND, "args": [2, 3, 4, 6]},
-        {"action": Actions.DISCARD_HAND, "args": [1, 2, 6, 8]},
-        {"action": Actions.PLAY_HAND, "args": [2, 3, 5, 6, 7]},
-        {"action": Actions.PLAY_HAND, "args": [3, 4, 7, 8]},
+        {"action": Actions.DISCARD_HAND, "args": [[2, 3, 4, 6]]},
+        {"action": Actions.DISCARD_HAND, "args": [[1, 2, 6, 8]]},
+        {"action": Actions.PLAY_HAND, "args": [[2, 3, 5, 6, 7]]},
+        {"action": Actions.PLAY_HAND, "args": [[3, 4, 7, 8]]},
     ]
 )
 
@@ -103,7 +103,7 @@ class ExampleBot(Bot):
         Returns:
             ActionCall: Action to sell jokers with empty list.
         """
-        return {"action": Actions.SELL_JOKER, "args": []}
+        return {"action": Actions.SELL_JOKER, "args": [[]]}
 
     def rearrange_jokers(self, env: dict[str, Any]) -> ActionSchema:
         """Don't rearrange jokers.
@@ -114,7 +114,7 @@ class ExampleBot(Bot):
         Returns:
             ActionCall: Action to rearrange jokers with empty list.
         """
-        return {"action": Actions.REARRANGE_JOKERS, "args": []}
+        return {"action": Actions.REARRANGE_JOKERS, "args": [[]]}
 
     def use_or_sell_consumables(self, env: dict[str, Any]) -> ActionSchema:
         """Don't use consumables.
@@ -125,7 +125,7 @@ class ExampleBot(Bot):
         Returns:
             ActionCall: Action to use consumables with empty list.
         """
-        return {"action": Actions.USE_CONSUMABLE, "args": []}
+        return {"action": Actions.USE_CONSUMABLE, "args": [[]]}
 
     def rearrange_consumables(self, env: dict[str, Any]) -> ActionSchema:
         """Don't rearrange consumables.
@@ -136,7 +136,7 @@ class ExampleBot(Bot):
         Returns:
             ActionCall: Action to rearrange consumables with empty list.
         """
-        return {"action": Actions.REARRANGE_CONSUMABLES, "args": []}
+        return {"action": Actions.REARRANGE_CONSUMABLES, "args": [[]]}
 
     def rearrange_hand(self, env: dict[str, Any]) -> ActionSchema:
         """Don't rearrange hand.
@@ -147,7 +147,7 @@ class ExampleBot(Bot):
         Returns:
             ActionCall: Action to rearrange hand with empty list.
         """
-        return {"action": Actions.REARRANGE_HAND, "args": []}
+        return {"action": Actions.REARRANGE_HAND, "args": [[]]}
 
 
 def main() -> None:
@@ -165,7 +165,7 @@ def main() -> None:
     # Configure logging with the specified level
     configure_bot_logging(args.log)
 
-    bot = ExampleBot()
+    bot = ExampleBot(deck=Decks.BLUE, stake=Stakes.WHITE, seed="EXAMPLE")
     bot.running = True
     bot.run()
 
