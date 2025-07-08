@@ -4,7 +4,7 @@ import json
 import socket
 
 import pytest
-from conftest import BUFFER_SIZE, HOST, PORT, TIMEOUT, send_api_message
+from conftest import BUFFER_SIZE, HOST, PORT, send_api_message
 
 
 def test_basic_connection(udp_client: socket.socket) -> None:
