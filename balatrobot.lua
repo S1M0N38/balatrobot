@@ -24,19 +24,27 @@ BALATRO_BOT_CONFIG = {
 	frame_ratio = 1,
 }
 
-assert(SMODS.load_file("src/lua/list.lua"))()
-assert(SMODS.load_file("src/lua/hook.lua"))()
+-- Load debug
+local success, dpAPI = pcall(require, "debugplus-api")
+
+-- Load minimal required files
 assert(SMODS.load_file("src/lua/utils.lua"))()
-assert(SMODS.load_file("src/lua/bot.lua"))()
-assert(SMODS.load_file("src/lua/middleware.lua"))()
 assert(SMODS.load_file("src/lua/api.lua"))()
 
--- Init middleware
-Middleware.hookbalatro()
-sendDebugMessage("Middleware loaded", "BALATROBOT")
+if success and dpAPI.isVersionCompatible(1) then
+	local debugplus = dpAPI.registerID("balatrobot")
+	debugplus.addCommand({
+		name = "env",
+		shortDesc = "Get game state",
+		desc = "Get the current game state, useful for debugging",
+		exec = function(args, rawArgs, dp)
+			debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G, 2) .. "}")
+		end,
+	})
+end
 
--- Init API (includes queue initialization)
-BalatrobotAPI.init()
+-- Initialize API
+API.init()
 sendDebugMessage("API loaded", "BALATROBOT")
 
 sendInfoMessage("BalatroBot loaded - version " .. SMODS.current_mod.version, "BALATROBOT")
