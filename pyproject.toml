@@ -38,4 +38,9 @@ lint.task-tags = ["FIX", "TODO", "HACK", "WARN", "PERF", "NOTE", "TEST"]
 typeCheckingMode = "basic"
 
 [dependency-groups]
-dev = ["basedpyright>=1.29.5", "mkdocs-material>=9.6.15", "ruff>=0.12.2"]
+dev = [
+  "basedpyright>=1.29.5",
+  "mkdocs-material>=9.6.15",
+  "pytest>=8.4.1",
+  "ruff>=0.12.2",
+]
