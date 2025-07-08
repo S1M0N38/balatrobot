@@ -8,9 +8,9 @@ import pytest
 
 # Connection settings
 HOST = "127.0.0.1"
-PORT = 12346
-TIMEOUT = 30.0
-BUFFER_SIZE = 65536  # 64KB buffer for UDP messages
+PORT: int = 12346  # default port for BalatroBot UDP API
+TIMEOUT: float = 30.0  # timeout for socket operations in seconds
+BUFFER_SIZE: int = 65536  # 64KB buffer for UDP messages
 
 
 @pytest.fixture
@@ -52,11 +52,19 @@ def receive_api_message(sock: socket.socket) -> dict[str, Any]:
     return json.loads(data.decode().strip())
 
 
-def teardown_test(sock: socket.socket) -> None:
-    """Teardown helper to return to menu state after test.
+def send_and_receive_api_message(
+    sock: socket.socket, name: str, arguments: dict
+) -> dict[str, Any]:
+    """Send a properly formatted JSON API message and receive the response.
 
     Args:
-        sock: Socket to send teardown message through.
+        sock: Socket to send through.
+        name: Function name to call.
+        arguments: Arguments dictionary for the function.
+
+    Returns:
+        The game state after the message is sent and received.
     """
-    send_api_message(sock, "go_to_menu", {})
-    receive_api_message(sock)
+    send_api_message(sock, name, arguments)
+    game_state = receive_api_message(sock)
+    return game_state
