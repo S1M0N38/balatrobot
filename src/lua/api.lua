@@ -75,13 +75,19 @@ function API.send_response(response)
 end
 
 function API.init()
-	-- API.setup_game_hooks()
-
 	-- Hook into the game's update loop
 	local original_update = love.update
 	love.update = function(dt)
-		original_update(dt)
-		API.update(dt)
+		original_update(BALATRO_BOT_CONFIG.dt)
+		API.update(BALATRO_BOT_CONFIG.dt)
+	end
+
+	if not BALATRO_BOT_CONFIG.vsync_enabled then
+		love.window.setVSync(0)
+	end
+
+	if BALATRO_BOT_CONFIG.max_fps then
+		G.FPS_CAP = 60
 	end
 
 	sendInfoMessage("BalatrobotAPI initialized", "BALATROBOT")
