@@ -4,3 +4,5 @@ gamestate_cache
 .envrc
 .luarc.json
 *.log
+src/lua_old
+balatrobot_old.lua
