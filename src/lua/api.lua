@@ -1,198 +1,247 @@
 local socket = require("socket")
 local json = require("json")
 
-local data, msg_or_ip, port_or_nil
+API = {}
+API.socket = nil
+API.functions = {}
+API.pending_requests = {}
+API.last_client_ip = nil
+API.last_client_port = nil
 
-BalatrobotAPI = {}
-BalatrobotAPI.socket = nil
+--------------------------------------------------------------------------------
+-- Update Loop
+--------------------------------------------------------------------------------
 
-BalatrobotAPI.waitingFor = nil
-BalatrobotAPI.waitingForAction = true
-
--- Action queues for Python bot commands
-BalatrobotAPI.q_skip_or_select_blind = nil
-BalatrobotAPI.q_select_cards_from_hand = nil
-BalatrobotAPI.q_select_shop_action = nil
-BalatrobotAPI.q_select_booster_action = nil
-BalatrobotAPI.q_sell_jokers = nil
-BalatrobotAPI.q_rearrange_jokers = nil
-BalatrobotAPI.q_use_or_sell_consumables = nil
-BalatrobotAPI.q_rearrange_consumables = nil
-BalatrobotAPI.q_rearrange_hand = nil
-BalatrobotAPI.q_start_run = nil
-
-function BalatrobotAPI.notifyapiclient()
-	-- Generate gamestate json object
-	local _gamestate = Utils.getGamestate()
-	_gamestate.waitingFor = BalatrobotAPI.waitingFor
-	sendDebugMessage("WaitingFor " .. tostring(BalatrobotAPI.waitingFor))
-	_gamestate.waitingForAction = BalatrobotAPI.waitingFor ~= nil and BalatrobotAPI.waitingForAction or false
-	local _gamestateJsonString = json.encode(_gamestate)
-
-	if BalatrobotAPI.socket and port_or_nil ~= nil then
-		sendDebugMessage(_gamestate.waitingFor)
-		BalatrobotAPI.socket:sendto(string.format("%s", _gamestateJsonString), msg_or_ip, port_or_nil)
-	end
-end
-
-function BalatrobotAPI.respond(str)
-	sendDebugMessage("respond")
-	if BalatrobotAPI.socket and port_or_nil ~= nil then
-		response = {}
-		response.response = str
-		str = json.encode(response)
-		BalatrobotAPI.socket:sendto(string.format("%s\n", str), msg_or_ip, port_or_nil)
-	end
-end
-
-function BalatrobotAPI.queueaction(action)
-	local _params = Bot.ACTIONPARAMS[action[1]]
-	List.pushleft(BalatrobotAPI["q_" .. _params.func], { 0, action })
-end
-
-function BalatrobotAPI.update(dt)
-	if not BalatrobotAPI.socket then
-		BalatrobotAPI.socket = socket.udp()
-		BalatrobotAPI.socket:settimeout(0)
+function API.update(dt)
+	-- Create socket if it doesn't exist
+	if not API.socket then
+		API.socket = socket.udp()
+		API.socket:settimeout(0)
 		local port = BALATRO_BOT_CONFIG.port
-		BalatrobotAPI.socket:setsockname("127.0.0.1", tonumber(port))
-		sendDebugMessage("New socket created on port " .. port)
+		API.socket:setsockname("127.0.0.1", tonumber(port))
+		sendDebugMessage("UDP socket created on port " .. port, "BALATROBOT")
 	end
 
-	data, msg_or_ip, port_or_nil = BalatrobotAPI.socket:receivefrom()
-	if data then
-		if data == "HELLO\n" or data == "HELLO" then
-			BalatrobotAPI.notifyapiclient()
-		else
-			local _action = Utils.parseaction(data)
-			local _err = Utils.validateAction(_action)
+	-- Process pending requests
+	for key, request in pairs(API.pending_requests) do
+		if request.condition(request.args) then
+			request.action(request.args)
+			API.pending_requests[key] = nil
+		end
+	end
 
-			if _err == Utils.ERROR.NUMPARAMS then
-				BalatrobotAPI.respond("Error: Incorrect number of params for action " .. _action[1])
-			elseif _err == Utils.ERROR.MSGFORMAT then
-				BalatrobotAPI.respond("Error: Incorrect message format. Should be ACTION|arg1|arg2")
-			elseif _err == Utils.ERROR.INVALIDACTION then
-				BalatrobotAPI.respond("Error: Action invalid for action " .. _action[1])
+	-- Parse received data and run the appropriate function
+	local raw_data, client_ip, client_port = API.socket:receivefrom(65536)
+	if raw_data and client_ip and client_port then
+		-- Store the last client connection
+		API.last_client_ip = client_ip
+		API.last_client_port = client_port
+
+		sendDebugMessage("Received data from " .. client_ip .. ":" .. client_port, "BALATROBOT")
+		local ok, data = pcall(json.decode, raw_data)
+		if not ok then
+			sendErrorMessage("Invalid JSON", "BALATROBOT")
+			API.send_response({ error = "Invalid JSON" })
+			return
+		end
+		if data.name == nil then
+			sendErrorMessage("Message must contain a name", "BALATROBOT")
+			API.send_response({ error = "Message must contain a name" })
+		elseif data.arguments == nil then
+			sendErrorMessage("Message must contain arguments", "BALATROBOT")
+			API.send_response({ error = "Message must contain arguments" })
+		else
+			local func = API.functions[data.name]
+			local args = data.arguments
+			if func == nil then
+				sendErrorMessage("Unknown function name: " .. data.name, "BALATROBOT")
+				API.send_response({ error = "Unknown function name: " .. data.name })
+			elseif type(args) ~= "table" then
+				sendErrorMessage("Arguments must be a table", "BALATROBOT")
+				API.send_response({ error = "Arguments must be a table: " .. type(args) })
 			else
-				BalatrobotAPI.waitingForAction = false
-				BalatrobotAPI.queueaction(_action)
+				func(args)
 			end
 		end
-	elseif msg_or_ip ~= "timeout" then
-		sendDebugMessage("Unknown network error: " .. tostring(msg))
+	elseif client_ip ~= "timeout" then
+		sendErrorMessage("UDP error: " .. tostring(client_ip), "BALATROBOT")
 	end
-
-	-- No idea if this is necessary
-	-- Without this being commented out, FPS capped out at ~80 for me
-	-- socket.sleep(0.01)
 end
 
-function BalatrobotAPI.init()
-	-- Initialize action queues for Python bot commands
-	BalatrobotAPI.q_skip_or_select_blind = List.new()
-	BalatrobotAPI.q_select_cards_from_hand = List.new()
-	BalatrobotAPI.q_select_shop_action = List.new()
-	BalatrobotAPI.q_select_booster_action = List.new()
-	BalatrobotAPI.q_sell_jokers = List.new()
-	BalatrobotAPI.q_rearrange_jokers = List.new()
-	BalatrobotAPI.q_use_or_sell_consumables = List.new()
-	BalatrobotAPI.q_rearrange_consumables = List.new()
-	BalatrobotAPI.q_rearrange_hand = List.new()
-	BalatrobotAPI.q_start_run = List.new()
-
-	love.update = Hook.addcallback(love.update, BalatrobotAPI.update)
-
-	-- Tell the game engine that every frame is 8/60 seconds long
-	-- Speeds up the game execution
-	-- Values higher than this seem to cause instability
-	if BALATRO_BOT_CONFIG.dt then
-		love.update = Hook.addbreakpoint(love.update, function(dt)
-			return BALATRO_BOT_CONFIG.dt
-		end)
+function API.send_response(response)
+	if API.last_client_ip and API.last_client_port then
+		API.socket:sendto(json.encode(response), API.last_client_ip, API.last_client_port)
 	end
-
-	-- Disable FPS cap
-	if BALATRO_BOT_CONFIG.uncap_fps then
-		G.FPS_CAP = 999999.0
-	end
-
-	-- Makes things move instantly instead of sliding
-	if BALATRO_BOT_CONFIG.instant_move then
-		function Moveable.move_xy(self, dt)
-			-- Directly set the visible transform to the target transform
-			self.VT.x = self.T.x
-			self.VT.y = self.T.y
-		end
-	end
-
-	-- Forcibly disable vsync
-	if BALATRO_BOT_CONFIG.disable_vsync then
-		love.window.setVSync(0)
-	end
-
-	-- Disable card scoring animation text
-	if BALATRO_BOT_CONFIG.disable_card_eval_status_text then
-		card_eval_status_text = function(card, eval_type, amt, percent, dir, extra) end
-	end
-
-	-- Only draw/present every Nth frame
-	local original_draw = love.draw
-	local draw_count = 0
-	love.draw = function()
-		draw_count = draw_count + 1
-		if draw_count % BALATRO_BOT_CONFIG.frame_ratio == 0 then
-			original_draw()
-		end
-	end
-
-	local original_present = love.graphics.present
-	love.graphics.present = function()
-		if draw_count % BALATRO_BOT_CONFIG.frame_ratio == 0 then
-			original_present()
-		end
-	end
-
-	-- Set up waiting states for Python bot
-	Middleware.c_play_hand = Hook.addbreakpoint(Middleware.c_play_hand, function()
-		BalatrobotAPI.waitingFor = "select_cards_from_hand"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_select_blind = Hook.addbreakpoint(Middleware.c_select_blind, function()
-		BalatrobotAPI.waitingFor = "skip_or_select_blind"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_choose_booster_cards = Hook.addbreakpoint(Middleware.c_choose_booster_cards, function()
-		BalatrobotAPI.waitingFor = "select_booster_action"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_shop = Hook.addbreakpoint(Middleware.c_shop, function()
-		BalatrobotAPI.waitingFor = "select_shop_action"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_rearrange_hand = Hook.addbreakpoint(Middleware.c_rearrange_hand, function()
-		BalatrobotAPI.waitingFor = "rearrange_hand"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_rearrange_consumables = Hook.addbreakpoint(Middleware.c_rearrange_consumables, function()
-		BalatrobotAPI.waitingFor = "rearrange_consumables"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_use_or_sell_consumables = Hook.addbreakpoint(Middleware.c_use_or_sell_consumables, function()
-		BalatrobotAPI.waitingFor = "use_or_sell_consumables"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_rearrange_jokers = Hook.addbreakpoint(Middleware.c_rearrange_jokers, function()
-		BalatrobotAPI.waitingFor = "rearrange_jokers"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_sell_jokers = Hook.addbreakpoint(Middleware.c_sell_jokers, function()
-		BalatrobotAPI.waitingFor = "sell_jokers"
-		BalatrobotAPI.waitingForAction = true
-	end)
-	Middleware.c_start_run = Hook.addbreakpoint(Middleware.c_start_run, function()
-		BalatrobotAPI.waitingFor = "start_run"
-		BalatrobotAPI.waitingForAction = true
-	end)
 end
 
-return BalatrobotAPI
+function API.init()
+	-- API.setup_game_hooks()
+
+	-- Hook into the game's update loop
+	local original_update = love.update
+	love.update = function(dt)
+		original_update(dt)
+		API.update(dt)
+	end
+
+	sendInfoMessage("BalatrobotAPI initialized", "BALATROBOT")
+end
+
+--------------------------------------------------------------------------------
+-- API Functions
+--------------------------------------------------------------------------------
+
+API.functions["get_game_state"] = function(args)
+	local game_state = utils.get_game_state()
+	API.send_response(game_state)
+end
+
+API.functions["go_to_menu"] = function(args)
+	if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
+		sendDebugMessage("go_to_menu called but already in menu", "BALATROBOT")
+		local game_state = utils.get_game_state()
+		API.send_response(game_state)
+		return
+	end
+
+	G.FUNCS.go_to_menu({})
+	API.pending_requests["go_to_menu"] = {
+		condition = function()
+			return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
+		end,
+		action = function(args)
+			local game_state = utils.get_game_state()
+			API.send_response(game_state)
+		end,
+		args = args,
+	}
+end
+
+API.functions["start_run"] = function(args)
+	-- Reset the game
+	local play_button = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
+	G.FUNCS[play_button.config.button]({ config = {} })
+	G.FUNCS.exit_overlay_menu({})
+
+	-- Set the deck
+	local deck_found = false
+	for _, v in pairs(G.P_CENTER_POOLS.Back) do
+		if v.name == args.deck then
+			sendDebugMessage("Changing to deck: " .. v.name, "BALATROBOT")
+			G.GAME.selected_back:change_to(v)
+			G.GAME.viewed_back:change_to(v)
+			deck_found = true
+			break
+		end
+	end
+	if not deck_found then
+		sendErrorMessage("Invalid deck arg for start_run: " .. tostring(args.deck), "BALATROBOT")
+		API.send_response({ error = "Invalid deck arg for start_run: " .. tostring(args.deck) })
+		return
+	end
+
+	-- Set the challenge
+	local challenge_obj = nil
+	if args.challenge then
+		for i = 1, #G.CHALLENGES do
+			if G.CHALLENGES[i].name == args.challenge then
+				challenge_obj = G.CHALLENGES[i]
+				break
+			end
+		end
+	end
+	G.GAME.challenge_name = args.challenge
+
+	-- Start the run
+	G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj })
+
+	-- Defer sending response until the run has started
+	API.pending_requests["start_run"] = {
+		condition = function()
+			return G.STATE == G.STATES.BLIND_SELECT and G.GAME.blind_on_deck
+		end,
+		action = function(args)
+			local game_state = utils.get_game_state()
+			API.send_response(game_state)
+		end,
+	}
+end
+
+API.functions["skip_or_select_blind"] = function(args)
+	local current_blind = G.GAME.blind_on_deck
+	local blind_obj = G.blind_select_opts[string.lower(current_blind)]
+	if args.action == "select" then
+		button = blind_obj:get_UIE_by_ID("select_blind_button")
+		G.FUNCS[button.config.button](button)
+		API.pending_requests["skip_or_select_blind"] = {
+			condition = function()
+				return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
+			end,
+			action = function(args)
+				local game_state = utils.get_game_state()
+				API.send_response(game_state)
+			end,
+			args = args,
+		}
+	elseif args.action == "skip" then
+		button = blind_obj:get_UIE_by_ID("tag_" .. current_blind).children[2]
+		G.FUNCS[button.config.button](button)
+		API.pending_requests["skip_or_select_blind"] = {
+			condition = function()
+				local prev_state = {
+					["Small"] = G.prev_small_state,
+					["Large"] = G.prev_large_state,
+					["Boss"] = G.prev_boss_state,
+				}
+				return prev_state[current_blind] == "Skipped"
+			end,
+			action = function(args)
+				local game_state = utils.get_game_state()
+				API.send_response(game_state)
+			end,
+			args = args,
+		}
+	else
+		sendErrorMessage("Invalid action arg for skip_or_select_blind: " .. args.action, "BALATROBOT")
+		API.send_response({ error = "Invalid action arg for skip_or_select_blind: " .. args.action })
+		return
+	end
+end
+
+API.functions["play_cards"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["discard_cards"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["select_booster_action"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["select_shop_action"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["rearrange_hand"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["rearrange_consumables"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["rearrange_jokers"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["use_or_sell_consumables"] = function(args)
+	-- TODO: implement
+end
+
+API.functions["sell_jokers"] = function(args)
+	-- TODO: implement
+end
+
+return API
