@@ -215,6 +215,12 @@ API.functions["skip_or_select_blind"] = function(args)
 end
 
 API.functions["play_hand_or_discard"] = function(args)
+  if args.action == "discard" and G.GAME.current_round.discards_left == 0 then
+    sendErrorMessage("No discards left to perform discard", "BALATROBOT")
+    API.send_response({ error = "No discards left to perform discard", state = G.STATE })
+    return
+  end
+
   -- adjust from 0-based to 1-based indexing
   for i, card_index in ipairs(args.cards) do
     args.cards[i] = card_index + 1
@@ -256,13 +262,12 @@ API.functions["play_hand_or_discard"] = function(args)
         -- round still going
         if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
           return true
-
         -- round won and entering cash out state (ROUND_EVAL state)
         elseif G.STATE == G.STATES.ROUND_EVAL then
           return true
-
-          -- TODO: round lost (back to MAIN MENU)
-          -- TODO: round lost ("you lost" banner)
+        -- game over state
+        elseif G.STATE == G.STATES.GAME_OVER then
+          return true
         end
       end
       return false
