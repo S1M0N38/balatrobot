@@ -251,8 +251,21 @@ API.functions["play_hand_or_discard"] = function(args)
   -- Defer sending response until the run has started
   API.pending_requests["play_hand_or_discard"] = {
     condition = function()
-      -- TODO: remove brittle G.E_MANAGER check
-      return G.buttons and G.STATE_COMPLETE and G.STATE == G.STATES.SELECTING_HAND and #G.E_MANAGER.queues.base < 3
+      -- TODO: maybe remove brittle G.E_MANAGER check
+      if #G.E_MANAGER.queues.base < 3 and G.STATE_COMPLETE then
+        -- round still going
+        if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
+          return true
+
+        -- round won and entering cash out state (ROUND_EVAL state)
+        elseif G.STATE == G.STATES.ROUND_EVAL then
+          return true
+
+          -- TODO: round lost (back to MAIN MENU)
+          -- TODO: round lost ("you lost" banner)
+        end
+      end
+      return false
     end,
     action = function(args)
       local game_state = utils.get_game_state()
