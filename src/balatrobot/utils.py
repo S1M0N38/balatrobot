@@ -6,7 +6,6 @@ This module provides shared utilities including logging configuration.
 import logging
 import sys
 from pathlib import Path
-from typing import Any
 
 
 def setup_logging(
