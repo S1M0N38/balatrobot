@@ -214,8 +214,51 @@ API.functions["skip_or_select_blind"] = function(args)
   end
 end
 
-API.functions["play_cards"] = function(args)
-  -- TODO: implement
+API.functions["play_hand_or_discard"] = function(args)
+  -- adjust from 0-based to 1-based indexing
+  for i, card_index in ipairs(args.cards) do
+    args.cards[i] = card_index + 1
+  end
+
+  -- Check that all cards are selectable
+  for _, card_index in ipairs(args.cards) do
+    if not G.hand.cards[card_index] then
+      sendErrorMessage("Invalid card index: " .. tostring(card_index), "BALATROBOT")
+      API.send_response({ error = "Invalid card index: " .. tostring(card_index) })
+      return
+    end
+  end
+
+  -- Select cards
+  for _, card_index in ipairs(args.cards) do
+    G.hand.cards[card_index]:click()
+  end
+
+  if args.action == "play_hand" then
+    ---@diagnostic disable-next-line: undefined-field
+    local play_button = UIBox:get_UIE_by_ID("play_button", G.buttons.UIRoot)
+    G.FUNCS["play_cards_from_highlighted"](play_button)
+  elseif args.action == "discard" then
+    ---@diagnostic disable-next-line: undefined-field
+    local discard_button = UIBox:get_UIE_by_ID("discard_button", G.buttons.UIRoot)
+    G.FUNCS["discard_cards_from_highlighted"](discard_button)
+  else
+    sendErrorMessage("Invalid action arg for play_hand_or_discard: " .. args.action, "BALATROBOT")
+    API.send_response({ error = "Invalid action arg for play_hand_or_discard: " .. args.action })
+    return
+  end
+
+  -- Defer sending response until the run has started
+  API.pending_requests["play_hand_or_discard"] = {
+    condition = function()
+      -- TODO: remove brittle G.E_MANAGER check
+      return G.buttons and G.STATE_COMPLETE and G.STATE == G.STATES.SELECTING_HAND and #G.E_MANAGER.queues.base < 3
+    end,
+    action = function(args)
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
 end
 
 API.functions["discard_cards"] = function(args)
