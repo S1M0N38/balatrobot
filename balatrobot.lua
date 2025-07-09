@@ -11,7 +11,7 @@
 ---@type BalatrobotConfig
 BALATRO_BOT_CONFIG = {
   port = "12346",
-  dt = 8.0 / 60.0,
+  dt = 4.0 / 60.0, -- value >= 4.0 make mod instable
   max_fps = 60,
   vsync_enabled = false,
 
