@@ -43,7 +43,7 @@ class TestGetGameState:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": None,
-            "seed": "STATE_TEST",
+            "seed": "EXAMPLE",
         }
         initial_state = send_and_receive_api_message(
             udp_client, "start_run", start_run_args
@@ -88,7 +88,7 @@ class TestStartRun:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": "The Omelette",
-            "seed": "CHALLENGE_TEST",
+            "seed": "EXAMPLE",
         }
         game_state = send_and_receive_api_message(
             udp_client, "start_run", start_run_args
@@ -104,7 +104,7 @@ class TestStartRun:
                 "deck": "Red Deck",
                 "stake": stake,
                 "challenge": None,
-                "seed": f"STAKE_{stake}",
+                "seed": "EXAMPLE",
             }
             game_state = send_and_receive_api_message(
                 udp_client, "start_run", start_run_args
@@ -161,7 +161,7 @@ class TestGoToMenu:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": None,
-            "seed": "MENU_TEST",
+            "seed": "EXAMPLE",
         }
         initial_state = send_and_receive_api_message(
             udp_client, "start_run", start_run_args
@@ -186,7 +186,7 @@ class TestSkipOrSelectBlind:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": None,
-            "seed": "BLIND_TEST",
+            "seed": "EXAMPLE",
         }
         game_state = send_and_receive_api_message(
             udp_client, "start_run", start_run_args
