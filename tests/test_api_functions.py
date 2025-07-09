@@ -251,7 +251,7 @@ class TestPlayHandOrDiscard:
                 "deck": "Red Deck",
                 "stake": 1,
                 "challenge": None,
-                "seed": "EXAMPLE",
+                "seed": "OOOO155",  # four of a kind in first hand
             },
         )
         game_state = send_and_receive_api_message(
@@ -266,7 +266,7 @@ class TestPlayHandOrDiscard:
     @pytest.mark.parametrize(
         "cards,expected_new_cards",
         [
-            ([0, 1, 2, 3, 4], 5),  # Test playing five cards
+            ([7, 6, 5, 4, 3], 5),  # Test playing five cards
             ([0], 1),  # Test playing one card
         ],
     )
@@ -298,6 +298,17 @@ class TestPlayHandOrDiscard:
         assert game_state["game"]["hands_played"] == 1
         assert len(set(final_card_keys) - set(init_card_keys)) == expected_new_cards
         assert set(final_card_keys) & set(played_hand_keys) == set()
+
+    def test_play_hand_winning(
+        self, udp_client: socket.socket, setup_and_teardown: dict
+    ) -> None:
+        """Test playing a winning hand (four of a kind)"""
+        _ = setup_and_teardown
+        play_hand_args = {"action": "play_hand", "cards": [0, 1, 2, 3]}
+        game_state = send_and_receive_api_message(
+            udp_client, "play_hand_or_discard", play_hand_args
+        )
+        assert game_state["state"] == State.ROUND_EVAL.value
 
     def test_play_hand_invalid_cards(self, udp_client: socket.socket) -> None:
         """Test playing a hand with invalid card indices returns error."""
