@@ -234,3 +234,134 @@ class TestSkipOrSelectBlind:
         assert isinstance(error_response, dict)
         assert "error" in error_response
         assert "Invalid action arg" in error_response["error"]
+
+
+class TestPlayHandOrDiscard:
+    """Tests for the play_hand_or_discard API endpoint."""
+
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(
+        self, udp_client: socket.socket
+    ) -> Generator[dict, None, None]:
+        """Set up and tear down each test method."""
+        send_and_receive_api_message(
+            udp_client,
+            "start_run",
+            {
+                "deck": "Red Deck",
+                "stake": 1,
+                "challenge": None,
+                "seed": "EXAMPLE",
+            },
+        )
+        game_state = send_and_receive_api_message(
+            udp_client,
+            "skip_or_select_blind",
+            {"action": "select"},
+        )
+        assert game_state["state"] == State.SELECTING_HAND.value
+        yield game_state
+        send_and_receive_api_message(udp_client, "go_to_menu", {})
+
+    @pytest.mark.parametrize(
+        "cards,expected_new_cards",
+        [
+            ([0, 1, 2, 3, 4], 5),  # Test playing five cards
+            ([0], 1),  # Test playing one card
+        ],
+    )
+    def test_play_hand(
+        self,
+        udp_client: socket.socket,
+        setup_and_teardown: dict,
+        cards: list[int],
+        expected_new_cards: int,
+    ) -> None:
+        """Test playing a hand with different numbers of cards."""
+        initial_game_state = setup_and_teardown
+        play_hand_args = {"action": "play_hand", "cards": cards}
+
+        init_card_keys = [
+            card["config"]["card"]["card_key"] for card in initial_game_state["hand"]
+        ]
+        played_hand_keys = [
+            initial_game_state["hand"][i]["config"]["card"]["card_key"]
+            for i in play_hand_args["cards"]
+        ]
+        game_state = send_and_receive_api_message(
+            udp_client, "play_hand_or_discard", play_hand_args
+        )
+        final_card_keys = [
+            card["config"]["card"]["card_key"] for card in game_state["hand"]
+        ]
+        assert game_state["state"] == State.SELECTING_HAND.value
+        assert game_state["game"]["hands_played"] == 1
+        assert len(set(final_card_keys) - set(init_card_keys)) == expected_new_cards
+        assert set(final_card_keys) & set(played_hand_keys) == set()
+
+    def test_play_hand_invalid_cards(self, udp_client: socket.socket) -> None:
+        """Test playing a hand with invalid card indices returns error."""
+        play_hand_args = {"action": "play_hand", "cards": [10, 11, 12, 13, 14]}
+        response = send_and_receive_api_message(
+            udp_client, "play_hand_or_discard", play_hand_args
+        )
+
+        # Should receive error response for invalid card index
+        assert isinstance(response, dict)
+        assert "error" in response
+        assert "Invalid card index" in response["error"]
+
+    def test_play_hand_invalid_action(self, udp_client: socket.socket) -> None:
+        """Test playing a hand with invalid action returns error."""
+        play_hand_args = {"action": "invalid_action", "cards": [0, 1, 2, 3, 4]}
+        response = send_and_receive_api_message(
+            udp_client, "play_hand_or_discard", play_hand_args
+        )
+
+        # Should receive error response for invalid action
+        assert isinstance(response, dict)
+        assert "error" in response
+        assert "Invalid action arg" in response["error"]
+
+    @pytest.mark.parametrize(
+        "cards,expected_new_cards",
+        [
+            ([0, 1, 2, 3, 4], 5),  # Test discarding five cards
+            ([0], 1),  # Test discarding one card
+        ],
+    )
+    def test_discard(
+        self,
+        udp_client: socket.socket,
+        setup_and_teardown: dict,
+        cards: list[int],
+        expected_new_cards: int,
+    ) -> None:
+        """Test discarding with different numbers of cards."""
+        initial_game_state = setup_and_teardown
+        init_discards_left = initial_game_state["game"]["current_round"][
+            "discards_left"
+        ]
+        discard_hand_args = {"action": "discard", "cards": cards}
+
+        init_card_keys = [
+            card["config"]["card"]["card_key"] for card in initial_game_state["hand"]
+        ]
+        discarded_hand_keys = [
+            initial_game_state["hand"][i]["config"]["card"]["card_key"]
+            for i in discard_hand_args["cards"]
+        ]
+        game_state = send_and_receive_api_message(
+            udp_client, "play_hand_or_discard", discard_hand_args
+        )
+        final_card_keys = [
+            card["config"]["card"]["card_key"] for card in game_state["hand"]
+        ]
+        assert game_state["state"] == State.SELECTING_HAND.value
+        assert game_state["game"]["hands_played"] == 0
+        assert (
+            game_state["game"]["current_round"]["discards_left"]
+            == init_discards_left - 1
+        )
+        assert len(set(final_card_keys) - set(init_card_keys)) == expected_new_cards
+        assert set(final_card_keys) & set(discarded_hand_keys) == set()
