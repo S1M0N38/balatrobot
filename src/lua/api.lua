@@ -261,10 +261,6 @@ API.functions["play_hand_or_discard"] = function(args)
   }
 end
 
-API.functions["discard_cards"] = function(args)
-  -- TODO: implement
-end
-
 API.functions["select_booster_action"] = function(args)
   -- TODO: implement
 end
