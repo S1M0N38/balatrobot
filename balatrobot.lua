@@ -4,14 +4,14 @@
 ---@class BalatrobotConfig
 ---@field port string Port for the bot to listen on
 ---@field dt number Tells the game that every update is dt seconds long.
----@field max_fps integer Maximum frames per second
+---@field max_fps integer? Maximum frames per second
 ---@field vsync_enabled boolean Whether vertical sync is enabled
 
 ---Global configuration for the BalatroBot mod
 ---@type BalatrobotConfig
 BALATRO_BOT_CONFIG = {
   port = "12346",
-  dt = 2.0 / 60.0,
+  dt = 8.0 / 60.0,
   max_fps = 60,
   vsync_enabled = false,
 
@@ -19,7 +19,7 @@ BALATRO_BOT_CONFIG = {
   -- port = "12346",
   -- dt = 1.0 / 60.0,
   -- vsync_enabled = true,
-  --  max_fps = nil,
+  -- max_fps = nil,
 }
 
 -- Load debug
@@ -36,7 +36,7 @@ if success and dpAPI.isVersionCompatible(1) then
     shortDesc = "Get game state",
     desc = "Get the current game state, useful for debugging",
     exec = function(args, _, _)
-      debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G, 2) .. "}")
+      debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G.GAME, 2) .. "}")
     end,
   })
 end
