@@ -37,7 +37,6 @@ function API.update(dt)
     API.last_client_ip = client_ip
     API.last_client_port = client_port
 
-    sendDebugMessage("Received data from " .. client_ip .. ":" .. client_port, "BALATROBOT")
     local ok, data = pcall(json.decode, raw_data)
     if not ok then
       sendErrorMessage("Invalid JSON", "BALATROBOT")
@@ -60,6 +59,7 @@ function API.update(dt)
         sendErrorMessage("Arguments must be a table", "BALATROBOT")
         API.send_response({ error = "Arguments must be a table: " .. type(args) })
       else
+        sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "BALATROBOT")
         func(args)
       end
     end
