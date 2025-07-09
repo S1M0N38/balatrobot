@@ -6,7 +6,7 @@ function utils.get_game_state()
   if G.GAME then
     game = {
       hands_played = G.GAME.hands_played,
-      skips = G.GAME.Skips,
+      skips = G.GAME.skips,
       round = G.GAME.round,
       discount_percent = G.GAME.discount_percent,
       interest_cap = G.GAME.interest_cap,
