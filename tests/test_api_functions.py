@@ -218,7 +218,10 @@ class TestSkipOrSelectBlind:
         )
 
         # Verify we get a valid game state response
-        # Note: State after skipping might vary depending on game logic
+        assert game_state["state"] == State.BLIND_SELECT.value
+
+        # Assert that the current blind is "Big", the "Small" blind was skipped
+        assert game_state["game"]["blind_on_deck"] == "Big"
 
     def test_invalid_blind_action(self, udp_client: socket.socket) -> None:
         """Test that invalid blind action arguments are handled properly."""
