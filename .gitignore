@@ -6,3 +6,4 @@ gamestate_cache
 *.log
 src/lua_old
 balatrobot_old.lua
+scripts
