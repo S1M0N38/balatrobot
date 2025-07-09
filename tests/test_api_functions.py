@@ -299,18 +299,27 @@ class TestPlayHandOrDiscard:
         assert len(set(final_card_keys) - set(init_card_keys)) == expected_new_cards
         assert set(final_card_keys) & set(played_hand_keys) == set()
 
-    def test_play_hand_winning(
-        self, udp_client: socket.socket, setup_and_teardown: dict
-    ) -> None:
+    def test_play_hand_winning(self, udp_client: socket.socket) -> None:
         """Test playing a winning hand (four of a kind)"""
-        _ = setup_and_teardown
         play_hand_args = {"action": "play_hand", "cards": [0, 1, 2, 3]}
         game_state = send_and_receive_api_message(
             udp_client, "play_hand_or_discard", play_hand_args
         )
         assert game_state["state"] == State.ROUND_EVAL.value
 
-    def test_play_hand_invalid_cards(self, udp_client: socket.socket) -> None:
+    def test_play_hands_losing(self, udp_client: socket.socket) -> None:
+        """Test playing a series of losing hands and reach Main menu again."""
+        for _ in range(4):
+            game_state = send_and_receive_api_message(
+                udp_client,
+                "play_hand_or_discard",
+                {"action": "play_hand", "cards": [0]},
+            )
+        assert game_state["state"] == State.GAME_OVER.value
+
+    def test_play_hand_or_discard_invalid_cards(
+        self, udp_client: socket.socket
+    ) -> None:
         """Test playing a hand with invalid card indices returns error."""
         play_hand_args = {"action": "play_hand", "cards": [10, 11, 12, 13, 14]}
         response = send_and_receive_api_message(
@@ -376,3 +385,28 @@ class TestPlayHandOrDiscard:
         )
         assert len(set(final_card_keys) - set(init_card_keys)) == expected_new_cards
         assert set(final_card_keys) & set(discarded_hand_keys) == set()
+
+    def test_try_to_discard_when_no_discards_left(
+        self, udp_client: socket.socket
+    ) -> None:
+        """Test trying to discard when no discards are left."""
+        for _ in range(4):
+            game_state = send_and_receive_api_message(
+                udp_client,
+                "play_hand_or_discard",
+                {"action": "discard", "cards": [0]},
+            )
+        assert game_state["state"] == State.SELECTING_HAND.value
+        assert game_state["game"]["hands_played"] == 0
+        assert game_state["game"]["current_round"]["discards_left"] == 0
+
+        response = send_and_receive_api_message(
+            udp_client,
+            "play_hand_or_discard",
+            {"action": "discard", "cards": [0]},
+        )
+
+        # Should receive error response for no discards left
+        assert isinstance(response, dict)
+        assert "error" in response
+        assert "No discards left" in response["error"]
