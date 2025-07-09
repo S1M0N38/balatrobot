@@ -13,84 +13,84 @@ API.last_client_port = nil
 --------------------------------------------------------------------------------
 
 function API.update(dt)
-	-- Create socket if it doesn't exist
-	if not API.socket then
-		API.socket = socket.udp()
-		API.socket:settimeout(0)
-		local port = BALATRO_BOT_CONFIG.port
-		API.socket:setsockname("127.0.0.1", tonumber(port))
-		sendDebugMessage("UDP socket created on port " .. port, "BALATROBOT")
-	end
+  -- Create socket if it doesn't exist
+  if not API.socket then
+    API.socket = socket.udp()
+    API.socket:settimeout(0)
+    local port = BALATRO_BOT_CONFIG.port
+    API.socket:setsockname("127.0.0.1", tonumber(port))
+    sendDebugMessage("UDP socket created on port " .. port, "BALATROBOT")
+  end
 
-	-- Process pending requests
-	for key, request in pairs(API.pending_requests) do
-		if request.condition(request.args) then
-			request.action(request.args)
-			API.pending_requests[key] = nil
-		end
-	end
+  -- Process pending requests
+  for key, request in pairs(API.pending_requests) do
+    if request.condition(request.args) then
+      request.action(request.args)
+      API.pending_requests[key] = nil
+    end
+  end
 
-	-- Parse received data and run the appropriate function
-	local raw_data, client_ip, client_port = API.socket:receivefrom(65536)
-	if raw_data and client_ip and client_port then
-		-- Store the last client connection
-		API.last_client_ip = client_ip
-		API.last_client_port = client_port
+  -- Parse received data and run the appropriate function
+  local raw_data, client_ip, client_port = API.socket:receivefrom(65536)
+  if raw_data and client_ip and client_port then
+    -- Store the last client connection
+    API.last_client_ip = client_ip
+    API.last_client_port = client_port
 
-		sendDebugMessage("Received data from " .. client_ip .. ":" .. client_port, "BALATROBOT")
-		local ok, data = pcall(json.decode, raw_data)
-		if not ok then
-			sendErrorMessage("Invalid JSON", "BALATROBOT")
-			API.send_response({ error = "Invalid JSON" })
-			return
-		end
-		if data.name == nil then
-			sendErrorMessage("Message must contain a name", "BALATROBOT")
-			API.send_response({ error = "Message must contain a name" })
-		elseif data.arguments == nil then
-			sendErrorMessage("Message must contain arguments", "BALATROBOT")
-			API.send_response({ error = "Message must contain arguments" })
-		else
-			local func = API.functions[data.name]
-			local args = data.arguments
-			if func == nil then
-				sendErrorMessage("Unknown function name: " .. data.name, "BALATROBOT")
-				API.send_response({ error = "Unknown function name: " .. data.name })
-			elseif type(args) ~= "table" then
-				sendErrorMessage("Arguments must be a table", "BALATROBOT")
-				API.send_response({ error = "Arguments must be a table: " .. type(args) })
-			else
-				func(args)
-			end
-		end
-	elseif client_ip ~= "timeout" then
-		sendErrorMessage("UDP error: " .. tostring(client_ip), "BALATROBOT")
-	end
+    sendDebugMessage("Received data from " .. client_ip .. ":" .. client_port, "BALATROBOT")
+    local ok, data = pcall(json.decode, raw_data)
+    if not ok then
+      sendErrorMessage("Invalid JSON", "BALATROBOT")
+      API.send_response({ error = "Invalid JSON" })
+      return
+    end
+    if data.name == nil then
+      sendErrorMessage("Message must contain a name", "BALATROBOT")
+      API.send_response({ error = "Message must contain a name" })
+    elseif data.arguments == nil then
+      sendErrorMessage("Message must contain arguments", "BALATROBOT")
+      API.send_response({ error = "Message must contain arguments" })
+    else
+      local func = API.functions[data.name]
+      local args = data.arguments
+      if func == nil then
+        sendErrorMessage("Unknown function name: " .. data.name, "BALATROBOT")
+        API.send_response({ error = "Unknown function name: " .. data.name })
+      elseif type(args) ~= "table" then
+        sendErrorMessage("Arguments must be a table", "BALATROBOT")
+        API.send_response({ error = "Arguments must be a table: " .. type(args) })
+      else
+        func(args)
+      end
+    end
+  elseif client_ip ~= "timeout" then
+    sendErrorMessage("UDP error: " .. tostring(client_ip), "BALATROBOT")
+  end
 end
 
 function API.send_response(response)
-	if API.last_client_ip and API.last_client_port then
-		API.socket:sendto(json.encode(response), API.last_client_ip, API.last_client_port)
-	end
+  if API.last_client_ip and API.last_client_port then
+    API.socket:sendto(json.encode(response), API.last_client_ip, API.last_client_port)
+  end
 end
 
 function API.init()
-	-- Hook into the game's update loop
-	local original_update = love.update
-	love.update = function(dt)
-		original_update(BALATRO_BOT_CONFIG.dt)
-		API.update(BALATRO_BOT_CONFIG.dt)
-	end
+  -- Hook into the game's update loop
+  local original_update = love.update
+  love.update = function(dt)
+    original_update(BALATRO_BOT_CONFIG.dt)
+    API.update(BALATRO_BOT_CONFIG.dt)
+  end
 
-	if not BALATRO_BOT_CONFIG.vsync_enabled then
-		love.window.setVSync(0)
-	end
+  if not BALATRO_BOT_CONFIG.vsync_enabled then
+    love.window.setVSync(0)
+  end
 
-	if BALATRO_BOT_CONFIG.max_fps then
-		G.FPS_CAP = 60
-	end
+  if BALATRO_BOT_CONFIG.max_fps then
+    G.FPS_CAP = 60
+  end
 
-	sendInfoMessage("BalatrobotAPI initialized", "BALATROBOT")
+  sendInfoMessage("BalatrobotAPI initialized", "BALATROBOT")
 end
 
 --------------------------------------------------------------------------------
@@ -98,156 +98,156 @@ end
 --------------------------------------------------------------------------------
 
 API.functions["get_game_state"] = function(args)
-	local game_state = utils.get_game_state()
-	API.send_response(game_state)
+  local game_state = utils.get_game_state()
+  API.send_response(game_state)
 end
 
 API.functions["go_to_menu"] = function(args)
-	if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
-		sendDebugMessage("go_to_menu called but already in menu", "BALATROBOT")
-		local game_state = utils.get_game_state()
-		API.send_response(game_state)
-		return
-	end
+  if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
+    sendDebugMessage("go_to_menu called but already in menu", "BALATROBOT")
+    local game_state = utils.get_game_state()
+    API.send_response(game_state)
+    return
+  end
 
-	G.FUNCS.go_to_menu({})
-	API.pending_requests["go_to_menu"] = {
-		condition = function()
-			return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
-		end,
-		action = function(args)
-			local game_state = utils.get_game_state()
-			API.send_response(game_state)
-		end,
-		args = args,
-	}
+  G.FUNCS.go_to_menu({})
+  API.pending_requests["go_to_menu"] = {
+    condition = function()
+      return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
+    end,
+    action = function(args)
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+    args = args,
+  }
 end
 
 API.functions["start_run"] = function(args)
-	-- Reset the game
-	local play_button = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
-	G.FUNCS[play_button.config.button]({ config = {} })
-	G.FUNCS.exit_overlay_menu({})
+  -- Reset the game
+  local play_button = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
+  G.FUNCS[play_button.config.button]({ config = {} })
+  G.FUNCS.exit_overlay_menu({})
 
-	-- Set the deck
-	local deck_found = false
-	for _, v in pairs(G.P_CENTER_POOLS.Back) do
-		if v.name == args.deck then
-			sendDebugMessage("Changing to deck: " .. v.name, "BALATROBOT")
-			G.GAME.selected_back:change_to(v)
-			G.GAME.viewed_back:change_to(v)
-			deck_found = true
-			break
-		end
-	end
-	if not deck_found then
-		sendErrorMessage("Invalid deck arg for start_run: " .. tostring(args.deck), "BALATROBOT")
-		API.send_response({ error = "Invalid deck arg for start_run: " .. tostring(args.deck) })
-		return
-	end
+  -- Set the deck
+  local deck_found = false
+  for _, v in pairs(G.P_CENTER_POOLS.Back) do
+    if v.name == args.deck then
+      sendDebugMessage("Changing to deck: " .. v.name, "BALATROBOT")
+      G.GAME.selected_back:change_to(v)
+      G.GAME.viewed_back:change_to(v)
+      deck_found = true
+      break
+    end
+  end
+  if not deck_found then
+    sendErrorMessage("Invalid deck arg for start_run: " .. tostring(args.deck), "BALATROBOT")
+    API.send_response({ error = "Invalid deck arg for start_run: " .. tostring(args.deck) })
+    return
+  end
 
-	-- Set the challenge
-	local challenge_obj = nil
-	if args.challenge then
-		for i = 1, #G.CHALLENGES do
-			if G.CHALLENGES[i].name == args.challenge then
-				challenge_obj = G.CHALLENGES[i]
-				break
-			end
-		end
-	end
-	G.GAME.challenge_name = args.challenge
+  -- Set the challenge
+  local challenge_obj = nil
+  if args.challenge then
+    for i = 1, #G.CHALLENGES do
+      if G.CHALLENGES[i].name == args.challenge then
+        challenge_obj = G.CHALLENGES[i]
+        break
+      end
+    end
+  end
+  G.GAME.challenge_name = args.challenge
 
-	-- Start the run
-	G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj })
+  -- Start the run
+  G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj })
 
-	-- Defer sending response until the run has started
-	API.pending_requests["start_run"] = {
-		condition = function()
-			return G.STATE == G.STATES.BLIND_SELECT and G.GAME.blind_on_deck
-		end,
-		action = function(args)
-			local game_state = utils.get_game_state()
-			API.send_response(game_state)
-		end,
-	}
+  -- Defer sending response until the run has started
+  API.pending_requests["start_run"] = {
+    condition = function()
+      return G.STATE == G.STATES.BLIND_SELECT and G.GAME.blind_on_deck
+    end,
+    action = function(args)
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
 end
 
 API.functions["skip_or_select_blind"] = function(args)
-	local current_blind = G.GAME.blind_on_deck
-	local blind_obj = G.blind_select_opts[string.lower(current_blind)]
-	if args.action == "select" then
-		button = blind_obj:get_UIE_by_ID("select_blind_button")
-		G.FUNCS[button.config.button](button)
-		API.pending_requests["skip_or_select_blind"] = {
-			condition = function()
-				return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
-			end,
-			action = function(args)
-				local game_state = utils.get_game_state()
-				API.send_response(game_state)
-			end,
-			args = args,
-		}
-	elseif args.action == "skip" then
-		button = blind_obj:get_UIE_by_ID("tag_" .. current_blind).children[2]
-		G.FUNCS[button.config.button](button)
-		API.pending_requests["skip_or_select_blind"] = {
-			condition = function()
-				local prev_state = {
-					["Small"] = G.prev_small_state,
-					["Large"] = G.prev_large_state,
-					["Boss"] = G.prev_boss_state,
-				}
-				return prev_state[current_blind] == "Skipped"
-			end,
-			action = function(args)
-				local game_state = utils.get_game_state()
-				API.send_response(game_state)
-			end,
-			args = args,
-		}
-	else
-		sendErrorMessage("Invalid action arg for skip_or_select_blind: " .. args.action, "BALATROBOT")
-		API.send_response({ error = "Invalid action arg for skip_or_select_blind: " .. args.action })
-		return
-	end
+  local current_blind = G.GAME.blind_on_deck
+  local blind_obj = G.blind_select_opts[string.lower(current_blind)]
+  if args.action == "select" then
+    button = blind_obj:get_UIE_by_ID("select_blind_button")
+    G.FUNCS[button.config.button](button)
+    API.pending_requests["skip_or_select_blind"] = {
+      condition = function()
+        return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
+      end,
+      action = function(args)
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+      args = args,
+    }
+  elseif args.action == "skip" then
+    button = blind_obj:get_UIE_by_ID("tag_" .. current_blind).children[2]
+    G.FUNCS[button.config.button](button)
+    API.pending_requests["skip_or_select_blind"] = {
+      condition = function()
+        local prev_state = {
+          ["Small"] = G.prev_small_state,
+          ["Large"] = G.prev_large_state,
+          ["Boss"] = G.prev_boss_state,
+        }
+        return prev_state[current_blind] == "Skipped"
+      end,
+      action = function(args)
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+      args = args,
+    }
+  else
+    sendErrorMessage("Invalid action arg for skip_or_select_blind: " .. args.action, "BALATROBOT")
+    API.send_response({ error = "Invalid action arg for skip_or_select_blind: " .. args.action })
+    return
+  end
 end
 
 API.functions["play_cards"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["discard_cards"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["select_booster_action"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["select_shop_action"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["rearrange_hand"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["rearrange_consumables"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["rearrange_jokers"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["use_or_sell_consumables"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 API.functions["sell_jokers"] = function(args)
-	-- TODO: implement
+  -- TODO: implement
 end
 
 return API

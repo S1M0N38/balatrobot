@@ -10,16 +10,16 @@
 ---Global configuration for the BalatroBot mod
 ---@type BalatrobotConfig
 BALATRO_BOT_CONFIG = {
-	port = "12346",
-	dt = 8.0 / 60.0,
-	max_fps = 60,
-	vsync_enabled = false,
+  port = "12346",
+  dt = 2.0 / 60.0,
+  max_fps = 60,
+  vsync_enabled = false,
 
-	--  -- Default values for the original game
-	-- port = "12346",
-	-- dt = 1.0 / 60.0,
-	-- vsync_enabled = true,
-	--  max_fps = nil,
+  --  -- Default values for the original game
+  -- port = "12346",
+  -- dt = 1.0 / 60.0,
+  -- vsync_enabled = true,
+  --  max_fps = nil,
 }
 
 -- Load debug
@@ -30,15 +30,15 @@ assert(SMODS.load_file("src/lua/utils.lua"))()
 assert(SMODS.load_file("src/lua/api.lua"))()
 
 if success and dpAPI.isVersionCompatible(1) then
-	local debugplus = dpAPI.registerID("balatrobot")
-	debugplus.addCommand({
-		name = "env",
-		shortDesc = "Get game state",
-		desc = "Get the current game state, useful for debugging",
-		exec = function(args, rawArgs, dp)
-			debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G, 2) .. "}")
-		end,
-	})
+  local debugplus = dpAPI.registerID("balatrobot")
+  debugplus.addCommand({
+    name = "env",
+    shortDesc = "Get game state",
+    desc = "Get the current game state, useful for debugging",
+    exec = function(args, _, _)
+      debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G, 2) .. "}")
+    end,
+  })
 end
 
 -- Initialize API
