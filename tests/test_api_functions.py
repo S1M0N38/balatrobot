@@ -4,7 +4,7 @@ import socket
 from typing import Generator
 
 import pytest
-from conftest import send_and_receive_api_message, assert_error_response
+from conftest import assert_error_response, send_and_receive_api_message
 
 from balatrobot.enums import State
 
@@ -231,7 +231,9 @@ class TestSkipOrSelectBlind:
             error_response, "Invalid action arg for skip_or_select_blind", ["action"]
         )
 
-    def test_skip_or_select_blind_invalid_state(self, udp_client: socket.socket) -> None:
+    def test_skip_or_select_blind_invalid_state(
+        self, udp_client: socket.socket
+    ) -> None:
         """Test that skip_or_select_blind returns error when not in blind selection state."""
         # Go to menu to ensure we're not in blind selection state
         send_and_receive_api_message(udp_client, "go_to_menu", {})
@@ -243,7 +245,9 @@ class TestSkipOrSelectBlind:
 
         # Verify error response
         assert_error_response(
-            error_response, "Cannot skip or select blind when not in blind selection", ["current_state"]
+            error_response,
+            "Cannot skip or select blind when not in blind selection",
+            ["current_state"],
         )
 
 
@@ -422,19 +426,25 @@ class TestPlayHandOrDiscard:
             response, "No discards left to perform discard", ["discards_left"]
         )
 
-    def test_play_hand_or_discard_invalid_state(self, udp_client: socket.socket) -> None:
+    def test_play_hand_or_discard_invalid_state(
+        self, udp_client: socket.socket
+    ) -> None:
         """Test that play_hand_or_discard returns error when not in selecting hand state."""
         # Go to menu to ensure we're not in selecting hand state
         send_and_receive_api_message(udp_client, "go_to_menu", {})
 
         # Try to play hand when not in selecting hand state
         error_response = send_and_receive_api_message(
-            udp_client, "play_hand_or_discard", {"action": "play_hand", "cards": [0, 1, 2, 3, 4]}
+            udp_client,
+            "play_hand_or_discard",
+            {"action": "play_hand", "cards": [0, 1, 2, 3, 4]},
         )
 
         # Verify error response
         assert_error_response(
-            error_response, "Cannot play hand or discard when not selecting hand", ["current_state"]
+            error_response,
+            "Cannot play hand or discard when not selecting hand",
+            ["current_state"],
         )
 
 
