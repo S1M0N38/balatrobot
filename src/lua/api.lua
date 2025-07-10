@@ -12,7 +12,7 @@ API.last_client_port = nil
 -- Update Loop
 --------------------------------------------------------------------------------
 
-function API.update(dt)
+function API.update(_)
   -- Create socket if it doesn't exist
   if not API.socket then
     API.socket = socket.udp()
@@ -24,8 +24,8 @@ function API.update(dt)
 
   -- Process pending requests
   for key, request in pairs(API.pending_requests) do
-    if request.condition(request.args) then
-      request.action(request.args)
+    if request.condition() then
+      request.action()
       API.pending_requests[key] = nil
     end
   end
@@ -77,7 +77,7 @@ end
 function API.init()
   -- Hook into the game's update loop
   local original_update = love.update
-  love.update = function(dt)
+  love.update = function(_)
     original_update(BALATRO_BOT_CONFIG.dt)
     API.update(BALATRO_BOT_CONFIG.dt)
   end
@@ -97,12 +97,12 @@ end
 -- API Functions
 --------------------------------------------------------------------------------
 
-API.functions["get_game_state"] = function(args)
+API.functions["get_game_state"] = function(_)
   local game_state = utils.get_game_state()
   API.send_response(game_state)
 end
 
-API.functions["go_to_menu"] = function(args)
+API.functions["go_to_menu"] = function(_)
   if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
     sendDebugMessage("go_to_menu called but already in menu", "BALATROBOT")
     local game_state = utils.get_game_state()
@@ -115,11 +115,10 @@ API.functions["go_to_menu"] = function(args)
     condition = function()
       return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
     end,
-    action = function(args)
+    action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
     end,
-    args = args,
   }
 end
 
@@ -166,7 +165,7 @@ API.functions["start_run"] = function(args)
     condition = function()
       return G.STATE == G.STATES.BLIND_SELECT and G.GAME.blind_on_deck
     end,
-    action = function(args)
+    action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
     end,
@@ -183,7 +182,7 @@ API.functions["skip_or_select_blind"] = function(args)
       condition = function()
         return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
       end,
-      action = function(args)
+      action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
       end,
@@ -201,11 +200,10 @@ API.functions["skip_or_select_blind"] = function(args)
         }
         return prev_state[current_blind] == "Skipped"
       end,
-      action = function(args)
+      action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
       end,
-      args = args,
     }
   else
     sendErrorMessage("Invalid action arg for skip_or_select_blind: " .. args.action, "BALATROBOT")
@@ -272,14 +270,14 @@ API.functions["play_hand_or_discard"] = function(args)
       end
       return false
     end,
-    action = function(args)
+    action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
     end,
   }
 end
 
-API.functions["cash_out"] = function(args)
+API.functions["cash_out"] = function(_)
   -- Validate current game state is appropriate for cash out
   if G.STATE ~= G.STATES.ROUND_EVAL then
     sendErrorMessage("Cannot cash out when not in shop. Current state: " .. tostring(G.STATE), "BALATROBOT")
@@ -292,39 +290,38 @@ API.functions["cash_out"] = function(args)
     condition = function()
       return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < 3 and G.STATE_COMPLETE
     end,
-    action = function(args)
+    action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
     end,
-    args = args,
   }
 end
 
-API.functions["select_booster_action"] = function(args)
+API.functions["select_booster_action"] = function(_)
   -- TODO: implement
 end
 
-API.functions["select_shop_action"] = function(args)
+API.functions["select_shop_action"] = function(_)
   -- TODO: implement
 end
 
-API.functions["rearrange_hand"] = function(args)
+API.functions["rearrange_hand"] = function(_)
   -- TODO: implement
 end
 
-API.functions["rearrange_consumables"] = function(args)
+API.functions["rearrange_consumables"] = function(_)
   -- TODO: implement
 end
 
-API.functions["rearrange_jokers"] = function(args)
+API.functions["rearrange_jokers"] = function(_)
   -- TODO: implement
 end
 
-API.functions["use_or_sell_consumables"] = function(args)
+API.functions["use_or_sell_consumables"] = function(_)
   -- TODO: implement
 end
 
-API.functions["sell_jokers"] = function(args)
+API.functions["sell_jokers"] = function(_)
   -- TODO: implement
 end
 
