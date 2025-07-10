@@ -39,14 +39,14 @@ pytest -v
    ps aux | grep run_lovely_macos
 
    # Start if not running
-   ./balatro.sh > balatrobot.log 2>&1 & sleep 10 && echo "Balatro started and ready"
+   ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo "Balatro started and ready"
    ```
 
 2. **Monitor game startup**:
 
    ```bash
    # Check logs for successful mod loading
-   tail -n 100 balatrobot.log
+   tail -n 100 balatro.log
 
    # Look for these success indicators:
    # - "BalatrobotAPI initialized"
@@ -60,14 +60,15 @@ pytest -v
    - **JSON metadata errors**: Normal for development files (.vscode, .luarc.json) - can be ignored
 
 4. **Test execution**:
-   - **Test suite**: 33 tests covering API functions and UDP communication
-   - **Execution time**: ~70 seconds (includes game state transitions)
+   - **Test suite**: 35 tests covering API functions and UDP communication
+   - **Execution time**: ~80 seconds (includes game state transitions)
    - **Coverage**: API function calls, socket communication, error handling, edge cases
 
 5. **Troubleshooting test failures**:
    - **Connection timeouts**: Ensure UDP port 12346 is available
    - **Game state errors**: Check if game is responsive and not crashed
    - **Invalid responses**: Verify mod loaded correctly by checking logs
+   - **If test/s fail for timeout the reasons is that Balatro crash because there was an error in the Balatro mod (i.e. @balatrobot.lua and @src/lua/ ). The error should be logged in the `balatro.log` file.**
 
 ### Documentation
 
@@ -121,4 +122,4 @@ I keep the old code around for reference.
 ### Testing Best Practices
 
 - **Always check that Balatro is running before running tests**
-- After starting Balatro, check the `balatrobot.log` to confirm successful startup
+- After starting Balatro, check the `balatro.log` to confirm successful startup
