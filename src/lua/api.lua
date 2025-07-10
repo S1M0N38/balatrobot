@@ -1,6 +1,11 @@
 local socket = require("socket")
 local json = require("json")
 
+-- Constants
+local UDP_BUFFER_SIZE = 65536
+local SOCKET_TIMEOUT = 0
+local EVENT_QUEUE_THRESHOLD = 3
+
 API = {}
 API.socket = nil
 API.functions = {}
@@ -16,7 +21,7 @@ function API.update(_)
   -- Create socket if it doesn't exist
   if not API.socket then
     API.socket = socket.udp()
-    API.socket:settimeout(0)
+    API.socket:settimeout(SOCKET_TIMEOUT)
     local port = BALATRO_BOT_CONFIG.port
     API.socket:setsockname("127.0.0.1", tonumber(port))
     sendDebugMessage("UDP socket created on port " .. port, "BALATROBOT")
@@ -31,7 +36,7 @@ function API.update(_)
   end
 
   -- Parse received data and run the appropriate function
-  local raw_data, client_ip, client_port = API.socket:receivefrom(65536)
+  local raw_data, client_ip, client_port = API.socket:receivefrom(UDP_BUFFER_SIZE)
   if raw_data and client_ip and client_port then
     -- Store the last client connection
     API.last_client_ip = client_ip
@@ -39,25 +44,20 @@ function API.update(_)
 
     local ok, data = pcall(json.decode, raw_data)
     if not ok then
-      sendErrorMessage("Invalid JSON", "BALATROBOT")
-      API.send_response({ error = "Invalid JSON" })
+      API.send_error_response("Invalid JSON")
       return
     end
     if data.name == nil then
-      sendErrorMessage("Message must contain a name", "BALATROBOT")
-      API.send_response({ error = "Message must contain a name" })
+      API.send_error_response("Message must contain a name")
     elseif data.arguments == nil then
-      sendErrorMessage("Message must contain arguments", "BALATROBOT")
-      API.send_response({ error = "Message must contain arguments" })
+      API.send_error_response("Message must contain arguments")
     else
       local func = API.functions[data.name]
       local args = data.arguments
       if func == nil then
-        sendErrorMessage("Unknown function name: " .. data.name, "BALATROBOT")
-        API.send_response({ error = "Unknown function name: " .. data.name })
+        API.send_error_response("Unknown function name", { function_name = data.name })
       elseif type(args) ~= "table" then
-        sendErrorMessage("Arguments must be a table", "BALATROBOT")
-        API.send_response({ error = "Arguments must be a table: " .. type(args) })
+        API.send_error_response("Arguments must be a table", { received_type = type(args) })
       else
         sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "BALATROBOT")
         func(args)
@@ -72,6 +72,15 @@ function API.send_response(response)
   if API.last_client_ip and API.last_client_port then
     API.socket:sendto(json.encode(response), API.last_client_ip, API.last_client_port)
   end
+end
+
+function API.send_error_response(message, context)
+  sendErrorMessage(message, "BALATROBOT")
+  local response = { error = message, state = G.STATE }
+  if context then
+    response.context = context
+  end
+  API.send_response(response)
 end
 
 function API.init()
@@ -140,8 +149,7 @@ API.functions["start_run"] = function(args)
     end
   end
   if not deck_found then
-    sendErrorMessage("Invalid deck arg for start_run: " .. tostring(args.deck), "BALATROBOT")
-    API.send_response({ error = "Invalid deck arg for start_run: " .. tostring(args.deck) })
+    API.send_error_response("Invalid deck arg for start_run", { deck = args.deck })
     return
   end
 
@@ -206,16 +214,17 @@ API.functions["skip_or_select_blind"] = function(args)
       end,
     }
   else
-    sendErrorMessage("Invalid action arg for skip_or_select_blind: " .. args.action, "BALATROBOT")
-    API.send_response({ error = "Invalid action arg for skip_or_select_blind: " .. args.action })
+    API.send_error_response("Invalid action arg for skip_or_select_blind", { action = args.action })
     return
   end
 end
 
 API.functions["play_hand_or_discard"] = function(args)
   if args.action == "discard" and G.GAME.current_round.discards_left == 0 then
-    sendErrorMessage("No discards left to perform discard", "BALATROBOT")
-    API.send_response({ error = "No discards left to perform discard", state = G.STATE })
+    API.send_error_response(
+      "No discards left to perform discard",
+      { discards_left = G.GAME.current_round.discards_left }
+    )
     return
   end
 
@@ -227,8 +236,7 @@ API.functions["play_hand_or_discard"] = function(args)
   -- Check that all cards are selectable
   for _, card_index in ipairs(args.cards) do
     if not G.hand.cards[card_index] then
-      sendErrorMessage("Invalid card index: " .. tostring(card_index), "BALATROBOT")
-      API.send_response({ error = "Invalid card index: " .. tostring(card_index) })
+      API.send_error_response("Invalid card index", { card_index = card_index, hand_size = #G.hand.cards })
       return
     end
   end
@@ -247,8 +255,7 @@ API.functions["play_hand_or_discard"] = function(args)
     local discard_button = UIBox:get_UIE_by_ID("discard_button", G.buttons.UIRoot)
     G.FUNCS["discard_cards_from_highlighted"](discard_button)
   else
-    sendErrorMessage("Invalid action arg for play_hand_or_discard: " .. args.action, "BALATROBOT")
-    API.send_response({ error = "Invalid action arg for play_hand_or_discard: " .. args.action })
+    API.send_error_response("Invalid action arg for play_hand_or_discard", { action = args.action })
     return
   end
 
@@ -256,7 +263,7 @@ API.functions["play_hand_or_discard"] = function(args)
   API.pending_requests["play_hand_or_discard"] = {
     condition = function()
       -- TODO: maybe remove brittle G.E_MANAGER check
-      if #G.E_MANAGER.queues.base < 3 and G.STATE_COMPLETE then
+      if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
         -- round still going
         if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
           return true
@@ -280,15 +287,14 @@ end
 API.functions["cash_out"] = function(_)
   -- Validate current game state is appropriate for cash out
   if G.STATE ~= G.STATES.ROUND_EVAL then
-    sendErrorMessage("Cannot cash out when not in shop. Current state: " .. tostring(G.STATE), "BALATROBOT")
-    API.send_response({ error = "Cannot cash out when not in shop", state = G.STATE })
+    API.send_error_response("Cannot cash out when not in shop", { current_state = G.STATE })
     return
   end
 
   G.FUNCS.cash_out({ config = {} })
   API.pending_requests["cash_out"] = {
     condition = function()
-      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < 3 and G.STATE_COMPLETE
+      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
     end,
     action = function()
       local game_state = utils.get_game_state()
