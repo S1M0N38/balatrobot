@@ -4,7 +4,7 @@ import json
 import socket
 
 import pytest
-from conftest import BUFFER_SIZE, HOST, PORT, send_api_message
+from conftest import BUFFER_SIZE, HOST, PORT, send_api_message, assert_error_response
 
 
 def test_basic_connection(udp_client: socket.socket) -> None:
@@ -54,9 +54,7 @@ def test_invalid_json_message(udp_client: socket.socket) -> None:
     data, _ = udp_client.recvfrom(BUFFER_SIZE)
     response = data.decode().strip()
     error_response = json.loads(response)
-    assert isinstance(error_response, dict)
-    assert "error" in error_response
-    assert "Invalid JSON" in error_response["error"]
+    assert_error_response(error_response, "Invalid JSON")
 
     # Verify server is still responsive
     send_api_message(udp_client, "get_game_state", {})
@@ -77,9 +75,7 @@ def test_missing_name_field(udp_client: socket.socket) -> None:
     data, _ = udp_client.recvfrom(BUFFER_SIZE)
     response = data.decode().strip()
     error_response = json.loads(response)
-    assert isinstance(error_response, dict)
-    assert "error" in error_response
-    assert "Message must contain a name" in error_response["error"]
+    assert_error_response(error_response, "Message must contain a name")
 
     # Verify server is still responsive
     send_api_message(udp_client, "get_game_state", {})
@@ -100,9 +96,7 @@ def test_missing_arguments_field(udp_client: socket.socket) -> None:
     data, _ = udp_client.recvfrom(BUFFER_SIZE)
     response = data.decode().strip()
     error_response = json.loads(response)
-    assert isinstance(error_response, dict)
-    assert "error" in error_response
-    assert "Message must contain arguments" in error_response["error"]
+    assert_error_response(error_response, "Message must contain arguments")
 
     # Verify server is still responsive
     send_api_message(udp_client, "get_game_state", {})
@@ -123,9 +117,7 @@ def test_unknown_message(udp_client: socket.socket) -> None:
     data, _ = udp_client.recvfrom(BUFFER_SIZE)
     response = data.decode().strip()
     error_response = json.loads(response)
-    assert isinstance(error_response, dict)
-    assert "error" in error_response
-    assert "Unknown function name" in error_response["error"]
+    assert_error_response(error_response, "Unknown function name", ["function_name"])
 
     # Verify server is still responsive
     send_api_message(udp_client, "get_game_state", {})
