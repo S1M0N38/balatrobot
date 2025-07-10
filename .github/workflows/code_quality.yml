@@ -49,3 +49,14 @@ jobs:
         run: |
           source .venv/bin/activate
           basedpyright
+  stylua:
+    name: StyLua
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Lua formatting
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: v4.1.0
+          args: --check src/lua
