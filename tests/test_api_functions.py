@@ -4,7 +4,7 @@ import socket
 from typing import Generator
 
 import pytest
-from conftest import send_and_receive_api_message
+from conftest import send_and_receive_api_message, assert_error_response
 
 from balatrobot.enums import State
 
@@ -127,9 +127,7 @@ class TestStartRun:
         response = send_and_receive_api_message(
             udp_client, "start_run", incomplete_args
         )
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert "Invalid deck arg" in response["error"]
+        assert_error_response(response, "Invalid deck arg for start_run")
 
     def test_start_run_invalid_deck(self, udp_client: socket.socket) -> None:
         """Test start_run with invalid deck name."""
@@ -141,9 +139,7 @@ class TestStartRun:
         }
         # Should receive error response
         response = send_and_receive_api_message(udp_client, "start_run", invalid_args)
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert "Invalid deck arg" in response["error"]
+        assert_error_response(response, "Invalid deck arg for start_run", ["deck"])
 
 
 class TestGoToMenu:
@@ -231,9 +227,9 @@ class TestSkipOrSelectBlind:
         )
 
         # Verify error response
-        assert isinstance(error_response, dict)
-        assert "error" in error_response
-        assert "Invalid action arg" in error_response["error"]
+        assert_error_response(
+            error_response, "Invalid action arg for skip_or_select_blind", ["action"]
+        )
 
 
 class TestPlayHandOrDiscard:
@@ -327,9 +323,9 @@ class TestPlayHandOrDiscard:
         )
 
         # Should receive error response for invalid card index
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert "Invalid card index" in response["error"]
+        assert_error_response(
+            response, "Invalid card index", ["card_index", "hand_size"]
+        )
 
     def test_play_hand_invalid_action(self, udp_client: socket.socket) -> None:
         """Test playing a hand with invalid action returns error."""
@@ -339,9 +335,9 @@ class TestPlayHandOrDiscard:
         )
 
         # Should receive error response for invalid action
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert "Invalid action arg" in response["error"]
+        assert_error_response(
+            response, "Invalid action arg for play_hand_or_discard", ["action"]
+        )
 
     @pytest.mark.parametrize(
         "cards,expected_new_cards",
@@ -407,9 +403,9 @@ class TestPlayHandOrDiscard:
         )
 
         # Should receive error response for no discards left
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert "No discards left" in response["error"]
+        assert_error_response(
+            response, "No discards left to perform discard", ["discards_left"]
+        )
 
 
 class TestCashOut:
@@ -461,7 +457,6 @@ class TestCashOut:
         response = send_and_receive_api_message(udp_client, "cash_out", {})
 
         # Verify error response
-        assert isinstance(response, dict)
-        assert "error" in response
-        assert "Cannot cash out when not in shop" in response["error"]
-        assert "state" in response
+        assert_error_response(
+            response, "Cannot cash out when not in shop", ["current_state"]
+        )

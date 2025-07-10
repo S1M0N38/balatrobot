@@ -9,7 +9,7 @@ import pytest
 # Connection settings
 HOST = "127.0.0.1"
 PORT: int = 12346  # default port for BalatroBot UDP API
-TIMEOUT: float = 30.0  # timeout for socket operations in seconds
+TIMEOUT: float = 10.0  # timeout for socket operations in seconds
 BUFFER_SIZE: int = 65536  # 64KB buffer for UDP messages
 
 
@@ -68,3 +68,15 @@ def send_and_receive_api_message(
     send_api_message(sock, name, arguments)
     game_state = receive_api_message(sock)
     return game_state
+
+
+def assert_error_response(response, expected_error_text, expected_context_keys=None):
+    """Helper function to assert error response format and content."""
+    assert isinstance(response, dict)
+    assert "error" in response
+    assert "state" in response
+    assert expected_error_text in response["error"]
+    if expected_context_keys:
+        assert "context" in response
+        for key in expected_context_keys:
+            assert key in response["context"]
