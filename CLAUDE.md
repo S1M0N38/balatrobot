@@ -2,32 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-This project requires that Balatro Game is running in the background. To run the game use the following command:
-
-```bash
-# Basic command (may hang on crash)
-./balatro.sh
-
-# Recommended: Run with logging and startup wait
-./balatro.sh > balatro_game.log 2>&1 & sleep 10 && echo "Balatro started and ready"
-```
-
-### Game Monitoring Commands
-
-```bash
-# Check if game is running
-ps aux | grep run_lovely_macos
-
-# View game logs
-tail -f balatro_game.log
-
-# View monitor logs
-tail -f balatro_monitor.log
-
-# Kill game process
-pkill -f run_lovely_macos
-```
-
 ## Development Commands
 
 ### Linting and Type Checking
@@ -65,14 +39,14 @@ pytest -v
    ps aux | grep run_lovely_macos
 
    # Start if not running
-   ./balatro.sh > balatro_game.log 2>&1 & sleep 10 && echo "Balatro started and ready"
+   ./balatro.sh > balatrobot.log 2>&1 & sleep 10 && echo "Balatro started and ready"
    ```
 
 2. **Monitor game startup**:
 
    ```bash
    # Check logs for successful mod loading
-   tail -f balatro_game.log
+   tail -n 100 balatrobot.log
 
    # Look for these success indicators:
    # - "BalatrobotAPI initialized"
@@ -86,8 +60,8 @@ pytest -v
    - **JSON metadata errors**: Normal for development files (.vscode, .luarc.json) - can be ignored
 
 4. **Test execution**:
-   - **Test suite**: 32 tests covering API functions and UDP communication
-   - **Execution time**: ~60 seconds (includes game state transitions)
+   - **Test suite**: 33 tests covering API functions and UDP communication
+   - **Execution time**: ~70 seconds (includes game state transitions)
    - **Coverage**: API function calls, socket communication, error handling, edge cases
 
 5. **Troubleshooting test failures**:
@@ -147,4 +121,4 @@ I keep the old code around for reference.
 ### Testing Best Practices
 
 - **Always check that Balatro is running before running tests**
-- After starting Balatro, check the log to confirm successful startup
+- After starting Balatro, check the `balatrobot.log` to confirm successful startup
