@@ -181,6 +181,12 @@ API.functions["start_run"] = function(args)
 end
 
 API.functions["skip_or_select_blind"] = function(args)
+  -- Validate current game state is appropriate for blind selection
+  if G.STATE ~= G.STATES.BLIND_SELECT then
+    API.send_error_response("Cannot skip or select blind when not in blind selection", { current_state = G.STATE })
+    return
+  end
+
   local current_blind = G.GAME.blind_on_deck
   local blind_obj = G.blind_select_opts[string.lower(current_blind)]
   if args.action == "select" then
@@ -220,6 +226,12 @@ API.functions["skip_or_select_blind"] = function(args)
 end
 
 API.functions["play_hand_or_discard"] = function(args)
+  -- Validate current game state is appropriate for playing hand or discarding
+  if G.STATE ~= G.STATES.SELECTING_HAND then
+    API.send_error_response("Cannot play hand or discard when not selecting hand", { current_state = G.STATE })
+    return
+  end
+
   if args.action == "discard" and G.GAME.current_round.discards_left == 0 then
     API.send_error_response(
       "No discards left to perform discard",
