@@ -58,5 +58,5 @@ jobs:
         uses: JohnnyMorganz/stylua-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v4.1.0
+          version: latest
           args: --check src/lua
