@@ -279,6 +279,27 @@ API.functions["play_hand_or_discard"] = function(args)
   }
 end
 
+API.functions["cash_out"] = function(args)
+  -- Validate current game state is appropriate for cash out
+  if G.STATE ~= G.STATES.ROUND_EVAL then
+    sendErrorMessage("Cannot cash out when not in shop. Current state: " .. tostring(G.STATE), "BALATROBOT")
+    API.send_response({ error = "Cannot cash out when not in shop", state = G.STATE })
+    return
+  end
+
+  G.FUNCS.cash_out({ config = {} })
+  API.pending_requests["cash_out"] = {
+    condition = function()
+      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < 3 and G.STATE_COMPLETE
+    end,
+    action = function(args)
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+    args = args,
+  }
+end
+
 API.functions["select_booster_action"] = function(args)
   -- TODO: implement
 end
