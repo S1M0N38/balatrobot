@@ -59,15 +59,17 @@ pytest -v
 #### Test Prerequisites and Workflow
 
 1. **Always start Balatro first**:
+
    ```bash
    # Check if game is running
    ps aux | grep run_lovely_macos
 
-# Start if not running
+   # Start if not running
    ./balatro.sh > balatro_game.log 2>&1 & sleep 10 && echo "Balatro started and ready"
    ```
 
 2. **Monitor game startup**:
+
    ```bash
    # Check logs for successful mod loading
    tail -f balatro_game.log
@@ -79,14 +81,13 @@ pytest -v
    ```
 
 3. **Common startup issues and fixes**:
-   - **Syntax errors in balatrobot.lua**: Check for corrupted text like `asldkfjalksdjlocal` that should be `local`
    - **Game crashes on mod load**: Review full log for Lua stack traces
    - **Steam connection warnings**: Can be ignored - game works without Steam in development
    - **JSON metadata errors**: Normal for development files (.vscode, .luarc.json) - can be ignored
 
 4. **Test execution**:
-   - **Test suite**: 31 tests covering API functions and UDP communication
-   - **Execution time**: ~56 seconds (includes game state transitions)
+   - **Test suite**: 32 tests covering API functions and UDP communication
+   - **Execution time**: ~60 seconds (includes game state transitions)
    - **Coverage**: API function calls, socket communication, error handling, edge cases
 
 5. **Troubleshooting test failures**:
@@ -102,17 +103,6 @@ mkdocs serve
 
 # Build documentation
 mkdocs build
-```
-
-### Bot Development
-
-```bash
-# Run the example bot
-python bots/example.py
-
-# Run bot with different log levels
-python bots/example.py --log DEBUG
-python bots/example.py --log INFO
 ```
 
 ## Architecture Overview
