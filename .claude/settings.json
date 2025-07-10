@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "stylua src/lua"
+          },
+          {
+            "type": "command",
+            "command": "ruff format -s src/balatrobot"
+          }
+        ]
+      }
+    ]
+  }
+}
