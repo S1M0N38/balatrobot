@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.2.0](https://github.com/S1M0N38/balatrobot/compare/v0.1.0...v0.2.0) (2025-07-11)
+
+
+### Features
+
+* add blind_on_deck to game_state and ftm code ([79da57f](https://github.com/S1M0N38/balatrobot/commit/79da57fe056186b26b7733ef18b9e1e42d4d6b9a))
+* add extensive logging to python code ([56c7c80](https://github.com/S1M0N38/balatrobot/commit/56c7c80d3419d9dd11fbd5cbea513a76015c92f0))
+* **api:** add cashout API function ([e9d86b0](https://github.com/S1M0N38/balatrobot/commit/e9d86b0e244f100f2ec2e9753883ec26afc3f713))
+* **api:** add shop action support with next_round functionality ([6bcab8a](https://github.com/S1M0N38/balatrobot/commit/6bcab8a783ba0ecb12764d7d45a990c3f7fa7dc9))
+* **api:** game over and no discard left edge cases ([5ad134a](https://github.com/S1M0N38/balatrobot/commit/5ad134afea7ec1fd30d27450bac474a69aaaa552))
+* **api:** handle winning a round in play_hand_or_discard ([975b0b7](https://github.com/S1M0N38/balatrobot/commit/975b0b7da89d15239da8e8d75d3f67b77c26c5c9))
+* **api:** implement play_hand_or_discard action ([2c0ae92](https://github.com/S1M0N38/balatrobot/commit/2c0ae92bc3350e7a7d6c7b15404346c55b127d1b))
+* **api:** improve logging for function calls ([8ba681e](https://github.com/S1M0N38/balatrobot/commit/8ba681e69de239bb58dba581749ab052bfdca628))
+* **api:** validate state in the usage of API functions ([94a58b5](https://github.com/S1M0N38/balatrobot/commit/94a58b51aba4346fef0e835bb20b14547f94afb1))
+* **dev:** add commit command with conventional commits spec ([95e4067](https://github.com/S1M0N38/balatrobot/commit/95e4067f9027bb14868ebd764180e65b8e82959a))
+* **dev:** add test command and improve process detection ([344d1d3](https://github.com/S1M0N38/balatrobot/commit/344d1d3edb594708fcc9b785f3a5f391d25ed145))
+* implement game speed up ([b46995f](https://github.com/S1M0N38/balatrobot/commit/b46995f1b9a695ba031e1795dd7458d9796a87fc))
+* init lua code socket server ([85b5249](https://github.com/S1M0N38/balatrobot/commit/85b52494a6866ff894db512261881ff07b5d7b41))
+* update mod entry point to new lua code ([5158a56](https://github.com/S1M0N38/balatrobot/commit/5158a56715d7d0ed83e277fe77487976e7f6edc5))
+
+
+### Bug Fixes
+
+* action params format ([5478ede](https://github.com/S1M0N38/balatrobot/commit/5478edeab759943767f0e39ad1fb795e4e0bcfc7))
+* include ActionSchema in __init__.py exporting ([72b06ab](https://github.com/S1M0N38/balatrobot/commit/72b06ab56385bf8a14fedf2b75783d59712740f4))
+* key for G.GAME.skips ([d99b4c9](https://github.com/S1M0N38/balatrobot/commit/d99b4c91bf831a353b9069e251af40d52f0fba2b))
+* lua type for BalatrobotConfig ([2ae6055](https://github.com/S1M0N38/balatrobot/commit/2ae605529fb1a8a0d13a93fde8585761607730e5))
+* reduce default mod dt to 4/60 ([21ea63b](https://github.com/S1M0N38/balatrobot/commit/21ea63b73931a94621f65deb646d3048d07801e2))
+
+
+### Documentation
+
+* add CLAUDE.md with development guidelines and commands ([be7898e](https://github.com/S1M0N38/balatrobot/commit/be7898e1a231d762773b3f26ed6f31edd39e0c98))
+* **dev:** clarify commit command formatting guidelines ([12130f2](https://github.com/S1M0N38/balatrobot/commit/12130f24c1262c4e8625d2468ea5522e46d9d351))
+* **dev:** improve code documentation and comments ([b06c259](https://github.com/S1M0N38/balatrobot/commit/b06c259912b17cf246509a251f2bb7c776798804))
+* **dev:** refine commit command workflow instructions ([c3340e6](https://github.com/S1M0N38/balatrobot/commit/c3340e6b00f6b29fd68993f224ff40337e2181d6))
+* **dev:** update commit command co-author handling ([b554b44](https://github.com/S1M0N38/balatrobot/commit/b554b442daf3b686bbc28cfb46eed47ef1581555))
+* **dev:** update test suite metrics after shop API addition ([8c49a7d](https://github.com/S1M0N38/balatrobot/commit/8c49a7d9197dcb6042de550f3ddc489f092be440))
+* remove redundant commands and refine existing ones ([a1e4d07](https://github.com/S1M0N38/balatrobot/commit/a1e4d070e9279f75681a45b836679093596c893c))
+* renamed log file and provide suggestion for Timeout errors ([ce6aa6d](https://github.com/S1M0N38/balatrobot/commit/ce6aa6d67fabc146a75805173a5044f776fed70c))
+* update CLAUDE.md with test prerequisites and workflow ([f7436e0](https://github.com/S1M0N38/balatrobot/commit/f7436e01175c9ad22aaf95a7c86e401ec1162886))
+
 ## 0.1.0 (2025-07-06)
 
 
