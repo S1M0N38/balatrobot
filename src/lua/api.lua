@@ -334,6 +334,35 @@ API.functions["cash_out"] = function(_)
   }
 end
 
+---Selects an action for shop
+---@param args ShopActionArgs The shop action to perform
+API.functions["shop"] = function(args)
+  -- Validate current game state is appropriate for shop
+  if G.STATE ~= G.STATES.SHOP then
+    API.send_error_response("Cannot select shop action when not in shop", { current_state = G.STATE })
+    return
+  end
+
+  local action = args.action
+  if action == "next_round" then
+    G.FUNCS.toggle_shop({})
+    API.pending_requests["shop"] = {
+      condition = function()
+        return G.STATE == G.STATES.BLIND_SELECT
+          and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+          and G.STATE_COMPLETE
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+  else
+    API.send_error_response("Invalid action arg for shop", { action = action })
+    return
+  end
+end
+
 ---Selects an action for booster packs (TODO implement)
 ---@param _ table Arguments
 API.functions["select_booster_action"] = function(_)
