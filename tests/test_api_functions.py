@@ -448,6 +448,80 @@ class TestPlayHandOrDiscard:
         )
 
 
+class TestShop:
+    """Tests for the shop API endpoint."""
+
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(
+        self, udp_client: socket.socket
+    ) -> Generator[None, None, None]:
+        """Set up and tear down each test method."""
+        # Start a run
+        start_run_args = {
+            "deck": "Red Deck",
+            "stake": 1,
+            "challenge": None,
+            "seed": "OOOO155",  # four of a kind in first hand
+        }
+        send_and_receive_api_message(udp_client, "start_run", start_run_args)
+
+        # Select blind
+        send_and_receive_api_message(
+            udp_client, "skip_or_select_blind", {"action": "select"}
+        )
+
+        # Play a winning hand (four of a kind) to reach shop
+        game_state = send_and_receive_api_message(
+            udp_client,
+            "play_hand_or_discard",
+            {"action": "play_hand", "cards": [0, 1, 2, 3]},
+        )
+        assert game_state["state"] == State.ROUND_EVAL.value
+
+        # Cash out to reach shop
+        game_state = send_and_receive_api_message(udp_client, "cash_out", {})
+        assert game_state["state"] == State.SHOP.value
+        yield
+        send_and_receive_api_message(udp_client, "go_to_menu", {})
+
+    def test_shop_next_round_success(self, udp_client: socket.socket) -> None:
+        """Test successful shop next_round action transitions to blind select."""
+        # Execute next_round action
+        game_state = send_and_receive_api_message(
+            udp_client, "shop", {"action": "next_round"}
+        )
+
+        # Verify we're in blind select state after next_round
+        assert game_state["state"] == State.BLIND_SELECT.value
+
+    def test_shop_invalid_action_error(self, udp_client: socket.socket) -> None:
+        """Test shop returns error for invalid action."""
+        # Try invalid action
+        response = send_and_receive_api_message(
+            udp_client, "shop", {"action": "invalid_action"}
+        )
+
+        # Verify error response
+        assert_error_response(
+            response, "Invalid action arg for shop", ["action"]
+        )
+
+    def test_shop_invalid_state_error(self, udp_client: socket.socket) -> None:
+        """Test shop returns error when not in shop state."""
+        # Go to menu first to ensure we're not in shop state
+        send_and_receive_api_message(udp_client, "go_to_menu", {})
+
+        # Try to use shop when not in shop state - should return error
+        response = send_and_receive_api_message(
+            udp_client, "shop", {"action": "next_round"}
+        )
+
+        # Verify error response
+        assert_error_response(
+            response, "Cannot select shop action when not in shop", ["current_state"]
+        )
+
+
 class TestCashOut:
     """Tests for the cash_out API endpoint."""
 
