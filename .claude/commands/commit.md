@@ -22,7 +22,7 @@ Analyze the git diff of staged files and create a commit message following conve
 - dev: Development tools and environment
 
 **Workflow:**
-1. Run `git status` to see overall repository state
+1. Run `git status` to see overall repository state. If there are are no staged changes, exit.
 2. Run `git diff --staged` to analyze the actual changes
 3. Run `git diff --stat --staged` for summary of changed files
 4. Run `git log --oneline -10` to review recent commit patterns
@@ -31,5 +31,4 @@ Analyze the git diff of staged files and create a commit message following conve
 7. Include body if changes are complex
 8. Add breaking change footer if applicable
 9. If this is the final commit after extensive Claude assistance with code creation/modification/deletion, add `Co-Authored-By: Claude <noreply@anthropic.com>` at the end of the commit body
-10. Present the generated commit message to the user for approval
-11. If user approves, commit the staged changes with the generated message
+10. Commit the staged changes with the generated message
