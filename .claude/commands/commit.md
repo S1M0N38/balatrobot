@@ -32,3 +32,7 @@ Analyze the git diff of staged files and create a commit message following conve
 8. Add breaking change footer if applicable
 9. If this is the final commit after extensive Claude assistance with code creation/modification/deletion, add `Co-Authored-By: Claude <noreply@anthropic.com>` at the end of the commit body
 10. Commit the staged changes with the generated message
+
+**Notes**
+- Do not include emojis in the commit message.
+- Do not include `🤖 Generated with [Claude Code](https://claude.ai/code)` in the commit message.
