@@ -120,7 +120,8 @@ API.functions["get_game_state"] = function(_)
   API.send_response(game_state)
 end
 
----Navigates to the main menu
+---Navigates to the main menu.
+---Call G.FUNCS.go_to_menu() to navigate to the main menu.
 ---@param _ table Arguments (not used)
 API.functions["go_to_menu"] = function(_)
   if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
@@ -143,12 +144,12 @@ API.functions["go_to_menu"] = function(_)
 end
 
 ---Starts a new game run with specified parameters
+---Call G.FUNCS.start_run() to start a new game run with specified parameters.
 ---@param args StartRunArgs The run configuration
 API.functions["start_run"] = function(args)
   -- Reset the game
-  local play_button = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
-  G.FUNCS[play_button.config.button]({ config = {} })
-  G.FUNCS.exit_overlay_menu({})
+  G.FUNCS.setup_run({ config = {} })
+  G.FUNCS.exit_overlay_menu()
 
   -- Set the deck
   local deck_found = false
@@ -194,6 +195,7 @@ API.functions["start_run"] = function(args)
 end
 
 ---Skips or selects the current blind
+---Call G.FUNCS.select_blind(button) or G.FUNCS.skip_blind(button)
 ---@param args BlindActionArgs The blind action to perform
 API.functions["skip_or_select_blind"] = function(args)
   -- Validate current game state is appropriate for blind selection
@@ -202,11 +204,14 @@ API.functions["skip_or_select_blind"] = function(args)
     return
   end
 
+  -- Get the current blind pane
   local current_blind = G.GAME.blind_on_deck
-  local blind_obj = G.blind_select_opts[string.lower(current_blind)]
+  assert(current_blind, "current_blind is nil")
+  local blind_pane = G.blind_select_opts[string.lower(current_blind)]
+
   if args.action == "select" then
-    button = blind_obj:get_UIE_by_ID("select_blind_button")
-    G.FUNCS[button.config.button](button)
+    local button = blind_pane:get_UIE_by_ID("select_blind_button")
+    G.FUNCS.select_blind(button)
     API.pending_requests["skip_or_select_blind"] = {
       condition = function()
         return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
@@ -218,13 +223,14 @@ API.functions["skip_or_select_blind"] = function(args)
       args = args,
     }
   elseif args.action == "skip" then
-    button = blind_obj:get_UIE_by_ID("tag_" .. current_blind).children[2]
-    G.FUNCS[button.config.button](button)
+    local tag_element = blind_pane:get_UIE_by_ID("tag_" .. current_blind)
+    local button = tag_element.children[2]
+    G.FUNCS.skip_blind(button)
     API.pending_requests["skip_or_select_blind"] = {
       condition = function()
         local prev_state = {
           ["Small"] = G.prev_small_state,
-          ["Large"] = G.prev_large_state,
+          ["Large"] = G.prev_large_state, -- this is Large not Big
           ["Boss"] = G.prev_boss_state,
         }
         return prev_state[current_blind] == "Skipped"
@@ -241,6 +247,8 @@ API.functions["skip_or_select_blind"] = function(args)
 end
 
 ---Plays selected cards or discards them
+---Call G.FUNCS.play_cards_from_highlighted(play_button)
+---or G.FUNCS.discard_cards_from_highlighted(discard_button)
 ---@param args HandActionArgs The hand action to perform
 API.functions["play_hand_or_discard"] = function(args)
   -- Validate current game state is appropriate for playing hand or discarding
@@ -278,11 +286,11 @@ API.functions["play_hand_or_discard"] = function(args)
   if args.action == "play_hand" then
     ---@diagnostic disable-next-line: undefined-field
     local play_button = UIBox:get_UIE_by_ID("play_button", G.buttons.UIRoot)
-    G.FUNCS["play_cards_from_highlighted"](play_button)
+    G.FUNCS.play_cards_from_highlighted(play_button)
   elseif args.action == "discard" then
     ---@diagnostic disable-next-line: undefined-field
     local discard_button = UIBox:get_UIE_by_ID("discard_button", G.buttons.UIRoot)
-    G.FUNCS["discard_cards_from_highlighted"](discard_button)
+    G.FUNCS.discard_cards_from_highlighted(discard_button)
   else
     API.send_error_response("Invalid action arg for play_hand_or_discard", { action = args.action })
     return
@@ -291,7 +299,6 @@ API.functions["play_hand_or_discard"] = function(args)
   -- Defer sending response until the run has started
   API.pending_requests["play_hand_or_discard"] = {
     condition = function()
-      -- TODO: maybe remove brittle G.E_MANAGER check
       if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
         -- round still going
         if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
@@ -314,6 +321,7 @@ API.functions["play_hand_or_discard"] = function(args)
 end
 
 ---Cashes out from the current round to enter the shop
+---Call G.FUNCS.cash_out() to cash out from the current round to enter the shop.
 ---@param _ table Arguments (not used)
 API.functions["cash_out"] = function(_)
   -- Validate current game state is appropriate for cash out
@@ -335,6 +343,7 @@ API.functions["cash_out"] = function(_)
 end
 
 ---Selects an action for shop
+---Call G.FUNCS.toggle_shop() to select an action for shop.
 ---@param args ShopActionArgs The shop action to perform
 API.functions["shop"] = function(args)
   -- Validate current game state is appropriate for shop
@@ -361,48 +370,6 @@ API.functions["shop"] = function(args)
     API.send_error_response("Invalid action arg for shop", { action = action })
     return
   end
-end
-
----Selects an action for booster packs (TODO implement)
----@param _ table Arguments
-API.functions["select_booster_action"] = function(_)
-  -- TODO: implement
-end
-
----Selects an action in the shop (TODO implement)
----@param _ table Arguments
-API.functions["select_shop_action"] = function(_)
-  -- TODO: implement
-end
-
----Rearranges cards in hand (TODO implement)
----@param _ table Arguments
-API.functions["rearrange_hand"] = function(_)
-  -- TODO: implement
-end
-
----Rearranges consumable cards (TODO implement)
----@param _ table Arguments
-API.functions["rearrange_consumables"] = function(_)
-  -- TODO: implement
-end
-
----Rearranges joker cards (TODO implement)
----@param _ table Arguments
-API.functions["rearrange_jokers"] = function(_)
-  -- TODO: implement
-end
-
----Uses or sells consumable cards (TODO implement)
----@param _ table Arguments
-API.functions["use_or_sell_consumables"] = function(_)
-  -- TODO: implement
-end
-
----Sells joker cards (TODO implement)
----@param _ table Arguments
-API.functions["sell_jokers"] = function(_)
-  -- TODO: implement
 end
 
 return API
