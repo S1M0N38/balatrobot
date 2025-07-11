@@ -117,7 +117,7 @@ def test_unknown_message(udp_client: socket.socket) -> None:
     data, _ = udp_client.recvfrom(BUFFER_SIZE)
     response = data.decode().strip()
     error_response = json.loads(response)
-    assert_error_response(error_response, "Unknown function name", ["function_name"])
+    assert_error_response(error_response, "Unknown function name", ["name"])
 
     # Verify server is still responsive
     send_api_message(udp_client, "get_game_state", {})
