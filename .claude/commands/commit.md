@@ -29,9 +29,13 @@ Analyze the git diff of staged files and create a commit message following conve
 5. Choose appropriate type and scope based on changes
 6. Write concise description (50 chars max for first line)
 7. Include body if changes are complex
-8. Add breaking change footer if applicable
-9. If this is the final commit after extensive Claude assistance with code creation/modification/deletion, add `Co-Authored-By: Claude <noreply@anthropic.com>` at the end of the commit body
-10. Commit the staged changes with the generated message
+8. Commit the staged changes with the generated message
+
+**Co-authors**
+Add the following co-authors: $ARGUMENTS
+If the list is empty, do not add any co-authors.
+Here is a list of co-authors (name, co-authored-by):
+- claude: `Co-Authored-By: Claude <noreply@anthropic.com>`
 
 **Notes**
 - Do not include emojis in the commit message.
