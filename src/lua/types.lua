@@ -46,6 +46,12 @@
 ---@field action "play_hand" | "discard" The action to perform
 ---@field cards number[] Array of card indices (0-based)
 
+---@class ShopActionArgs
+---@field action "next_round" The action to perform
+
+-- TODO: add the other actions "reroll" | "buy" | "buy_and_use" | "redeem" | "open"
+--@field item number? The item to buy/buy_and_use/redeem/open (0-based)
+
 -- =============================================================================
 -- Main API Module (defined in api.lua)
 -- =============================================================================
