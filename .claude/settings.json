@@ -10,7 +10,7 @@
           },
           {
             "type": "command",
-            "command": "ruff format -s src/balatrobot"
+            "command": "ruff format -s src/balatrobot tests/"
           }
         ]
       }
