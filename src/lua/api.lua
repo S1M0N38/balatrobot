@@ -5,7 +5,6 @@ local json = require("json")
 local UDP_BUFFER_SIZE = 65536
 local SOCKET_TIMEOUT = 0
 local EVENT_QUEUE_THRESHOLD = 3
-
 API = {}
 API.socket = nil
 API.functions = {}
@@ -17,13 +16,15 @@ API.last_client_port = nil
 -- Update Loop
 --------------------------------------------------------------------------------
 
+---Updates the API by processing UDP messages and pending requests
+---@param _ number Delta time (not used)
 function API.update(_)
   -- Create socket if it doesn't exist
   if not API.socket then
     API.socket = socket.udp()
     API.socket:settimeout(SOCKET_TIMEOUT)
     local port = BALATRO_BOT_CONFIG.port
-    API.socket:setsockname("127.0.0.1", tonumber(port))
+    API.socket:setsockname("127.0.0.1", tonumber(port) or 12346)
     sendDebugMessage("UDP socket created on port " .. port, "BALATROBOT")
   end
 
@@ -68,12 +69,17 @@ function API.update(_)
   end
 end
 
+---Sends a response back to the last connected client
+---@param response table The response data to send
 function API.send_response(response)
   if API.last_client_ip and API.last_client_port then
     API.socket:sendto(json.encode(response), API.last_client_ip, API.last_client_port)
   end
 end
 
+---Sends an error response to the client with optional context
+---@param message string The error message
+---@param context? table Optional additional context about the error
 function API.send_error_response(message, context)
   sendErrorMessage(message, "BALATROBOT")
   local response = { error = message, state = G.STATE }
@@ -83,6 +89,7 @@ function API.send_error_response(message, context)
   API.send_response(response)
 end
 
+---Initializes the API by hooking into the game's update loop and configuring settings
 function API.init()
   -- Hook into the game's update loop
   local original_update = love.update
@@ -106,11 +113,15 @@ end
 -- API Functions
 --------------------------------------------------------------------------------
 
+---Gets the current game state
+---@param _ table Arguments (not used)
 API.functions["get_game_state"] = function(_)
   local game_state = utils.get_game_state()
   API.send_response(game_state)
 end
 
+---Navigates to the main menu
+---@param _ table Arguments (not used)
 API.functions["go_to_menu"] = function(_)
   if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
     sendDebugMessage("go_to_menu called but already in menu", "BALATROBOT")
@@ -131,6 +142,8 @@ API.functions["go_to_menu"] = function(_)
   }
 end
 
+---Starts a new game run with specified parameters
+---@param args StartRunArgs The run configuration
 API.functions["start_run"] = function(args)
   -- Reset the game
   local play_button = G.MAIN_MENU_UI:get_UIE_by_ID("main_menu_play")
@@ -180,6 +193,8 @@ API.functions["start_run"] = function(args)
   }
 end
 
+---Skips or selects the current blind
+---@param args BlindActionArgs The blind action to perform
 API.functions["skip_or_select_blind"] = function(args)
   -- Validate current game state is appropriate for blind selection
   if G.STATE ~= G.STATES.BLIND_SELECT then
@@ -225,6 +240,8 @@ API.functions["skip_or_select_blind"] = function(args)
   end
 end
 
+---Plays selected cards or discards them
+---@param args HandActionArgs The hand action to perform
 API.functions["play_hand_or_discard"] = function(args)
   -- Validate current game state is appropriate for playing hand or discarding
   if G.STATE ~= G.STATES.SELECTING_HAND then
@@ -296,6 +313,8 @@ API.functions["play_hand_or_discard"] = function(args)
   }
 end
 
+---Cashes out from the current round to enter the shop
+---@param _ table Arguments (not used)
 API.functions["cash_out"] = function(_)
   -- Validate current game state is appropriate for cash out
   if G.STATE ~= G.STATES.ROUND_EVAL then
@@ -315,30 +334,44 @@ API.functions["cash_out"] = function(_)
   }
 end
 
+---Selects an action for booster packs (TODO implement)
+---@param _ table Arguments
 API.functions["select_booster_action"] = function(_)
   -- TODO: implement
 end
 
+---Selects an action in the shop (TODO implement)
+---@param _ table Arguments
 API.functions["select_shop_action"] = function(_)
   -- TODO: implement
 end
 
+---Rearranges cards in hand (TODO implement)
+---@param _ table Arguments
 API.functions["rearrange_hand"] = function(_)
   -- TODO: implement
 end
 
+---Rearranges consumable cards (TODO implement)
+---@param _ table Arguments
 API.functions["rearrange_consumables"] = function(_)
   -- TODO: implement
 end
 
+---Rearranges joker cards (TODO implement)
+---@param _ table Arguments
 API.functions["rearrange_jokers"] = function(_)
   -- TODO: implement
 end
 
+---Uses or sells consumable cards (TODO implement)
+---@param _ table Arguments
 API.functions["use_or_sell_consumables"] = function(_)
   -- TODO: implement
 end
 
+---Sells joker cards (TODO implement)
+---@param _ table Arguments
 API.functions["sell_jokers"] = function(_)
   -- TODO: implement
 end
