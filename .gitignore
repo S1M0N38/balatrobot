@@ -4,6 +4,7 @@ gamestate_cache
 .envrc
 .luarc.json
 *.log
+*.jsonl
 src/lua_old
 balatrobot_old.lua
 scripts
