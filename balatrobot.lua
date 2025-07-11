@@ -13,24 +13,10 @@ BALATRO_BOT_CONFIG = {
   -- max_fps = nil,
 }
 
--- Load debug
-local success, dpAPI = pcall(require, "debugplus-api")
-
 -- Load minimal required files
 assert(SMODS.load_file("src/lua/utils.lua"))()
 assert(SMODS.load_file("src/lua/api.lua"))()
 
-if success and dpAPI.isVersionCompatible(1) then
-  local debugplus = dpAPI.registerID("balatrobot")
-  debugplus.addCommand({
-    name = "env",
-    shortDesc = "Get game state",
-    desc = "Get the current game state, useful for debugging",
-    exec = function(args, _, _)
-      debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G.GAME, 2) .. "}")
-    end,
-  })
-end
 
 -- Initialize API
 API.init()
