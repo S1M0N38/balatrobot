@@ -71,7 +71,20 @@ def send_and_receive_api_message(
 
 
 def assert_error_response(response, expected_error_text, expected_context_keys=None):
-    """Helper function to assert error response format and content."""
+    """
+    Helper function to assert the format and content of an error response.
+
+    Args:
+        response (dict): The response dictionary to validate. Must contain at least
+            the keys "error" and "state".
+        expected_error_text (str): The expected error message text to check within
+            the "error" field of the response.
+        expected_context_keys (list, optional): A list of keys expected to be present
+            in the "context" field of the response, if the "context" field exists.
+
+    Raises:
+        AssertionError: If the response does not match the expected format or content.
+    """
     assert isinstance(response, dict)
     assert "error" in response
     assert "state" in response

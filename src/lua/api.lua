@@ -4,6 +4,11 @@ local json = require("json")
 -- Constants
 local UDP_BUFFER_SIZE = 65536
 local SOCKET_TIMEOUT = 0
+-- The threshold for determining when game state transitions are complete.
+-- This value represents the maximum number of events allowed in the game's event queue
+-- to consider the game idle and waiting for user action. When the queue has fewer than
+-- 3 events, the game is considered stable enough to process API responses. This is a
+-- heuristic based on empirical testing to ensure smooth gameplay without delays.
 local EVENT_QUEUE_THRESHOLD = 3
 API = {}
 API.socket = nil
