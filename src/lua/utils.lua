@@ -111,7 +111,12 @@ function utils.table_to_json(obj, depth)
   return json.encode(sanitized)
 end
 
--- Load debug
+-- Load DebugPlus integration
+-- Attempt to load the optional DebugPlus mod (https://github.com/WilsontheWolf/DebugPlus/tree/master).
+-- DebugPlus is a Balatro mod that provides additional debugging utilities for mod development,
+-- such as custom debug commands and structured logging. It is not required for core functionality
+-- and is primarily intended for development and debugging purposes. If the module is unavailable
+-- or incompatible, the program will continue to function without it.
 local success, dpAPI = pcall(require, "debugplus-api")
 
 if success and dpAPI.isVersionCompatible(1) then
