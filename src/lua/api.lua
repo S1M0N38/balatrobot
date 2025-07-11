@@ -25,7 +25,7 @@ function API.update(_)
     API.socket:settimeout(SOCKET_TIMEOUT)
     local port = BALATRO_BOT_CONFIG.port
     API.socket:setsockname("127.0.0.1", tonumber(port) or 12346)
-    sendDebugMessage("UDP socket created on port " .. port, "BALATROBOT")
+    sendDebugMessage("UDP socket created on port " .. port, "API")
   end
 
   -- Process pending requests
@@ -56,16 +56,16 @@ function API.update(_)
       local func = API.functions[data.name]
       local args = data.arguments
       if func == nil then
-        API.send_error_response("Unknown function name", { function_name = data.name })
+        API.send_error_response("Unknown function name", { name = data.name })
       elseif type(args) ~= "table" then
         API.send_error_response("Arguments must be a table", { received_type = type(args) })
       else
-        sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "BALATROBOT")
+        sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "API")
         func(args)
       end
     end
   elseif client_ip ~= "timeout" then
-    sendErrorMessage("UDP error: " .. tostring(client_ip), "BALATROBOT")
+    sendErrorMessage("UDP error: " .. tostring(client_ip), "API")
   end
 end
 
@@ -81,7 +81,7 @@ end
 ---@param message string The error message
 ---@param context? table Optional additional context about the error
 function API.send_error_response(message, context)
-  sendErrorMessage(message, "BALATROBOT")
+  sendErrorMessage(message, "API")
   local response = { error = message, state = G.STATE }
   if context then
     response.context = context
@@ -106,7 +106,7 @@ function API.init()
     G.FPS_CAP = 60
   end
 
-  sendInfoMessage("BalatrobotAPI initialized", "BALATROBOT")
+  sendInfoMessage("BalatrobotAPI initialized", "API")
 end
 
 --------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ end
 ---@param _ table Arguments (not used)
 API.functions["go_to_menu"] = function(_)
   if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
-    sendDebugMessage("go_to_menu called but already in menu", "BALATROBOT")
+    sendDebugMessage("go_to_menu called but already in menu", "API")
     local game_state = utils.get_game_state()
     API.send_response(game_state)
     return
@@ -155,7 +155,7 @@ API.functions["start_run"] = function(args)
   local deck_found = false
   for _, v in pairs(G.P_CENTER_POOLS.Back) do
     if v.name == args.deck then
-      sendDebugMessage("Changing to deck: " .. v.name, "BALATROBOT")
+      sendDebugMessage("Changing to deck: " .. v.name, "API")
       G.GAME.selected_back:change_to(v)
       G.GAME.viewed_back:change_to(v)
       deck_found = true
