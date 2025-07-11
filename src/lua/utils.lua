@@ -2,6 +2,10 @@
 utils = {}
 local json = require("json")
 
+-- ==========================================================================
+-- Game State Extraction
+-- ==========================================================================
+
 ---Extracts the current game state including game info, hand, and jokers
 ---@return GameStateResponse The complete game state
 function utils.get_game_state()
@@ -65,6 +69,10 @@ function utils.get_game_state()
   }
 end
 
+-- ==========================================================================
+-- Debugging Utilities
+-- ==========================================================================
+
 ---Converts a Lua table to JSON string with depth limiting to prevent infinite recursion
 ---@param obj any The object to convert to JSON
 ---@param depth? number Maximum depth to traverse (default: 3)
@@ -101,6 +109,21 @@ function utils.table_to_json(obj, depth)
 
   local sanitized = sanitize_for_json(obj, depth)
   return json.encode(sanitized)
+end
+
+-- Load debug
+local success, dpAPI = pcall(require, "debugplus-api")
+
+if success and dpAPI.isVersionCompatible(1) then
+  local debugplus = dpAPI.registerID("balatrobot")
+  debugplus.addCommand({
+    name = "env",
+    shortDesc = "Get game state",
+    desc = "Get the current game state, useful for debugging",
+    exec = function(args, _, _)
+      debugplus.logger.log('{"name": "' .. args[1] .. '", "G": ' .. utils.table_to_json(G.GAME, 2) .. "}")
+    end,
+  })
 end
 
 return utils
