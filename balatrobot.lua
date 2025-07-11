@@ -1,12 +1,3 @@
----@meta balatrobot
----Main entry point for the BalatroBot mod
-
----@class BalatrobotConfig
----@field port string Port for the bot to listen on
----@field dt number Tells the game that every update is dt seconds long.
----@field max_fps integer? Maximum frames per second
----@field vsync_enabled boolean Whether vertical sync is enabled
-
 ---Global configuration for the BalatroBot mod
 ---@type BalatrobotConfig
 BALATRO_BOT_CONFIG = {

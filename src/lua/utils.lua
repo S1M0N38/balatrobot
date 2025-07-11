@@ -1,6 +1,9 @@
+---Utility functions for game state extraction and data processing
 utils = {}
 local json = require("json")
 
+---Extracts the current game state including game info, hand, and jokers
+---@return GameStateResponse The complete game state
 function utils.get_game_state()
   local game = nil
   if G.GAME then
@@ -62,6 +65,10 @@ function utils.get_game_state()
   }
 end
 
+---Converts a Lua table to JSON string with depth limiting to prevent infinite recursion
+---@param obj any The object to convert to JSON
+---@param depth? number Maximum depth to traverse (default: 3)
+---@return string JSON string representation of the object
 function utils.table_to_json(obj, depth)
   depth = depth or 3
 
