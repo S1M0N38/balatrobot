@@ -502,9 +502,7 @@ class TestShop:
         )
 
         # Verify error response
-        assert_error_response(
-            response, "Invalid action arg for shop", ["action"]
-        )
+        assert_error_response(response, "Invalid action arg for shop", ["action"])
 
     def test_shop_invalid_state_error(self, udp_client: socket.socket) -> None:
         """Test shop returns error when not in shop state."""
