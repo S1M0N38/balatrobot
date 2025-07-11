@@ -36,7 +36,7 @@ pytest -v
 
    ```bash
    # Check if game is running
-   ps aux | grep run_lovely_macos
+   ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
 
    # Start if not running
    ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo "Balatro started and ready"
