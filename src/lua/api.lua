@@ -235,7 +235,7 @@ API.functions["skip_or_select_blind"] = function(args)
       condition = function()
         local prev_state = {
           ["Small"] = G.prev_small_state,
-          ["Large"] = G.prev_large_state, -- this is Large not Big
+          ["Big"] = G.prev_large_state,
           ["Boss"] = G.prev_boss_state,
         }
         return prev_state[current_blind] == "Skipped"
