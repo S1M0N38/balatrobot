@@ -2,7 +2,6 @@ local socket = require("socket")
 local json = require("json")
 
 -- Constants
-local TCP_BUFFER_SIZE = 65536
 local SOCKET_TIMEOUT = 0
 -- The threshold for determining when game state transitions are complete.
 -- This value represents the maximum number of events allowed in the game's event queue
@@ -81,10 +80,7 @@ function API.update(_)
       API.client_socket = nil
     elseif err ~= "timeout" then
       sendDebugMessage("TCP receive error: " .. tostring(err), "API")
-      -- Don't close connection on timeout, only on real errors
-      if err ~= "timeout" then
-        API.client_socket = nil
-      end
+      API.client_socket = nil
     end
   end
 end
