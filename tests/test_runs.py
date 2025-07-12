@@ -31,18 +31,18 @@ class TestRunReplays:
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(
-        self, udp_client: socket.socket
+        self, tcp_client: socket.socket
     ) -> Generator[None, None, None]:
         """Set up and tear down each test method."""
         yield
-        send_and_receive_api_message(udp_client, "go_to_menu", {})
+        send_and_receive_api_message(tcp_client, "go_to_menu", {})
 
     @pytest.mark.parametrize("jsonl_file", get_jsonl_files())
-    def test_replay_run(self, udp_client: socket.socket, jsonl_file: Path) -> None:
+    def test_replay_run(self, tcp_client: socket.socket, jsonl_file: Path) -> None:
         """Test replaying a complete run from JSONL file.
 
         Args:
-            udp_client: UDP socket for API communication
+            tcp_client: UDP socket for API communication
             jsonl_file: Path to JSONL file containing recorded run
         """
         steps = load_jsonl_run(jsonl_file)
@@ -53,7 +53,7 @@ class TestRunReplays:
 
             # Call the API function with recorded parameters
             actual_game_state = send_and_receive_api_message(
-                udp_client, function_call["name"], function_call["params"]
+                tcp_client, function_call["name"], function_call["params"]
             )
 
             # Compare with the game_state from the next step (if it exists)
