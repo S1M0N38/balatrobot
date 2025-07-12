@@ -2,7 +2,7 @@ local socket = require("socket")
 local json = require("json")
 
 -- Constants
-local UDP_BUFFER_SIZE = 65536
+local TCP_BUFFER_SIZE = 65536
 local SOCKET_TIMEOUT = 0
 -- The threshold for determining when game state transitions are complete.
 -- This value represents the maximum number of events allowed in the game's event queue
@@ -11,26 +11,36 @@ local SOCKET_TIMEOUT = 0
 -- heuristic based on empirical testing to ensure smooth gameplay without delays.
 local EVENT_QUEUE_THRESHOLD = 3
 API = {}
-API.socket = nil
+API.server_socket = nil
+API.client_socket = nil
 API.functions = {}
 API.pending_requests = {}
-API.last_client_ip = nil
-API.last_client_port = nil
 
 --------------------------------------------------------------------------------
 -- Update Loop
 --------------------------------------------------------------------------------
 
----Updates the API by processing UDP messages and pending requests
+---Updates the API by processing TCP messages and pending requests
 ---@param _ number Delta time (not used)
 function API.update(_)
-  -- Create socket if it doesn't exist
-  if not API.socket then
-    API.socket = socket.udp()
-    API.socket:settimeout(SOCKET_TIMEOUT)
+  -- Create server socket if it doesn't exist
+  if not API.server_socket then
+    API.server_socket = socket.tcp()
+    API.server_socket:settimeout(SOCKET_TIMEOUT)
     local port = BALATRO_BOT_CONFIG.port
-    API.socket:setsockname("127.0.0.1", tonumber(port) or 12346)
-    sendDebugMessage("UDP socket created on port " .. port, "API")
+    API.server_socket:bind("127.0.0.1", tonumber(port) or 12346)
+    API.server_socket:listen(1)
+    sendDebugMessage("TCP server socket created on port " .. port, "API")
+  end
+
+  -- Accept client connection if we don't have one
+  if not API.client_socket then
+    local client = API.server_socket:accept()
+    if client then
+      client:settimeout(SOCKET_TIMEOUT)
+      API.client_socket = client
+      sendDebugMessage("Client connected", "API")
+    end
   end
 
   -- Process pending requests
@@ -42,43 +52,52 @@ function API.update(_)
   end
 
   -- Parse received data and run the appropriate function
-  local raw_data, client_ip, client_port = API.socket:receivefrom(UDP_BUFFER_SIZE)
-  if raw_data and client_ip and client_port then
-    -- Store the last client connection
-    API.last_client_ip = client_ip
-    API.last_client_port = client_port
-
-    local ok, data = pcall(json.decode, raw_data)
-    if not ok then
-      API.send_error_response("Invalid JSON")
-      return
-    end
-    if data.name == nil then
-      API.send_error_response("Message must contain a name")
-    elseif data.arguments == nil then
-      API.send_error_response("Message must contain arguments")
-    else
-      local func = API.functions[data.name]
-      local args = data.arguments
-      if func == nil then
-        API.send_error_response("Unknown function name", { name = data.name })
-      elseif type(args) ~= "table" then
-        API.send_error_response("Arguments must be a table", { received_type = type(args) })
+  if API.client_socket then
+    local raw_data, err = API.client_socket:receive("*l")
+    if raw_data then
+      local ok, data = pcall(json.decode, raw_data)
+      if not ok then
+        API.send_error_response("Invalid JSON")
+        return
+      end
+      if data.name == nil then
+        API.send_error_response("Message must contain a name")
+      elseif data.arguments == nil then
+        API.send_error_response("Message must contain arguments")
       else
-        sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "API")
-        func(args)
+        local func = API.functions[data.name]
+        local args = data.arguments
+        if func == nil then
+          API.send_error_response("Unknown function name", { name = data.name })
+        elseif type(args) ~= "table" then
+          API.send_error_response("Arguments must be a table", { received_type = type(args) })
+        else
+          sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "API")
+          func(args)
+        end
+      end
+    elseif err == "closed" then
+      sendDebugMessage("Client disconnected", "API")
+      API.client_socket = nil
+    elseif err ~= "timeout" then
+      sendDebugMessage("TCP receive error: " .. tostring(err), "API")
+      -- Don't close connection on timeout, only on real errors
+      if err ~= "timeout" then
+        API.client_socket = nil
       end
     end
-  elseif client_ip ~= "timeout" then
-    sendErrorMessage("UDP error: " .. tostring(client_ip), "API")
   end
 end
 
----Sends a response back to the last connected client
+---Sends a response back to the connected client
 ---@param response table The response data to send
 function API.send_response(response)
-  if API.last_client_ip and API.last_client_port then
-    API.socket:sendto(json.encode(response), API.last_client_ip, API.last_client_port)
+  if API.client_socket then
+    local success, err = API.client_socket:send(json.encode(response) .. "\n")
+    if not success then
+      sendErrorMessage("Failed to send response: " .. tostring(err), "API")
+      API.client_socket = nil
+    end
   end
 end
 
