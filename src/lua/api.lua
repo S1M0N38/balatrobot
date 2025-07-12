@@ -238,7 +238,7 @@ API.functions["skip_or_select_blind"] = function(args)
           ["Big"] = G.prev_large_state,
           ["Boss"] = G.prev_boss_state,
         }
-        return prev_state[current_blind] == "Skipped"
+        return prev_state[current_blind] == "Skipped" and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
       end,
       action = function()
         local game_state = utils.get_game_state()
