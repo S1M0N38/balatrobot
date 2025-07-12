@@ -17,6 +17,7 @@ Analyze the git diff of staged files and create a commit message following conve
 
 **Scopes:**
 - api: Lua API and Python API communication
+- log: Logging and Replay functionality
 - bot: Python bot framework and base classes
 - examples: Example bots and usage samples
 - dev: Development tools and environment
@@ -32,11 +33,14 @@ Analyze the git diff of staged files and create a commit message following conve
 8. Commit the staged changes with the generated message
 
 **Co-authors**
-Add the following co-authors: $ARGUMENTS
-If the list is empty, do not add any co-authors.
-Here is a list of co-authors (name, co-authored-by):
+Here is the collection of all previous co-authors of the repo as reference (names and emails):
 - claude: `Co-Authored-By: Claude <noreply@anthropic.com>`
+Here is a list of the co-authors which contributed to this commit:
+```
+$ARGUMENTS
+```
 
 **Notes**
 - Do not include emojis in the commit message.
 - Do not include `🤖 Generated with [Claude Code](https://claude.ai/code)` in the commit message.
+- If the list is empty, do not add any co-authors
