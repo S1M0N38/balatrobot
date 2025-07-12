@@ -4,14 +4,7 @@ import json
 import socket
 
 import pytest
-from conftest import (
-    BUFFER_SIZE,
-    HOST,
-    PORT,
-    assert_error_response,
-    send_api_message,
-    receive_api_message,
-)
+from conftest import HOST, assert_error_response, receive_api_message, send_api_message
 
 
 def test_basic_connection(tcp_client: socket.socket) -> None:
