@@ -15,8 +15,11 @@ BALATRO_BOT_CONFIG = {
 
 -- Load minimal required files
 assert(SMODS.load_file("src/lua/utils.lua"))()
+assert(SMODS.load_file("src/lua/log.lua"))()
 assert(SMODS.load_file("src/lua/api.lua"))()
 
+-- Initialize Logger
+LOG.init()
 
 -- Initialize API
 API.init()
