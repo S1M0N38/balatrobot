@@ -32,7 +32,6 @@ function LOG.write(function_name, params)
   sendDebugMessage("Writing log entry: " .. utils.table_to_json(log_entry, 4), "LOG")
   local log_line = json.encode(log_entry) .. "\n"
 
-  -- Use current run file if available, otherwise fallback to pre-run log
   local log_file_path
   if LOG.current_run_file then
     log_file_path = LOG.current_run_file
@@ -191,7 +190,7 @@ function LOG.hook_toggle_shop()
   sendDebugMessage("Hooked into G.FUNCS.toggle_shop for logging", "LOG")
 end
 
--- TODO: add hoooks for other shop functions
+-- TODO: add hooks for other shop functions
 
 -- =============================================================================
 -- Initializer
