@@ -8,14 +8,29 @@ import pytest
 
 # Connection settings
 HOST = "127.0.0.1"
-PORT: int = 12346  # default port for BalatroBot UDP API
+PORT: int = 12346  # default port for BalatroBot TCP API
 TIMEOUT: float = 10.0  # timeout for socket operations in seconds
-BUFFER_SIZE: int = 65536  # 64KB buffer for UDP messages
+BUFFER_SIZE: int = 65536  # 64KB buffer for TCP messages
+
+
+@pytest.fixture
+def tcp_client() -> Generator[socket.socket, None, None]:
+    """Create and clean up a TCP client socket.
+
+    Yields:
+        Configured TCP socket for testing.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(TIMEOUT)
+        # Set socket receive buffer size
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+        sock.connect((HOST, PORT))
+        yield sock
 
 
 @pytest.fixture
 def udp_client() -> Generator[socket.socket, None, None]:
-    """Create and clean up a UDP client socket.
+    """Create and clean up a UDP client socket (legacy support).
 
     Yields:
         Configured UDP socket for testing.
@@ -36,7 +51,10 @@ def send_api_message(sock: socket.socket, name: str, arguments: dict) -> None:
         arguments: Arguments dictionary for the function.
     """
     message = {"name": name, "arguments": arguments}
-    sock.sendto(json.dumps(message).encode(), (HOST, PORT))
+    if sock.type == socket.SOCK_STREAM:
+        sock.send(json.dumps(message).encode() + b"\n")
+    else:
+        sock.sendto(json.dumps(message).encode(), (HOST, PORT))
 
 
 def receive_api_message(sock: socket.socket) -> dict[str, Any]:
@@ -48,8 +66,12 @@ def receive_api_message(sock: socket.socket) -> dict[str, Any]:
     Returns:
         Received message as a dictionary.
     """
-    data, _ = sock.recvfrom(BUFFER_SIZE)
-    return json.loads(data.decode().strip())
+    if sock.type == socket.SOCK_STREAM:
+        data = sock.recv(BUFFER_SIZE)
+        return json.loads(data.decode().strip())
+    else:
+        data, _ = sock.recvfrom(BUFFER_SIZE)
+        return json.loads(data.decode().strip())
 
 
 def send_and_receive_api_message(
