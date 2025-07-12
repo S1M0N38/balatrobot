@@ -182,7 +182,7 @@ class TestSkipOrSelectBlind:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": None,
-            "seed": "EXAMPLE",
+            "seed": "OOOO155",
         }
         game_state = send_and_receive_api_message(
             udp_client, "start_run", start_run_args
@@ -218,6 +218,70 @@ class TestSkipOrSelectBlind:
 
         # Assert that the current blind is "Big", the "Small" blind was skipped
         assert game_state["game"]["blind_on_deck"] == "Big"
+
+    def test_skip_big_blind(self, udp_client: socket.socket) -> None:
+        """Test complete flow: play small blind, cash out, skip shop, skip big blind."""
+        # 1. Play small blind (select it)
+        select_blind_args = {"action": "select"}
+        game_state = send_and_receive_api_message(
+            udp_client, "skip_or_select_blind", select_blind_args
+        )
+
+        # Verify we're in hand selection state
+        assert game_state["state"] == State.SELECTING_HAND.value
+
+        # 2. Play winning hand (four of a kind)
+        play_hand_args = {"action": "play_hand", "cards": [0, 1, 2, 3]}
+        game_state = send_and_receive_api_message(
+            udp_client, "play_hand_or_discard", play_hand_args
+        )
+
+        # Verify we're in round evaluation state
+        assert game_state["state"] == State.ROUND_EVAL.value
+
+        # 3. Cash out to go to shop
+        game_state = send_and_receive_api_message(udp_client, "cash_out", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # 4. Skip shop (next round)
+        game_state = send_and_receive_api_message(
+            udp_client, "shop", {"action": "next_round"}
+        )
+
+        # Verify we're back in blind selection state
+        assert game_state["state"] == State.BLIND_SELECT.value
+
+        # 5. Skip the big blind
+        skip_big_blind_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            udp_client, "skip_or_select_blind", skip_big_blind_args
+        )
+
+        # Verify we successfully skipped the big blind and are still in blind selection
+        assert game_state["state"] == State.BLIND_SELECT.value
+
+    def test_skip_both_blinds(self, udp_client: socket.socket) -> None:
+        """Test skipping small blind then immediately skipping big blind."""
+        # 1. Skip the small blind
+        skip_small_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            udp_client, "skip_or_select_blind", skip_small_args
+        )
+
+        # Verify we're still in blind selection and the big blind is on deck
+        assert game_state["state"] == State.BLIND_SELECT.value
+        assert game_state["game"]["blind_on_deck"] == "Big"
+
+        # 2. Skip the big blind
+        skip_big_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            udp_client, "skip_or_select_blind", skip_big_args
+        )
+
+        # Verify we successfully skipped both blinds
+        assert game_state["state"] == State.BLIND_SELECT.value
 
     def test_invalid_blind_action(self, udp_client: socket.socket) -> None:
         """Test that invalid blind action arguments are handled properly."""
