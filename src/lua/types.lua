@@ -117,6 +117,15 @@
 ---@field table_to_json fun(obj: any, depth?: number): string Converts a Lua table to JSON string
 
 -- =============================================================================
+-- Log Types (used in log.lua)
+-- =============================================================================
+
+---@class LogEntry
+---@field timestamp_ms number Timestamp in milliseconds since epoch
+---@field function {name: string, params: table} Function call information
+---@field game_state GameStateResponse Game state at time of logging
+
+-- =============================================================================
 -- Configuration Types (used in balatrobot.lua)
 -- =============================================================================
 
