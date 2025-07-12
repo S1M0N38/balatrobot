@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.0](https://github.com/S1M0N38/balatrobot/compare/v0.2.0...v0.3.0) (2025-07-12)
+
+
+### Features
+
+* **api:** add comprehensive function call logging system ([38a3ff9](https://github.com/S1M0N38/balatrobot/commit/38a3ff91cb75ad89b4e418cf7d9b624cb682ef83))
+* **api:** integrate logging system into main mod ([3c4a09f](https://github.com/S1M0N38/balatrobot/commit/3c4a09f8b780497a71f17691c9261f7ed56d9eb5))
+
+
+### Bug Fixes
+
+* **api:** add event queue threshold check to skip_or_select_blind ([91e4613](https://github.com/S1M0N38/balatrobot/commit/91e4613652f7a560b3d97e4c23cd72e80bb0e0e1))
+* **api:** correct blind state key from Large to Big in comment ([f7e5c42](https://github.com/S1M0N38/balatrobot/commit/f7e5c425e9b182fd2ec03b9f0de1312488e54a59))
+* **api:** remove misleading comment and fix typo in logging system ([859a50a](https://github.com/S1M0N38/balatrobot/commit/859a50a7532781c305a4a011779e359d3601bd4e))
+
+
+### Documentation
+
+* **api:** add TODO comment for additional shop actions ([34071a2](https://github.com/S1M0N38/balatrobot/commit/34071a26ecc1624c0beefab1ae5a3279a4610575))
+* **dev:** update commit command scope and co-author docs ([c089ff5](https://github.com/S1M0N38/balatrobot/commit/c089ff580ef70e485c3a8599eba4d1f6c121b20e))
+* **dev:** update test suite metrics in CLAUDE.md ([cc5b159](https://github.com/S1M0N38/balatrobot/commit/cc5b159c391dbfd2876bd2421cfb957eb98d4aad))
+
 ## [0.2.0](https://github.com/S1M0N38/balatrobot/compare/v0.1.0...v0.2.0) (2025-07-11)
 
 
