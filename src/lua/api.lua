@@ -371,6 +371,7 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
+  -- TODO: add other shop actions
   else
     API.send_error_response("Invalid action arg for shop", { action = action })
     return
