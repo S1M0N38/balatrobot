@@ -18,7 +18,7 @@ Balatrobot is installed like any other Steamodded mod.
 
 === "Windows"
 
-    ``` sh
+    ```sh
     cd %AppData%/Balatro
     mkdir -p Mods
     cd Mods
@@ -27,7 +27,7 @@ Balatrobot is installed like any other Steamodded mod.
 
 === "MacOS"
 
-    ``` sh
+    ```sh
     cd "/Users/$USER/Library/Application Support/Balatro"
     mkdir -p Mods
     cd Mods
@@ -36,7 +36,7 @@ Balatrobot is installed like any other Steamodded mod.
 
 === "Linux"
 
-    ``` sh
+    ```sh
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro
     mkdir -p Mods
     cd Mods
@@ -50,7 +50,7 @@ Balatrobot is installed like any other Steamodded mod.
 
     === "Windows"
 
-        ``` sh
+        ```sh
         # Clone repository to a custom location
         cd C:\your\custom\path
         git clone https://github.com/S1M0N38/balatrobot.git
@@ -62,7 +62,7 @@ Balatrobot is installed like any other Steamodded mod.
 
     === "MacOS"
 
-        ``` sh
+        ```sh
         # Clone repository to a custom location
         cd /your/custom/path
         git clone https://github.com/S1M0N38/balatrobot.git
@@ -74,7 +74,7 @@ Balatrobot is installed like any other Steamodded mod.
 
     === "Linux"
 
-        ``` sh
+        ```sh
         # Clone repository to a custom location
         cd /your/custom/path
         git clone https://github.com/S1M0N38/balatrobot.git
@@ -84,28 +84,27 @@ Balatrobot is installed like any other Steamodded mod.
         ln -s /your/custom/path/balatrobot balatrobot
         ```
 
-
 ??? "Update Balatrobot"
 
     Updating Balatrobot is as simple as pulling the latest changes from the repository.
 
     === "Windows"
 
-        ``` sh
+        ```sh
         cd %AppData%/Balatro/Mods/balatrobot
         git pull
         ```
 
     === "MacOS"
 
-        ``` sh
+        ```sh
         cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
         git pull
         ```
 
     === "Linux"
 
-        ``` sh
+        ```sh
         cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
         git pull
         ```
@@ -116,21 +115,21 @@ Balatrobot is installed like any other Steamodded mod.
 
     === "Windows"
 
-        ``` sh
+        ```sh
         cd %AppData%/Balatro/Mods
         rmdir /S /Q balatrobot
         ```
 
     === "MacOS"
 
-        ``` sh
+        ```sh
         cd "/Users/$USER/Library/Application Support/Balatro/Mods"
         rm -rf balatrobot
         ```
 
     === "Linux"
 
-        ``` sh
+        ```sh
         cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods
         rm -rf balatrobot
         ```
@@ -142,21 +141,21 @@ To setup the Python environment for running Balatrobot bots simply run:
 
 === "Windows"
 
-    ``` sh
+    ```sh
     cd %AppData%/Balatro/Mods/balatrobot
     uv sync
     ```
 
 === "MacOS"
 
-    ``` sh
+    ```sh
     cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
     uv sync
     ```
 
 === "Linux"
 
-    ``` sh
+    ```sh
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
     uv sync
     ```
@@ -169,21 +168,21 @@ The same command can be used to update the Python environment and dependencies i
 
     === "Windows"
 
-        ``` sh
+        ```sh
         cd %AppData%/Balatro/Mods/balatrobot
         rmdir /S /Q .venv
         ```
 
     === "MacOS"
 
-        ``` sh
+        ```sh
         cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
         rm -rf .venv
         ```
 
     === "Linux"
 
-        ``` sh
+        ```sh
         cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
         rm -rf .venv
         ```
@@ -204,7 +203,7 @@ The same command can be used to update the Python environment and dependencies i
 
     === "MacOS"
 
-        ``` sh
+        ```sh
         cd "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro"
         ./run_lovely_macos.sh
         ```
@@ -213,29 +212,27 @@ The same command can be used to update the Python environment and dependencies i
     settings will prevent it from executing. Open **System Preferences** → **Security & Privacy**
     and click "Allow" when prompted, then run the script again.
 
-
 ### Quick Test with Example Bot
 
 With Balatro running and the mod enabled, you can quickly test if everything is set up correctly using the provided example bot.
 
-
 === "Windows"
 
-    ``` sh
+    ```sh
     cd %AppData%/Balatro/Mods/balatrobot
     uv run bots/example.py
     ```
 
 === "MacOS"
 
-    ``` sh
+    ```sh
     cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
     uv run bots/example.py
     ```
 
 === "Linux"
 
-    ``` sh
+    ```sh
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
     uv run bots/example.py
     ```
@@ -245,7 +242,6 @@ With Balatro running and the mod enabled, you can quickly test if everything is 
     You can also navigate to the `balatrobot` directory, activate the Python
     environment and run the bot with `python bots/example.py` if you prefer.
     However, remember to always activate the virtual environment first.
-
 
 The bot is working correctly if:
 
