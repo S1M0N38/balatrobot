@@ -9,7 +9,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
 <div class="grid cards" markdown>
 
--   :material-download:{ .lg .middle } __Installation__
+- :material-download:{ .lg .middle } __Installation__
 
     ---
 
@@ -18,7 +18,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     [:octicons-arrow-right-24: Installation](installation.md)
 
--   :material-robot:{ .lg .middle } __Bot Development__
+- :material-robot:{ .lg .middle } __Bot Development__
 
     ---
 
@@ -27,7 +27,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     [:octicons-arrow-right-24: Bot Development](bot-development.md)
 
--   :material-api:{ .lg .middle } __API Protocol__
+- :material-api:{ .lg .middle } __API Protocol__
 
     ---
 
@@ -36,7 +36,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     [:octicons-arrow-right-24: API Protocol](api-protocol.md)
 
--   :material-help-circle:{ .lg .middle } __Troubleshooting__
+- :material-help-circle:{ .lg .middle } __Troubleshooting__
 
     ---
 
@@ -46,4 +46,3 @@ BalatroBot is a Python framework designed to help developers create automated bo
     [:octicons-arrow-right-24: Troubleshooting](troubleshooting.md)
 
 </div>
-
