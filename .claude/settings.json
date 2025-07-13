@@ -11,6 +11,10 @@
           {
             "type": "command",
             "command": "ruff format -s src/balatrobot tests/"
+          },
+          {
+            "type": "command",
+            "command": "mdformat --number --check docs/api-protocol.md docs/index.md docs/installation.md docs/bot-development.md docs/troubleshooting.md"
           }
         ]
       }
