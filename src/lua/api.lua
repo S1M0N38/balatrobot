@@ -277,6 +277,12 @@ API.functions["play_hand_or_discard"] = function(args)
     return
   end
 
+  -- Validate number of cards is between 1 and 5 (inclusive)
+  if #args.cards < 1 or #args.cards > 5 then
+    API.send_error_response("Invalid number of cards", { cards_count = #args.cards, valid_range = "1-5" })
+    return
+  end
+
   if args.action == "discard" and G.GAME.current_round.discards_left == 0 then
     API.send_error_response(
       "No discards left to perform discard",
