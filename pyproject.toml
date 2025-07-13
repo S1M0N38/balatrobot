@@ -40,11 +40,8 @@ typeCheckingMode = "basic"
 [dependency-groups]
 dev = [
   "basedpyright>=1.29.5",
-  "mdformat>=0.7.22",
-  "mdformat-footnote>=0.1.1",
-  "mdformat-frontmatter>=2.0.8",
-  "mdformat-gfm>=0.4.1",
-  "mdformat-gfm-alerts>=2.0.0",
+  "mdformat-mkdocs>=4.3.0",
+  "mdformat-simple-breaks>=0.0.1",
   "mkdocs-material>=9.6.15",
   "pytest>=8.4.1",
   "ruff>=0.12.2",
