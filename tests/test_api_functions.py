@@ -490,6 +490,56 @@ class TestPlayHandOrDiscard:
             response, "No discards left to perform discard", ["discards_left"]
         )
 
+    def test_play_hand_or_discard_empty_cards(self, tcp_client: socket.socket) -> None:
+        """Test playing a hand with no cards returns error."""
+        play_hand_args = {"action": "play_hand", "cards": []}
+        response = send_and_receive_api_message(
+            tcp_client, "play_hand_or_discard", play_hand_args
+        )
+
+        # Should receive error response for no cards
+        assert_error_response(
+            response, "Invalid number of cards", ["cards_count", "valid_range"]
+        )
+
+    def test_play_hand_or_discard_too_many_cards(
+        self, tcp_client: socket.socket
+    ) -> None:
+        """Test playing a hand with more than 5 cards returns error."""
+        play_hand_args = {"action": "play_hand", "cards": [0, 1, 2, 3, 4, 5]}
+        response = send_and_receive_api_message(
+            tcp_client, "play_hand_or_discard", play_hand_args
+        )
+
+        # Should receive error response for too many cards
+        assert_error_response(
+            response, "Invalid number of cards", ["cards_count", "valid_range"]
+        )
+
+    def test_discard_empty_cards(self, tcp_client: socket.socket) -> None:
+        """Test discarding with no cards returns error."""
+        discard_args = {"action": "discard", "cards": []}
+        response = send_and_receive_api_message(
+            tcp_client, "play_hand_or_discard", discard_args
+        )
+
+        # Should receive error response for no cards
+        assert_error_response(
+            response, "Invalid number of cards", ["cards_count", "valid_range"]
+        )
+
+    def test_discard_too_many_cards(self, tcp_client: socket.socket) -> None:
+        """Test discarding with more than 5 cards returns error."""
+        discard_args = {"action": "discard", "cards": [0, 1, 2, 3, 4, 5, 6]}
+        response = send_and_receive_api_message(
+            tcp_client, "play_hand_or_discard", discard_args
+        )
+
+        # Should receive error response for too many cards
+        assert_error_response(
+            response, "Invalid number of cards", ["cards_count", "valid_range"]
+        )
+
     def test_play_hand_or_discard_invalid_state(
         self, tcp_client: socket.socket
     ) -> None:
