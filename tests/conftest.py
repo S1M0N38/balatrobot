@@ -6,8 +6,6 @@ from typing import Any, Generator
 
 import pytest
 
-from balatrobot.enums import ErrorCode
-
 # Connection settings
 HOST = "127.0.0.1"
 PORT: int = 12346  # default port for BalatroBot TCP API
