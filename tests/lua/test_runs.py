@@ -11,7 +11,7 @@ from conftest import send_and_receive_api_message
 
 def get_jsonl_files() -> list[Path]:
     """Get all JSONL files from the runs directory."""
-    runs_dir = Path(__file__).parent / "runs"
+    runs_dir = Path(__file__).parent.parent / "runs"
     return list(runs_dir.glob("*.jsonl"))
 
 
