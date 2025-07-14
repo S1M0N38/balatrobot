@@ -283,7 +283,9 @@ API.functions["start_run"] = function(args)
   -- Defer sending response until the run has started
   API.pending_requests["start_run"] = {
     condition = function()
-      return G.STATE == G.STATES.BLIND_SELECT and G.GAME.blind_on_deck
+      return G.STATE == G.STATES.BLIND_SELECT
+        and G.GAME.blind_on_deck
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
     end,
     action = function()
       local game_state = utils.get_game_state()
