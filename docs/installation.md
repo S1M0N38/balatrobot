@@ -1,10 +1,10 @@
 # Installation Guide
 
-This guide will walk you through installing and setting up Balatrobot.
+This guide will walk you through installing and setting up BalatroBot.
 
 ## Prerequisites
 
-Before installing Balatrobot, ensure you have:
+Before installing BalatroBot, ensure you have:
 
 - **[balatro](https://store.steampowered.com/app/2379780/Balatro/)**: Steam version (>= 1.0.1)
 - **[git](https://git-scm.com/downloads)**: for cloning the repository
@@ -12,9 +12,9 @@ Before installing Balatrobot, ensure you have:
 - **[lovely](https://github.com/ethangreen-dev/lovely-injector)**: for injecting Lua code into Balatro (>= 0.8.0)
 - **[steamodded](https://github.com/Steamodded/smods)**: for loading and injecting mods (>=1.0.0)
 
-## Step 1: Install Balatrobot
+## Step 1: Install BalatroBot
 
-Balatrobot is installed like any other Steamodded mod.
+BalatroBot is installed like any other Steamodded mod.
 
 === "Windows"
 
@@ -84,9 +84,9 @@ Balatrobot is installed like any other Steamodded mod.
         ln -s /your/custom/path/balatrobot balatrobot
         ```
 
-??? "Update Balatrobot"
+??? "Update BalatroBot"
 
-    Updating Balatrobot is as simple as pulling the latest changes from the repository.
+    Updating BalatroBot is as simple as pulling the latest changes from the repository.
 
     === "Windows"
 
@@ -109,7 +109,7 @@ Balatrobot is installed like any other Steamodded mod.
         git pull
         ```
 
-??? "Uninstall Balatrobot"
+??? "Uninstall BalatroBot"
 
     Simply delete the balatrobot mod directory.
 
@@ -137,7 +137,7 @@ Balatrobot is installed like any other Steamodded mod.
 ## Step 2: Setup Python Environment
 
 Uv takes care of managing Python installations, virtual environments creation and dependencies installation.
-To setup the Python environment for running Balatrobot bots simply run:
+To setup the Python environment for running BalatroBot bots simply run:
 
 === "Windows"
 
@@ -193,7 +193,7 @@ The same command can be used to update the Python environment and dependencies i
 
 1. Start Balatro through Steam
 2. In the main menu, click "Mods"
-3. Verify "Balatrobot" appears in the mod list
+3. Verify "BalatroBot" appears in the mod list
 4. Enable the mod if it's not already enabled and restart the game
 
 !!! warning "macOS Steam Client Issue"
@@ -260,4 +260,4 @@ If you encounter issues during installation or testing:
 
 ---
 
-*Once installation is complete, proceed to the [Bot Development Guide](bot-development.md) to create your first bot!*
+*Once installation is complete, proceed to the [Developing Bots](developing-bots.md) to create your first bot!*
