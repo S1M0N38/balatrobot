@@ -162,4 +162,3 @@ For higher-level integration:
 
 - Use the [BalatroBot API](balatrobot-api.md) `BalatroClient` for managed connections
 - See [Developing Bots](developing-bots.md) for complete bot implementation examples
-- Check [Troubleshooting](troubleshooting.md) for common protocol issues
