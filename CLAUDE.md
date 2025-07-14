@@ -60,8 +60,8 @@ pytest -v
    - **JSON metadata errors**: Normal for development files (.vscode, .luarc.json) - can be ignored
 
 4. **Test execution**:
-   - **Test suite**: 42 tests covering API functions and UDP communication
-   - **Execution time**: ~150 seconds (includes game state transitions)
+   - **Test suite**: 55 tests covering API functions and UDP communication
+   - **Execution time**: ~160 seconds (includes game state transitions)
    - **Coverage**: API function calls, socket communication, error handling, edge cases
 
 5. **Troubleshooting test failures**:
