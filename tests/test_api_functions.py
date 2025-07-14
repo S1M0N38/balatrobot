@@ -127,7 +127,7 @@ class TestStartRun:
         response = send_and_receive_api_message(
             tcp_client, "start_run", incomplete_args
         )
-        assert_error_response(response, "Invalid deck arg for start_run")
+        assert_error_response(response, "Missing required field: deck")
 
     def test_start_run_invalid_deck(self, tcp_client: socket.socket) -> None:
         """Test start_run with invalid deck name."""
@@ -139,7 +139,7 @@ class TestStartRun:
         }
         # Should receive error response
         response = send_and_receive_api_message(tcp_client, "start_run", invalid_args)
-        assert_error_response(response, "Invalid deck arg for start_run", ["deck"])
+        assert_error_response(response, "Invalid deck name", ["deck"])
 
 
 class TestGoToMenu:
@@ -292,7 +292,7 @@ class TestSkipOrSelectBlind:
 
         # Verify error response
         assert_error_response(
-            error_response, "Invalid action arg for skip_or_select_blind", ["action"]
+            error_response, "Invalid action for skip_or_select_blind", ["action"]
         )
 
     def test_skip_or_select_blind_invalid_state(
@@ -419,7 +419,7 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for invalid action
         assert_error_response(
-            response, "Invalid action arg for play_hand_or_discard", ["action"]
+            response, "Invalid action for play_hand_or_discard", ["action"]
         )
 
     @pytest.mark.parametrize(
@@ -616,7 +616,7 @@ class TestShop:
         )
 
         # Verify error response
-        assert_error_response(response, "Invalid action arg for shop", ["action"])
+        assert_error_response(response, "Invalid action for shop", ["action"])
 
     def test_shop_invalid_state_error(self, tcp_client: socket.socket) -> None:
         """Test shop returns error when not in shop state."""
@@ -684,5 +684,5 @@ class TestCashOut:
 
         # Verify error response
         assert_error_response(
-            response, "Cannot cash out when not in shop", ["current_state"]
+            response, "Cannot cash out when not in round evaluation", ["current_state"]
         )
