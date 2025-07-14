@@ -1,173 +1,68 @@
-"""Simple bot example demonstrating the balatrobot API.
+#!/usr/bin/env python3
+"""Example usage of the new BalatroBot API."""
 
-This example shows how to create a basic bot that plays Balatro using
-a predefined sequence of actions.
-"""
-
-import argparse
-import itertools
-from typing import Any, Iterator
-
-from balatrobot import Actions, ActionSchema, Bot, Decks, Stakes, configure_bot_logging
-
-# Predefined sequence of actions using the ActionCall format
-plays: Iterator[ActionSchema] = itertools.cycle(
-    [
-        # This sequence of plays is winning for the first round
-        # for the seed "EXAMPLE" and the deck "Red Deck" with stake 1.
-        {"action": Actions.DISCARD_HAND, "args": [[2, 3, 4, 6]]},
-        {"action": Actions.DISCARD_HAND, "args": [[1, 2, 6, 8]]},
-        {"action": Actions.PLAY_HAND, "args": [[2, 3, 5, 6, 7]]},
-        {"action": Actions.PLAY_HAND, "args": [[3, 4, 7, 8]]},
-    ]
-)
+from balatrobot import BalatroError, BalatroClient, State
 
 
-class ExampleBot(Bot):
-    """Example bot implementation using the ActionCall API.
+def main():
+    """Example of using the new BalatroBot API."""
+    print("BalatroBot API Example")
+    print("=" * 50)
 
-    This bot demonstrates a simple strategy using predefined actions.
-    It always selects blinds, uses a fixed sequence of plays, and
-    skips most optional actions.
+    # Create client and connect
+    with BalatroClient() as client:
+        try:
+            # Get initial game state
+            print("Getting initial game state...")
+            game_state = client.get_game_state()
+            print(f"Current state: {game_state.state_enum.name}")
 
-    Attributes:
-        round_count (int): The current round number.
-    """
+            # Go to menu if not already there
+            if game_state.state_enum != State.MENU:
+                print("Going to menu...")
+                game_state = client.go_to_menu()
+                print(f"Now in state: {game_state.state_enum.name}")
 
-    def __init__(
-        self,
-        deck: Decks = Decks.RED,
-        stake: Stakes = Stakes.WHITE,
-        seed: str = "EXAMPLE",
-    ) -> None:
-        """Initialize the bot with default settings.
+            # Start a new run
+            print("Starting new run...")
+            game_state = client.start_run(deck="Red Deck", stake=1, seed="EXAMPLE")
+            print(f"Run started, state: {game_state.state_enum.name}")
 
-        Args:
-            deck: The deck type to use.
-            stake: The stake level to play at.
-            seed: The random seed for the game.
-        """
-        super().__init__(deck=deck, stake=stake, seed=seed)
-        self.round_count: int = 0
+            # Select the blind
+            print("Selecting blind...")
+            game_state = client.skip_or_select_blind("select")
+            print(f"Blind selected, state: {game_state.state_enum.name}")
+            print(f"Hand size: {len(game_state.hand)}")
 
-    def skip_or_select_blind(self, env: dict[str, Any]) -> ActionSchema:
-        """Always select blinds to play them.
+            # Play a hand (first 4 cards)
+            if len(game_state.hand) >= 4:
+                print("Playing hand with first 4 cards...")
+                game_state = client.play_hand_or_discard("play_hand", [0, 1, 2, 3])
+                print(f"Hand played, state: {game_state.state_enum.name}")
 
-        Args:
-            env (dict[str, Any]): The current game environment state.
+                # If we won the round, cash out
+                if game_state.state_enum == State.ROUND_EVAL:
+                    print("Cashing out...")
+                    game_state = client.cash_out()
+                    print(f"Cashed out, state: {game_state.state_enum.name}")
 
-        Returns:
-            ActionCall: Action to select blind.
-        """
-        return {"action": Actions.SELECT_BLIND, "args": None}
+                    # Go to next round
+                    print("Going to next round...")
+                    game_state = client.shop("next_round")
+                    print(f"Next round, state: {game_state.state_enum.name}")
 
-    def select_cards_from_hand(self, env: dict[str, Any]) -> ActionSchema:
-        """Simple strategy: use predefined card selection sequence.
+            # Go back to menu at the end
+            print("Going back to menu...")
+            game_state = client.go_to_menu()
+            print(f"Back to menu, state: {game_state.state_enum.name}")
 
-        Args:
-            env (dict[str, Any]): The current game environment state.
+        except BalatroError as e:
+            print(f"API Error: {e}")
+            print(f"Error code: {e.error_code}")
+            print(f"Context: {e.context}")
 
-        Returns:
-            ActionCall: Action with card selection from predefined sequence.
-        """
-        return next(plays)
-
-    def select_shop_action(self, env: dict[str, Any]) -> ActionSchema:
-        """Always leave the shop immediately.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to end shop.
-        """
-        return {"action": Actions.END_SHOP, "args": None}
-
-    def select_booster_action(self, env: dict[str, Any]) -> ActionSchema:
-        """Skip all booster packs.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to skip booster pack.
-        """
-        return {"action": Actions.SKIP_BOOSTER_PACK, "args": None}
-
-    def sell_jokers(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't sell any jokers.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to sell jokers with empty list.
-        """
-        return {"action": Actions.SELL_JOKER, "args": [[]]}
-
-    def rearrange_jokers(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't rearrange jokers.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to rearrange jokers with empty list.
-        """
-        return {"action": Actions.REARRANGE_JOKERS, "args": [[]]}
-
-    def use_or_sell_consumables(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't use consumables.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to use consumables with empty list.
-        """
-        return {"action": Actions.USE_CONSUMABLE, "args": [[]]}
-
-    def rearrange_consumables(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't rearrange consumables.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to rearrange consumables with empty list.
-        """
-        return {"action": Actions.REARRANGE_CONSUMABLES, "args": [[]]}
-
-    def rearrange_hand(self, env: dict[str, Any]) -> ActionSchema:
-        """Don't rearrange hand.
-
-        Args:
-            env (dict[str, Any]): The current game environment state.
-
-        Returns:
-            ActionCall: Action to rearrange hand with empty list.
-        """
-        return {"action": Actions.REARRANGE_HAND, "args": [[]]}
-
-
-def main() -> None:
-    """Main function to run the example bot with command-line argument support."""
-    parser = argparse.ArgumentParser(description="Run the example Balatro bot")
-    parser.add_argument(
-        "--log",
-        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
-        default="DEBUG",
-        help="Set the console logging level (default: DEBUG)",
-    )
-
-    args = parser.parse_args()
-
-    # Configure logging with the specified level
-    configure_bot_logging(args.log)
-
-    bot = ExampleBot(deck=Decks.BLUE, stake=Stakes.WHITE, seed="EXAMPLE")
-    bot.running = True
-    bot.run()
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
 
 if __name__ == "__main__":
