@@ -46,6 +46,7 @@ dev = [
   "mdformat-mkdocs>=4.3.0",
   "mdformat-simple-breaks>=0.0.1",
   "mkdocs-material>=9.6.15",
+  "mkdocstrings[python]>=0.29.1",
   "pytest>=8.4.1",
   "pytest-cov>=6.2.1",
   "ruff>=0.12.2",
