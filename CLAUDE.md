@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Run ruff linter and formatter
 ruff check .
+ruff check --select I --fix .
 ruff format .
 
 # Run type checker
@@ -20,14 +21,14 @@ basedpyright
 **IMPORTANT**: Tests require Balatro to be running in the background. Always start the game before running tests.
 
 ```bash
-# Run all tests (requires Balatro to be running)
-pytest
+# Run all tests (requires Balatro to be running) - stops after first failure
+pytest -x
 
-# Run specific test file
-pytest tests/test_api_functions.py
+# Run specific test file - stops after first failure
+pytest -x tests/test_api_functions.py
 
-# Run tests with verbose output
-pytest -v
+# Run tests with verbose output - stops after first failure
+pytest -vx
 ```
 
 #### Test Prerequisites and Workflow
@@ -39,7 +40,7 @@ pytest -v
    ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
 
    # Start if not running
-   ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo "Balatro started and ready"
+   ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo 'Balatro started and ready'
    ```
 
 2. **Monitor game startup**:
@@ -51,7 +52,7 @@ pytest -v
    # Look for these success indicators:
    # - "BalatrobotAPI initialized"
    # - "BalatroBot loaded - version X.X.X"
-   # - "UDP socket created on port 12346"
+   # - "TCP socket created on port 12346"
    ```
 
 3. **Common startup issues and fixes**:
@@ -60,15 +61,16 @@ pytest -v
    - **JSON metadata errors**: Normal for development files (.vscode, .luarc.json) - can be ignored
 
 4. **Test execution**:
-   - **Test suite**: 55 tests covering API functions and UDP communication
+   - **Test suite**: 55 tests covering API functions and TCP communication
    - **Execution time**: ~160 seconds (includes game state transitions)
    - **Coverage**: API function calls, socket communication, error handling, edge cases
 
 5. **Troubleshooting test failures**:
-   - **Connection timeouts**: Ensure UDP port 12346 is available
+   - **Connection timeouts**: Ensure TCP port 12346 is available
    - **Game state errors**: Check if game is responsive and not crashed
    - **Invalid responses**: Verify mod loaded correctly by checking logs
    - **If test/s fail for timeout the reasons is that Balatro crash because there was an error in the Balatro mod (i.e. @balatrobot.lua and @src/lua/ ). The error should be logged in the `balatro.log` file.**
+   - **Balatro app crashes**: When the Balatro app crashes during testing, **do not run the remaining tests**. The crash usually indicates an issue with the Lua mod code that causes cryptic errors in `balatro.log`. Stop test execution and investigate the crash logs before continuing. Before running the tests again, ALWAYS kill the current Balatro instance running and start it again.
 
 ### Documentation
 
@@ -84,10 +86,10 @@ mkdocs build
 
 BalatroBot is a Python framework for developing automated bots to play the card game Balatro. The architecture consists of three main layers:
 
-### 1. Communication Layer (UDP Protocol)
+### 1. Communication Layer (TCP Protocol)
 
 - **Lua API** (`src/lua/api.lua`): Game-side mod that handles socket communication
-- **UDP Socket Communication**: Real-time bidirectional communication between game and bot
+- **TCP Socket Communication**: Real-time bidirectional communication between game and bot
 - **Protocol**: Bot sends "HELLO" → Game responds with JSON state → Bot sends action strings
 
 ### 2. Python Framework Layer (`src/balatrobot/`)
@@ -114,9 +116,9 @@ I keep the old code around for reference.
 ## Project Structure Context
 
 - **Dual Implementation**: Both Python framework and Lua game mod
-- **UDP Communication**: Port 12346 for real-time game interaction
+- **TCP Communication**: Port 12346 for real-time game interaction
 - **MkDocs Documentation**: Comprehensive guides with Material theme
-- **Pytest Testing**: UDP socket testing with fixtures
+- **Pytest Testing**: TCP socket testing with fixtures
 - **Development Tools**: Ruff, basedpyright, modern Python tooling
 
 ### Testing Best Practices
