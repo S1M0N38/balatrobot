@@ -1,6 +1,6 @@
-# Bot Development Guide
+# Developing Bots
 
-Balatrobot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a TCP socket connection actions to perform and receiving back the game state.
+BalatroBot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a TCP socket connection actions to perform and receiving back the game state.
 
 ## Bot Architecture
 
@@ -80,7 +80,7 @@ stateDiagram-v2
 
 ## Development Environment Setup
 
-The Balatrobot project provides a complete development environment with all necessary tools and resources for building bots.
+The BalatroBot project provides a complete development environment with all necessary tools and resources for developing bots.
 
 ### Environment Setup
 
@@ -88,7 +88,7 @@ Before developing or running bots, you need to set up the development environmen
 
 === "Windows"
 
-    ``` sh
+    ```sh
     cd %AppData%/Balatro/Mods/balatrobot
     copy .envrc.example .envrc
     .envrc
@@ -96,7 +96,7 @@ Before developing or running bots, you need to set up the development environmen
 
 === "MacOS"
 
-    ``` sh
+    ```sh
     cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
     cp .envrc.example .envrc
     source .envrc
@@ -104,7 +104,7 @@ Before developing or running bots, you need to set up the development environmen
 
 === "Linux"
 
-    ``` sh
+    ```sh
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
     cp .envrc.example .envrc
     source .envrc
@@ -134,7 +134,15 @@ Before developing or running bots, you need to set up the development environmen
 
 ### Bot File Location
 
-When creating new bots, place your files in the `bots/` directory using one of these recommended patterns:
+When developing new bots, place your files in the `bots/` directory using one of these recommended patterns:
 
 - **Single file bots**: `bots/my_new_bot.py`
 - **Complex bots**: `bots/my_new_bot/main.py` (for bots with multiple modules)
+
+## Next Steps
+
+After setting up your development environment:
+
+- Explore the [BalatroBot API](balatrobot-api.md) for detailed client and model documentation
+- Learn about the underlying [Protocol API](protocol-api.md) for TCP communication details
+- Check the [Troubleshooting](troubleshooting.md) guide if you encounter issues

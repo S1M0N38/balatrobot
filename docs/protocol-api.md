@@ -1,4 +1,4 @@
-# API Protocol
+# Protocol
 
 This document provides the TCP API protocol reference for developers who want to interact directly with the BalatroBot game interface using raw socket connections.
 
@@ -155,3 +155,11 @@ All API functions validate their inputs and game state before execution. Error r
 | `E014` | Game Logic | Invalid card index                         |
 | `E015` | Game Logic | No discards remaining                      |
 | `E016` | Game Logic | Invalid action for current context         |
+
+## Implementation
+
+For higher-level integration:
+
+- Use the [BalatroBot API](balatrobot-api.md) `BalatroClient` for managed connections
+- See [Developing Bots](developing-bots.md) for complete bot implementation examples
+- Check [Troubleshooting](troubleshooting.md) for common protocol issues

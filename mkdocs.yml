@@ -27,15 +27,30 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+extra:
+  generator: false
 plugins:
   - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_source: false
+            show_bases: false
+            filters: ["!^_"]
+            heading_level: 4
 nav:
   - index.md
   - Installation: installation.md
-  - Bot Development: bot-development.md
-  - API Protocol: api-protocol.md
+  - Developing Bots: developing-bots.md
+  - BalatroBot API: balatrobot-api.md
+  - Protocol API: protocol-api.md
   - Troubleshooting: troubleshooting.md
 markdown_extensions:
+  - toc:
+      toc_depth: 3
   - attr_list
   - md_in_html
   - pymdownx.blocks.caption
