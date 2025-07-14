@@ -1,4 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(pytest:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(basedpyright:*)"
+    ],
+    "deny": []
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -10,7 +19,7 @@
           },
           {
             "type": "command",
-            "command": "ruff format -s src/balatrobot tests/"
+            "command": "ruff check --select I --fix src/balatrobot tests/ && ruff format -s src/balatrobot tests/"
           },
           {
             "type": "command",
