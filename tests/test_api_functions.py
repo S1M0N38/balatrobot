@@ -6,6 +6,8 @@ from typing import Generator
 import pytest
 from conftest import assert_error_response, send_and_receive_api_message
 
+from balatrobot.enums import ErrorCode
+
 from balatrobot.enums import State
 
 
@@ -127,7 +129,11 @@ class TestStartRun:
         response = send_and_receive_api_message(
             tcp_client, "start_run", incomplete_args
         )
-        assert_error_response(response, "Missing required field: deck")
+        assert_error_response(
+            response,
+            "Missing required field: deck",
+            expected_error_code=ErrorCode.INVALID_PARAMETER.value,
+        )
 
     def test_start_run_invalid_deck(self, tcp_client: socket.socket) -> None:
         """Test start_run with invalid deck name."""
@@ -139,7 +145,9 @@ class TestStartRun:
         }
         # Should receive error response
         response = send_and_receive_api_message(tcp_client, "start_run", invalid_args)
-        assert_error_response(response, "Invalid deck name", ["deck"])
+        assert_error_response(
+            response, "Invalid deck name", ["deck"], ErrorCode.DECK_NOT_FOUND.value
+        )
 
 
 class TestGoToMenu:
@@ -292,7 +300,10 @@ class TestSkipOrSelectBlind:
 
         # Verify error response
         assert_error_response(
-            error_response, "Invalid action for skip_or_select_blind", ["action"]
+            error_response,
+            "Invalid action for skip_or_select_blind",
+            ["action"],
+            ErrorCode.INVALID_ACTION.value,
         )
 
     def test_skip_or_select_blind_invalid_state(
@@ -312,6 +323,7 @@ class TestSkipOrSelectBlind:
             error_response,
             "Cannot skip or select blind when not in blind selection",
             ["current_state"],
+            ErrorCode.INVALID_GAME_STATE.value,
         )
 
 
@@ -407,7 +419,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for invalid card index
         assert_error_response(
-            response, "Invalid card index", ["card_index", "hand_size"]
+            response,
+            "Invalid card index",
+            ["card_index", "hand_size"],
+            ErrorCode.INVALID_CARD_INDEX.value,
         )
 
     def test_play_hand_invalid_action(self, tcp_client: socket.socket) -> None:
@@ -419,7 +434,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for invalid action
         assert_error_response(
-            response, "Invalid action for play_hand_or_discard", ["action"]
+            response,
+            "Invalid action for play_hand_or_discard",
+            ["action"],
+            ErrorCode.INVALID_ACTION.value,
         )
 
     @pytest.mark.parametrize(
@@ -487,7 +505,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for no discards left
         assert_error_response(
-            response, "No discards left to perform discard", ["discards_left"]
+            response,
+            "No discards left to perform discard",
+            ["discards_left"],
+            ErrorCode.NO_DISCARDS_LEFT.value,
         )
 
     def test_play_hand_or_discard_empty_cards(self, tcp_client: socket.socket) -> None:
@@ -499,7 +520,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for no cards
         assert_error_response(
-            response, "Invalid number of cards", ["cards_count", "valid_range"]
+            response,
+            "Invalid number of cards",
+            ["cards_count", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
         )
 
     def test_play_hand_or_discard_too_many_cards(
@@ -513,7 +537,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for too many cards
         assert_error_response(
-            response, "Invalid number of cards", ["cards_count", "valid_range"]
+            response,
+            "Invalid number of cards",
+            ["cards_count", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
         )
 
     def test_discard_empty_cards(self, tcp_client: socket.socket) -> None:
@@ -525,7 +552,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for no cards
         assert_error_response(
-            response, "Invalid number of cards", ["cards_count", "valid_range"]
+            response,
+            "Invalid number of cards",
+            ["cards_count", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
         )
 
     def test_discard_too_many_cards(self, tcp_client: socket.socket) -> None:
@@ -537,7 +567,10 @@ class TestPlayHandOrDiscard:
 
         # Should receive error response for too many cards
         assert_error_response(
-            response, "Invalid number of cards", ["cards_count", "valid_range"]
+            response,
+            "Invalid number of cards",
+            ["cards_count", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
         )
 
     def test_play_hand_or_discard_invalid_state(
@@ -559,6 +592,7 @@ class TestPlayHandOrDiscard:
             error_response,
             "Cannot play hand or discard when not selecting hand",
             ["current_state"],
+            ErrorCode.INVALID_GAME_STATE.value,
         )
 
 
@@ -616,7 +650,12 @@ class TestShop:
         )
 
         # Verify error response
-        assert_error_response(response, "Invalid action for shop", ["action"])
+        assert_error_response(
+            response,
+            "Invalid action for shop",
+            ["action"],
+            ErrorCode.INVALID_ACTION.value,
+        )
 
     def test_shop_invalid_state_error(self, tcp_client: socket.socket) -> None:
         """Test shop returns error when not in shop state."""
@@ -630,7 +669,10 @@ class TestShop:
 
         # Verify error response
         assert_error_response(
-            response, "Cannot select shop action when not in shop", ["current_state"]
+            response,
+            "Cannot select shop action when not in shop",
+            ["current_state"],
+            ErrorCode.INVALID_GAME_STATE.value,
         )
 
 
@@ -684,5 +726,8 @@ class TestCashOut:
 
         # Verify error response
         assert_error_response(
-            response, "Cannot cash out when not in round evaluation", ["current_state"]
+            response,
+            "Cannot cash out when not in round evaluation",
+            ["current_state"],
+            ErrorCode.INVALID_GAME_STATE.value,
         )
