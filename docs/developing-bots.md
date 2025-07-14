@@ -145,4 +145,3 @@ After setting up your development environment:
 
 - Explore the [BalatroBot API](balatrobot-api.md) for detailed client and model documentation
 - Learn about the underlying [Protocol API](protocol-api.md) for TCP communication details
-- Check the [Troubleshooting](troubleshooting.md) guide if you encounter issues

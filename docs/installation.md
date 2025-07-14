@@ -256,7 +256,6 @@ If you encounter issues during installation or testing:
 
 - **Discord Support**: Join our community at [https://discord.gg/xzBAj4JFVC](https://discord.gg/xzBAj4JFVC) for real-time help
 - **GitHub Issues**: Report bugs or request features by [opening an issue](https://github.com/S1M0N38/balatrobot/issues) on GitHub
-- **Documentation**: Check the [Troubleshooting](troubleshooting.md) page (work in progress)
 
 ---
 
