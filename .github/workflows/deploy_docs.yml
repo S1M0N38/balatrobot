@@ -18,15 +18,28 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      - name: Set up Python
       - uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version-file: ".python-version"
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv sync --dev
+      - name: Initialize cache
       - uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material 'mkdocstrings[python]'
-      - run: mkdocs gh-deploy --force
+      - name: Deploy documentation
+      - run: |
+          source .venv/bin/activate
+          mkdocs gh-deploy --force
