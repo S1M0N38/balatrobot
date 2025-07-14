@@ -10,7 +10,7 @@ authors = [
   { name = "phughesion" },
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["pydantic>=2.11.7"]
 classifiers = [
   "Development Status :: 1 - Planning",
   "Framework :: Pytest",
@@ -37,6 +37,9 @@ lint.task-tags = ["FIX", "TODO", "HACK", "WARN", "PERF", "NOTE", "TEST"]
 [tool.pyright]
 typeCheckingMode = "basic"
 
+[tool.pytest.ini_options]
+addopts = "--cov=src/balatrobot --cov-report=term-missing --cov-report=html --cov-report=xml"
+
 [dependency-groups]
 dev = [
   "basedpyright>=1.29.5",
@@ -44,5 +47,6 @@ dev = [
   "mdformat-simple-breaks>=0.0.1",
   "mkdocs-material>=9.6.15",
   "pytest>=8.4.1",
+  "pytest-cov>=6.2.1",
   "ruff>=0.12.2",
 ]
