@@ -31,6 +31,21 @@ extra:
   generator: false
 plugins:
   - search
+  - llmstxt:
+      markdown_description: |
+        BalatroBot is a Python framework for developing automated bots to play the card game Balatro.
+        The architecture consists of three main layers: a communication layer using TCP protocol with Lua API,
+        a Python framework layer for bot development, and comprehensive testing and documentation systems.
+        The project enables real-time bidirectional communication between the game and bot through TCP sockets.
+      sections:
+        Documentation:
+          - index.md
+          - installation.md
+          - developing-bots.md
+          - balatrobot-api.md
+          - protocol-api.md
+      full_output: llms-full.txt
+      autoclean: false
   - mkdocstrings:
       handlers:
         python:
