@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Example usage of the new BalatroBot API."""
 
-from balatrobot import BalatroError, BalatroClient, State
+from balatrobot import BalatroClient, BalatroError, State
 
 
 def main():

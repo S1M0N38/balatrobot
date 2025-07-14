@@ -1,7 +1,5 @@
 """Tests for exception handling and error response creation."""
 
-import pytest
-
 from src.balatrobot.enums import ErrorCode
 from src.balatrobot.exceptions import (
     BalatroError,
