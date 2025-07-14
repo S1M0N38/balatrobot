@@ -1,4 +1,4 @@
-# Protocol
+# Protocol API
 
 This document provides the TCP API protocol reference for developers who want to interact directly with the BalatroBot game interface using raw socket connections.
 

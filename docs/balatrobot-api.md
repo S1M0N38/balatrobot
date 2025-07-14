@@ -1,4 +1,4 @@
-# BalatroBot API Reference
+# BalatroBot API
 
 This page provides comprehensive API documentation for the BalatroBot Python framework. The API enables you to build automated bots that interact with the Balatro card game through a structured TCP communication protocol.
 
