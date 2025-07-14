@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.1](https://github.com/S1M0N38/balatrobot/compare/v0.4.0...v0.4.1) (2025-07-14)
+
+
+### Documentation
+
+* configure mkdocs-llmstxt plugin for LLM-friendly documentation ([aaf9b38](https://github.com/S1M0N38/balatrobot/commit/aaf9b38b9a44d985602e9f2620d78db574539034))
+* remove empty troubleshooting page and references ([b69d2ed](https://github.com/S1M0N38/balatrobot/commit/b69d2ed5bcc4179f873a4863abdd7c71fcb02d4f))
+* replace troubleshooting with LLM documentation links on homepage ([b632077](https://github.com/S1M0N38/balatrobot/commit/b6320776ffbea2c8ba21a413261edc45bfa13cde))
+* update API documentation page titles ([ab79ef3](https://github.com/S1M0N38/balatrobot/commit/ab79ef3921c1f18b171f0a31b2f33f930e09a347))
+
 ## [0.4.0](https://github.com/S1M0N38/balatrobot/compare/v0.3.0...v0.4.0) (2025-07-14)
 
 
