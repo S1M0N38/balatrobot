@@ -1,178 +1,154 @@
-# Balatro Bot API Protocol
+# API Protocol
 
-This document provides the UDP protocol reference for developing bots that interface with Balatro via raw UDP sockets.
+This document provides the TCP API protocol reference for developers who want to interact directly with the BalatroBot game interface using raw socket connections.
 
-## UDP Communication
+## Protocol
 
-The Balatro Bot API uses UDP sockets for real-time communication between the game and external bot clients.
-
-**Connection Details:**
+The BalatroBot API establishes a TCP socket connection to communicate with the Balatro game through the BalatroBot Lua mod. The protocol uses a simple JSON request-response model for synchronous communication.
 
 - **Host:** `127.0.0.1` (localhost)
 - **Port:** `12346` (default)
-- **Protocol:** UDP
+- **Message Format:** JSON
 
-## Communication Sequence
+### Communication Sequence
+
+The typical interaction follows a game loop where clients continuously query the game state, analyze it, and send appropriate actions:
 
 ```mermaid
 sequenceDiagram
-    participant Bot
-    participant Game
-
-    Bot->>Game: "HELLO" (UDP)
-    Game->>Bot: JSON Game State
+    participant Client
+    participant BalatroBot
 
     loop Game Loop
-        Game->>Bot: Updated JSON Game State (when waitingForAction changes)
+        Client->>BalatroBot: {"name": "get_game_state", "arguments": {}}
+        BalatroBot->>Client: {game state JSON}
 
-        Note over Bot: Bot analyzes game state and decides action
+        Note over Client: Analyze game state and decide action
 
-        Bot->>Game: "ACTION_NAME|param1,param2|param3"
+        Client->>BalatroBot: {"name": "function_name", "arguments": {...}}
 
-        alt Valid Action
-            Game->>Bot: {"response": "Action executed successfully"}
-        else Invalid Action  
-            Game->>Bot: {"response": "Error: [description]"}
+        alt Valid Function Call
+            BalatroBot->>Client: {updated game state}
+        else Error
+            BalatroBot->>Client: {"error": "description", ...}
         end
     end
 ```
 
-## Message Formats
+### Message Format
 
-**Handshake**
+All communication uses JSON messages with a standardized structure. The protocol defines three main message types: function call requests, successful responses, and error responses.
+
+**Request Format:**
+
+```json
+{
+  "name": "function_name",
+  "arguments": {
+    "param1": "value1",
+    "param2": [
+      "array",
+      "values"
+    ]
+  }
+}
 ```
-Bot -> Game: "HELLO"
-Game -> Bot: {JSON game state with waitingFor field}
+
+**Response Format:**
+
+```json
+{
+  "state": 7,
+  "game": { ... },
+  "hand": [ ... ],
+  "jokers": [ ... ]
+}
 ```
 
-**Action Request**
+**Error Response Format:**
+
+```json
+{
+  "error": "Error message description",
+  "state": 7,
+  "context": {
+    "additional": "error details"
+  }
+}
 ```
-Bot -> Game: "ACTION_NAME|param1,param2|param3,param4"
-```
-
-**Responses**
-```
-Success: {"response": "Action executed successfully"}
-Error:   {"response": "Error: [description]"}
-```
-
-## Game State JSON
-
-The game sends JSON containing:
-
-- **waitingFor**: What action type the game expects
-- **waitingForAction**: Boolean indicating if bot input is needed
-- **gamestate**: Current game phase and data
-- **hand**: Player's current hand cards
-- **jokers**: Active joker cards
-- **consumables**: Available consumable cards  
-- **shop**: Shop items and costs
-- **blinds**: Current blind information
-- **round**: Round data (hands/discards remaining, etc.)
-
-Key field for bots: **waitingForAction** - only send actions when this is `true`.
-
-## Available Actions
-
-Actions use pipe-separated format: `ACTION_NAME|param1,param2|param3,param4`
-
-
-| Action | Parameters | Description | Valid When waitingFor |
-|--------|------------|-------------|------------|
-| `SELECT_BLIND` | `1` | Select the current blind | `skip_or_select_blind` |
-| `SKIP_BLIND` | `2` | Skip the current blind | `skip_or_select_blind` |
-| `PLAY_HAND` | `3|card_indices` | Play selected cards | `select_cards_from_hand` |
-| `DISCARD_HAND` | `4|card_indices` | Discard selected cards | `select_cards_from_hand` |
-| `END_SHOP` | `5` | Leave the shop | `select_shop_action` |
-| `REROLL_SHOP` | `6` | Reroll shop items | `select_shop_action` |
-| `BUY_CARD` | `7|shop_index` | Buy joker from shop | `select_shop_action` |
-| `BUY_VOUCHER` | `8|voucher_index` | Buy voucher from shop | `select_shop_action` |
-| `BUY_BOOSTER` | `9|booster_index` | Buy booster pack | `select_shop_action` |
-| `SELECT_BOOSTER_CARD` | `10|pack_index|hand_indices` | Use consumable on cards | `select_booster_action` |
-| `SKIP_BOOSTER_PACK` | `11` | Skip booster pack | `select_booster_action` |
-| `SELL_JOKER` | `12|joker_indices` | Sell joker cards | `sell_jokers` |
-| `USE_CONSUMABLE` | `13|consumable_indices` | Use consumable cards | `use_or_sell_consumables` |
-| `SELL_CONSUMABLE` | `14|consumable_indices` | Sell consumable cards | `use_or_sell_consumables` |
-| `REARRANGE_JOKERS` | `15|new_order` | Reorder joker positions | `rearrange_jokers` |
-| `REARRANGE_CONSUMABLES` | `16|new_order` | Reorder consumable positions | `rearrange_consumables` |
-| `REARRANGE_HAND` | `17|new_order` | Reorder hand cards | `rearrange_hand` |
-| `PASS` | `18` | Do nothing (always valid) | Any state |
-| `START_RUN` | `19|stake|deck|seed|challenge` | Start new run | `start_run` |
-
-
-**Card Indices:** 1-based array of card positions
-
-- Example: `PLAY_HAND|3|1,3,5` (play cards at positions 1, 3, and 5)
-
-**Shop Indices:** 1-based position in shop
-
-- Example: `BUY_CARD|7|2` (buy second joker in shop)
-
-**Reorder Arrays:** Complete new ordering (all positions)
-
-- Example: `REARRANGE_JOKERS|15|3,1,2,4` (move 3rd joker to 1st position, etc.)
-
-**Run Parameters:**
-
-- stake: 1-8 (difficulty)
-- deck: deck name string
-- seed: seed string or empty
-- challenge: challenge name or empty
 
 ## Game States
 
+The BalatroBot API operates as a finite state machine that mirrors the natural flow of playing Balatro. Each state represents a distinct phase where specific actions are available.
 
-| waitingFor State | Description | Valid Actions |
-|------------------|-------------|---------------|
-| `start_run` | Main menu | `START_RUN` |
-| `skip_or_select_blind` | Blind selection screen | `SELECT_BLIND`, `SKIP_BLIND` |
-| `select_cards_from_hand` | Playing/discarding phase | `PLAY_HAND`, `DISCARD_HAND` |
-| `select_shop_action` | In shop | `END_SHOP`, `REROLL_SHOP`, `BUY_CARD`, `BUY_VOUCHER`, `BUY_BOOSTER` |
-| `select_booster_action` | Opening booster packs | `SELECT_BOOSTER_CARD`, `SKIP_BOOSTER_PACK` |
-| `sell_jokers` | Joker management | `SELL_JOKER` |
-| `use_or_sell_consumables` | Consumable management | `USE_CONSUMABLE`, `SELL_CONSUMABLE` |
-| `rearrange_jokers` | Joker positioning | `REARRANGE_JOKERS` |
-| `rearrange_consumables` | Consumable positioning | `REARRANGE_CONSUMABLES` |
-| `rearrange_hand` | Hand card positioning | `REARRANGE_HAND` |
+### Overview
 
+The game progresses through these states in a typical flow: `MENU` → `BLIND_SELECT` → `SELECTING_HAND` → `ROUND_EVAL` → `SHOP` → `BLIND_SELECT` (or `GAME_OVER`).
 
-## Error Handling
+| State | Value | Description | Available Functions |
+| ---------------- | ----- | ---------------------------- | ---------------------- |
+| `MENU` | 11 | Main menu screen | `start_run` |
+| `BLIND_SELECT` | 7 | Selecting or skipping blinds | `skip_or_select_blind` |
+| `SELECTING_HAND` | 1 | Playing or discarding cards | `play_hand_or_discard` |
+| `ROUND_EVAL` | 8 | Round completion evaluation | `cash_out` |
+| `SHOP` | 5 | Shop interface | `shop` |
+| `GAME_OVER` | 4 | Game ended | `go_to_menu` |
 
-The game validates all actions and returns errors for:
+### Validation
 
-- **Invalid format:** Incorrect action syntax
-- **Invalid parameters:** Wrong number or type of parameters  
-- **Invalid state:** Action not allowed in current game state
-- **Invalid indices:** References to non-existent cards/items
-- **Insufficient resources:** Not enough money, hands, discards, etc.
+Functions can only be called when the game is in their corresponding valid states. The `get_game_state` function is available in all states.
 
-## Example Bot Communication
+!!! tip "Game State Reset"
 
-```
-1. Bot connects and sends handshake:
-   Bot -> Game: "HELLO"
+    The `go_to_menu` function can be used in any state to reset a run. However,
+    run resuming is not supported by BalatroBot. So performing a `go_to_menu` is
+    effectively equivalent to resetting the run. This can be used to restart the
+    game to a clean state.
 
-2. Game responds with initial state:
-   Game -> Bot: {"waitingFor": "start_run", "waitingForAction": true, ...}
+## Game Functions
 
-3. Bot starts a run:
-   Bot -> Game: "START_RUN|19|1|Red Deck||"
-   Game -> Bot: {"response": "Action executed successfully"}
+The BalatroBot API provides core functions that correspond to the main game actions. Each function is state-dependent and can only be called in the appropriate game state.
 
-4. Game state updates automatically:
-   Game -> Bot: {"waitingFor": "skip_or_select_blind", "waitingForAction": true, ...}
+### Overview
 
-5. Bot selects blind:
-   Bot -> Game: "SELECT_BLIND|1"
-   Game -> Bot: {"response": "Action executed successfully"}
+| Name | Description |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `get_game_state` | Retrieves the current complete game state |
+| `go_to_menu` | Returns to the main menu from any game state |
+| `start_run` | Starts a new game run with specified configuration |
+| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it |
+| `play_hand_or_discard` | Plays selected cards or discards them |
+| `cash_out` | Proceeds from round completion to the shop phase |
+| `shop` | Performs shop actions. Currently supports proceeding to the next round |
 
-6. Continue until run ends...
-```
+### Parameters
 
-## Implementation Notes
+The following table details the parameters required for each function. Note that `get_game_state` and `go_to_menu` require no parameters:
 
-- **Wait for waitingForAction:** Only send actions when `waitingForAction` is `true`
-- **One action per request:** Send one action string per UDP message
-- **Monitor responses:** Check for error messages and handle appropriately
-- **State changes:** Game automatically sends updated state when ready for next action
-- **Index validation:** All card/item indices are 1-based and must refer to existing items 
+| Name | Parameters |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_run` | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name |
+| `skip_or_select_blind` | `action` (string): Either "select" or "skip" |
+| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards) |
+| `shop` | `action` (string): Shop action to perform ("next_round") |
+
+### Errors
+
+All API functions validate their inputs and game state before execution. Error responses always include an `error` message, current `state` value, and optional `context` with additional details.
+
+- `Invalid JSON`
+- `Message must contain a name`
+- `Message must contain arguments`
+- `Unknown function name`
+- `Arguments must be a table`
+- `Invalid deck arg for start_run`
+- `Cannot skip or select blind when not in blind selection`
+- `Invalid action arg for skip_or_select_blind`
+- `Cannot play hand or discard when not selecting hand`
+- `Invalid number of cards`
+- `No discards left to perform discard`
+- `Invalid card index`
+- `Invalid action arg for play_hand_or_discard`
+- `Cannot cash out when not in shop`
+- `Cannot select shop action when not in shop`
+- `Invalid action arg for shop`
