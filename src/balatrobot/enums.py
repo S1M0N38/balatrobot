@@ -85,3 +85,36 @@ class Stakes(Enum):
     PURPLE = 6
     ORANGE = 7
     GOLD = 8
+
+
+@unique
+class ErrorCode(Enum):
+    """Enumeration of standardized error codes used in BalatroBot API.
+
+    These error codes match those defined in src/lua/api.lua and provide
+    consistent error handling across the entire system.
+    """
+
+    # Protocol errors (E001-E005)
+    INVALID_JSON = "E001"
+    MISSING_NAME = "E002"
+    MISSING_ARGUMENTS = "E003"
+    UNKNOWN_FUNCTION = "E004"
+    INVALID_ARGUMENTS = "E005"
+
+    # Network errors (E006-E008)
+    SOCKET_CREATE_FAILED = "E006"
+    SOCKET_BIND_FAILED = "E007"
+    CONNECTION_FAILED = "E008"
+
+    # Validation errors (E009-E012)
+    INVALID_GAME_STATE = "E009"
+    INVALID_PARAMETER = "E010"
+    PARAMETER_OUT_OF_RANGE = "E011"
+    MISSING_GAME_OBJECT = "E012"
+
+    # Game logic errors (E013-E016)
+    DECK_NOT_FOUND = "E013"
+    INVALID_CARD_INDEX = "E014"
+    NO_DISCARDS_LEFT = "E015"
+    INVALID_ACTION = "E016"
