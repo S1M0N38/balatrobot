@@ -19,7 +19,7 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
       - name: Set up Python
-      - uses: actions/setup-python@v5
+        uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
@@ -33,13 +33,13 @@ jobs:
           uv venv
           uv sync --dev
       - name: Initialize cache
-      - uses: actions/cache@v4
+        uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
       - name: Deploy documentation
-      - run: |
+        run: |
           source .venv/bin/activate
           mkdocs gh-deploy --force
