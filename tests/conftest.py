@@ -92,17 +92,21 @@ def send_and_receive_api_message(
     return game_state
 
 
-def assert_error_response(response, expected_error_text, expected_context_keys=None):
+def assert_error_response(
+    response, expected_error_text, expected_context_keys=None, expected_error_code=None
+):
     """
     Helper function to assert the format and content of an error response.
 
     Args:
         response (dict): The response dictionary to validate. Must contain at least
-            the keys "error" and "state".
+            the keys "error", "state", and "error_code".
         expected_error_text (str): The expected error message text to check within
             the "error" field of the response.
         expected_context_keys (list, optional): A list of keys expected to be present
             in the "context" field of the response, if the "context" field exists.
+        expected_error_code (str, optional): The expected error code to check within
+            the "error_code" field of the response.
 
     Raises:
         AssertionError: If the response does not match the expected format or content.
@@ -110,7 +114,10 @@ def assert_error_response(response, expected_error_text, expected_context_keys=N
     assert isinstance(response, dict)
     assert "error" in response
     assert "state" in response
+    assert "error_code" in response
     assert expected_error_text in response["error"]
+    if expected_error_code:
+        assert response["error_code"] == expected_error_code
     if expected_context_keys:
         assert "context" in response
         for key in expected_context_keys:
