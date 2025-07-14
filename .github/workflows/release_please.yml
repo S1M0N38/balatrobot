@@ -39,6 +39,12 @@ jobs:
       - name: Update lock file
         if: ${{ steps.release.outputs.release_created }}
         run: uv lock
+      - name: Update balatrobot.json version
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          # Update version in balatrobot.json
+          jq --arg version "${{ steps.release.outputs.version }}" '.version = $version' balatrobot.json > balatrobot.json.tmp
+          mv balatrobot.json.tmp balatrobot.json
       - name: Commit and push updated lock file
         if: ${{ steps.release.outputs.release_created }}
         run: |
@@ -48,4 +54,14 @@ jobs:
             git push
           else
             echo "No changes to uv.lock"
+          fi
+      - name: Commit and push updated balatrobot.json
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          if [[ -n $(git status --porcelain balatrobot.json) ]]; then
+            git add balatrobot.json
+            git commit -m "chore(release): update balatrobot.json version to ${{ steps.release.outputs.version }}"
+            git push
+          else
+            echo "No changes to balatrobot.json"
           fi
