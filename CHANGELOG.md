@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.4.0](https://github.com/S1M0N38/balatrobot/compare/v0.3.0...v0.4.0) (2025-07-14)
+
+
+### Features
+
+* **api:** add comprehensive error handling and validation system ([c00eca4](https://github.com/S1M0N38/balatrobot/commit/c00eca477caee4a2b3a816db4884e425eb85cded))
+* **bot:** add standardized error codes enum ([2c9fdaa](https://github.com/S1M0N38/balatrobot/commit/2c9fdaaf1e0cfbfbb5586e633c0fa8cd97db496d))
+* **bot:** replace Bot ABC with structured API client ([3a70fde](https://github.com/S1M0N38/balatrobot/commit/3a70fdef70a5647732155bc2608d37f5fdc10182))
+* **examples:** update example bot to use new client API ([73bf5b7](https://github.com/S1M0N38/balatrobot/commit/73bf5b7c19e15a65968de5c273b51754ffba2419))
+* **tests:** add TCP client support to test infrastructure ([ff935f3](https://github.com/S1M0N38/balatrobot/commit/ff935f3f39b873e97a580f02fe8204f2e03565d3))
+
+
+### Bug Fixes
+
+* **api:** add card count validation to play_hand_or_discard function ([0072a0e](https://github.com/S1M0N38/balatrobot/commit/0072a0e8fbc078bde347f4bd5f1b771a911da4e8))
+* **api:** add event queue threshold check to start_run condition ([ea210ed](https://github.com/S1M0N38/balatrobot/commit/ea210ed47021f90106248bbf8cced3e9f9e7c878))
+* **api:** correct socket type references from UDP to TCP ([149d314](https://github.com/S1M0N38/balatrobot/commit/149d3148184561b86562dac2e4604ac117fbf0ec))
+* **ci:** correct YAML indentation in deploy docs workflow ([ca2d797](https://github.com/S1M0N38/balatrobot/commit/ca2d797b4c73dfb6cb869af995a0caaf2913bbad))
+* **dev:** remove --check flag from mdformat command ([3f710b8](https://github.com/S1M0N38/balatrobot/commit/3f710b8ba13a79432284732ee420e778e45915ac))
+
+
+### Documentation
+
+* add comprehensive BalatroBot Python API reference ([548c0c3](https://github.com/S1M0N38/balatrobot/commit/548c0c3a6470186f6eb3b1a65fac7d3383d23abd))
+* **api:** add standardized error codes and improve formatting ([5ca9813](https://github.com/S1M0N38/balatrobot/commit/5ca981363f2c26d4c11766d93571feb1ee4cc59b))
+* **api:** refactor API protocol documentation for TCP implementation ([411268b](https://github.com/S1M0N38/balatrobot/commit/411268b7d25803ac8b307de8b163bd9b42559b8e))
+* **bot:** init version for new balatrobot python package ([a29996e](https://github.com/S1M0N38/balatrobot/commit/a29996e21f59bfba97b90d40cd38d3ee48e1f21a))
+* **dev:** improve CLAUDE.md development commands and testing guidance ([2883a6d](https://github.com/S1M0N38/balatrobot/commit/2883a6d7faa6ade21936322e2890277b8baef1ab))
+* **dev:** update test suite statistics ([dcf44fe](https://github.com/S1M0N38/balatrobot/commit/dcf44fe60cb1001a2239395a689ed53b9ad50980))
+* restructure documentation and configure mkdocstrings ([e89e34a](https://github.com/S1M0N38/balatrobot/commit/e89e34ab3d2cd5355148c584422a70a2bde68c16))
+
 ## [0.3.0](https://github.com/S1M0N38/balatrobot/compare/v0.2.0...v0.3.0) (2025-07-12)
 
 
