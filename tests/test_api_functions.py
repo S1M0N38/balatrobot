@@ -6,9 +6,7 @@ from typing import Generator
 import pytest
 from conftest import assert_error_response, send_and_receive_api_message
 
-from balatrobot.enums import ErrorCode
-
-from balatrobot.enums import State
+from balatrobot.enums import ErrorCode, State
 
 
 class TestGetGameState:
