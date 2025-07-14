@@ -2,14 +2,14 @@
 ---Type definitions for the BalatroBot Lua mod
 
 -- =============================================================================
--- UDP Socket Types
+-- TCP Socket Types
 -- =============================================================================
 
----@class UDPSocket
----@field settimeout fun(self: UDPSocket, timeout: number)
----@field setsockname fun(self: UDPSocket, address: string, port: number): boolean, string?
----@field receivefrom fun(self: UDPSocket, size: number): string?, string?, number?
----@field sendto fun(self: UDPSocket, data: string, address: string, port: number): number?, string?
+---@class TCPSocket
+---@field settimeout fun(self: TCPSocket, timeout: number)
+---@field setsockname fun(self: TCPSocket, address: string, port: number): boolean, string?
+---@field receivefrom fun(self: TCPSocket, size: number): string?, string?, number?
+---@field sendto fun(self: TCPSocket, data: string, address: string, port: number): number?, string?
 
 -- =============================================================================
 -- API Request Types (used in api.lua)
@@ -57,9 +57,9 @@
 -- Main API Module (defined in api.lua)
 -- =============================================================================
 
----Main API module for handling UDP communication with bots
+---Main API module for handling TCP communication with bots
 ---@class API
----@field socket? UDPSocket UDP socket instance
+---@field socket? TCPSocket TCP socket instance
 ---@field functions table<string, fun(args: table)> Map of API function names to their implementations
 ---@field pending_requests table<string, PendingRequest> Map of pending async requests
 ---@field last_client_ip? string IP address of the last client that sent a message

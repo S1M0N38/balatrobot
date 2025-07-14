@@ -42,7 +42,7 @@ class TestRunReplays:
         """Test replaying a complete run from JSONL file.
 
         Args:
-            tcp_client: UDP socket for API communication
+            tcp_client: TCP socket for API communication
             jsonl_file: Path to JSONL file containing recorded run
         """
         steps = load_jsonl_run(jsonl_file)

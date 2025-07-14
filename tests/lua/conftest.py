@@ -30,10 +30,10 @@ def tcp_client() -> Generator[socket.socket, None, None]:
 
 @pytest.fixture
 def udp_client() -> Generator[socket.socket, None, None]:
-    """Create and clean up a UDP client socket (legacy support).
+    """Create and clean up a TCP client socket (legacy support).
 
     Yields:
-        Configured UDP socket for testing.
+        Configured TCP socket for testing.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.settimeout(TIMEOUT)
