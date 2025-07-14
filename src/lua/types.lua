@@ -26,6 +26,7 @@
 
 ---@class ErrorResponse
 ---@field error string The error message
+---@field error_code string Standardized error code (e.g., "E001")
 ---@field state any The current game state
 ---@field context? table Optional additional context about the error
 
