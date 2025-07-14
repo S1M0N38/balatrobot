@@ -27,22 +27,24 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     [:octicons-arrow-right-24: Developing Bots](developing-bots.md)
 
-- :material-api:{ .lg .middle } __API Protocol__
+- :material-api:{ .lg .middle } __Protocol API__
 
     ---
 
     Technical reference for TCP socket communication, message formats,
     game states, action types.
 
-    [:octicons-arrow-right-24: Protocol](protocol-api.md)
+    [:octicons-arrow-right-24: Protocol API](protocol-api.md)
 
-- :material-help-circle:{ .lg .middle } __Troubleshooting__
+
+- :octicons-sparkle-fill-16:{ .lg .middle } __Documentation for LLM__
 
     ---
 
-    Common issues and debugging solutions for developing bots
-    and game integration problems (WIP).
+    Documentation in [llms.txt](https://llmstxt.org/) formats, easily digestible by LLMs.
 
-    [:octicons-arrow-right-24: Troubleshooting](troubleshooting.md)
+    [:octicons-arrow-right-24: llms.txt](llms.txt)
+
+    [:octicons-arrow-right-24: llms-full.txt](llms-full.txt)
 
 </div>
