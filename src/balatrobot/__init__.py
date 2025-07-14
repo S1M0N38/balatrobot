@@ -1,18 +1,21 @@
-from .base import ActionSchema, Bot
-from .enums import Actions, Decks, ErrorCode, Stakes, State
-from .utils import configure_bot_logging, get_logger, setup_logging
+"""BalatroBot - Python client for the BalatroBot game API."""
 
-__all__ = [
-    "ActionSchema",
-    "Actions",
-    "Bot",
-    "Decks",
-    "ErrorCode",
-    "Stakes",
-    "State",
-    "configure_bot_logging",
-    "get_logger",
-    "setup_logging",
-]
+from .client import BalatroClient
+from .enums import Actions, Decks, Stakes, State
+from .exceptions import BalatroError
+from .models import GameState
 
 __version__ = "0.3.0"
+__all__ = [
+    # Main client
+    "BalatroClient",
+    # Enums
+    "Actions",
+    "Decks",
+    "Stakes",
+    "State",
+    # Exception
+    "BalatroError",
+    # Models
+    "GameState",
+]

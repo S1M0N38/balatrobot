@@ -3,7 +3,8 @@ from enum import Enum, unique
 
 @unique
 class State(Enum):
-    """Represents the current state of the game."""
+    """Game state values representing different phases of gameplay in Balatro,
+    from menu navigation to active card play and shop interactions."""
 
     SELECTING_HAND = 1
     HAND_PLAYED = 2
@@ -28,7 +29,9 @@ class State(Enum):
 
 @unique
 class Actions(Enum):
-    """Represents the available actions that can be performed."""
+    """Bot action values corresponding to user interactions available in
+    different game states, from card play to shop purchases and inventory
+    management."""
 
     SELECT_BLIND = 1
     SKIP_BLIND = 2
@@ -54,7 +57,9 @@ class Actions(Enum):
 
 @unique
 class Decks(Enum):
-    """Represents the available decks that can be used."""
+    """Starting deck types in Balatro, each providing unique starting
+    conditions, card modifications, or special abilities that affect gameplay
+    throughout the run."""
 
     RED = "Red Deck"
     BLUE = "Blue Deck"
@@ -75,7 +80,9 @@ class Decks(Enum):
 
 @unique
 class Stakes(Enum):
-    """Represents the available stakes that can be used."""
+    """Difficulty stake levels in Balatro that increase game difficulty through
+    various modifiers and restrictions, with higher stakes providing greater
+    challenges and rewards."""
 
     WHITE = 1
     RED = 2
@@ -89,11 +96,7 @@ class Stakes(Enum):
 
 @unique
 class ErrorCode(Enum):
-    """Enumeration of standardized error codes used in BalatroBot API.
-
-    These error codes match those defined in src/lua/api.lua and provide
-    consistent error handling across the entire system.
-    """
+    """Standardized error codes used in BalatroBot API that match those defined in src/lua/api.lua for consistent error handling across the entire system."""
 
     # Protocol errors (E001-E005)
     INVALID_JSON = "E001"
