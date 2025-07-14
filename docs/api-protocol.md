@@ -70,6 +70,7 @@ All communication uses JSON messages with a standardized structure. The protocol
 ```json
 {
   "error": "Error message description",
+  "error_code": "E001",
   "state": 7,
   "context": {
     "additional": "error details"
@@ -85,14 +86,14 @@ The BalatroBot API operates as a finite state machine that mirrors the natural f
 
 The game progresses through these states in a typical flow: `MENU` → `BLIND_SELECT` → `SELECTING_HAND` → `ROUND_EVAL` → `SHOP` → `BLIND_SELECT` (or `GAME_OVER`).
 
-| State | Value | Description | Available Functions |
+| State            | Value | Description                  | Available Functions    |
 | ---------------- | ----- | ---------------------------- | ---------------------- |
-| `MENU` | 11 | Main menu screen | `start_run` |
-| `BLIND_SELECT` | 7 | Selecting or skipping blinds | `skip_or_select_blind` |
-| `SELECTING_HAND` | 1 | Playing or discarding cards | `play_hand_or_discard` |
-| `ROUND_EVAL` | 8 | Round completion evaluation | `cash_out` |
-| `SHOP` | 5 | Shop interface | `shop` |
-| `GAME_OVER` | 4 | Game ended | `go_to_menu` |
+| `MENU`           | 11    | Main menu screen             | `start_run`            |
+| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind` |
+| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard` |
+| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`             |
+| `SHOP`           | 5     | Shop interface               | `shop`                 |
+| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`           |
 
 ### Validation
 
@@ -111,44 +112,46 @@ The BalatroBot API provides core functions that correspond to the main game acti
 
 ### Overview
 
-| Name | Description |
+| Name                   | Description                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------- |
-| `get_game_state` | Retrieves the current complete game state |
-| `go_to_menu` | Returns to the main menu from any game state |
-| `start_run` | Starts a new game run with specified configuration |
+| `get_game_state`       | Retrieves the current complete game state                                    |
+| `go_to_menu`           | Returns to the main menu from any game state                                 |
+| `start_run`            | Starts a new game run with specified configuration                           |
 | `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it |
-| `play_hand_or_discard` | Plays selected cards or discards them |
-| `cash_out` | Proceeds from round completion to the shop phase |
-| `shop` | Performs shop actions. Currently supports proceeding to the next round |
+| `play_hand_or_discard` | Plays selected cards or discards them                                        |
+| `cash_out`             | Proceeds from round completion to the shop phase                             |
+| `shop`                 | Performs shop actions. Currently supports proceeding to the next round       |
 
 ### Parameters
 
 The following table details the parameters required for each function. Note that `get_game_state` and `go_to_menu` require no parameters:
 
-| Name | Parameters |
+| Name                   | Parameters                                                                                                                                                                   |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start_run` | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name |
-| `skip_or_select_blind` | `action` (string): Either "select" or "skip" |
-| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards) |
-| `shop` | `action` (string): Shop action to perform ("next_round") |
+| `start_run`            | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name |
+| `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                 |
+| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                   |
+| `shop`                 | `action` (string): Shop action to perform ("next_round")                                                                                                                     |
 
 ### Errors
 
-All API functions validate their inputs and game state before execution. Error responses always include an `error` message, current `state` value, and optional `context` with additional details.
+All API functions validate their inputs and game state before execution. Error responses include an `error` message, standardized `error_code`, current `state` value, and optional `context` with additional details.
 
-- `Invalid JSON`
-- `Message must contain a name`
-- `Message must contain arguments`
-- `Unknown function name`
-- `Arguments must be a table`
-- `Invalid deck arg for start_run`
-- `Cannot skip or select blind when not in blind selection`
-- `Invalid action arg for skip_or_select_blind`
-- `Cannot play hand or discard when not selecting hand`
-- `Invalid number of cards`
-- `No discards left to perform discard`
-- `Invalid card index`
-- `Invalid action arg for play_hand_or_discard`
-- `Cannot cash out when not in shop`
-- `Cannot select shop action when not in shop`
-- `Invalid action arg for shop`
+| Code   | Category   | Error                                      |
+| ------ | ---------- | ------------------------------------------ |
+| `E001` | Protocol   | Invalid JSON in request                    |
+| `E002` | Protocol   | Message missing required 'name' field      |
+| `E003` | Protocol   | Message missing required 'arguments' field |
+| `E004` | Protocol   | Unknown function name                      |
+| `E005` | Protocol   | Arguments must be a table                  |
+| `E006` | Network    | Socket creation failed                     |
+| `E007` | Network    | Socket bind failed                         |
+| `E008` | Network    | Connection failed                          |
+| `E009` | Validation | Invalid game state for requested action    |
+| `E010` | Validation | Invalid or missing required parameter      |
+| `E011` | Validation | Parameter value out of valid range         |
+| `E012` | Validation | Required game object missing               |
+| `E013` | Game Logic | Deck not found                             |
+| `E014` | Game Logic | Invalid card index                         |
+| `E015` | Game Logic | No discards remaining                      |
+| `E016` | Game Logic | Invalid action for current context         |
