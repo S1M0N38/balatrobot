@@ -10,3 +10,5 @@ balatrobot_old.lua
 scripts
 balatro.sh
 dump
+coverage.xml
+.coverage
