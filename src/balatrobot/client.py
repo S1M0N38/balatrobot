@@ -191,6 +191,10 @@ class BalatroClient:
             seed=seed,
             challenge=challenge,
         )
+        if request.seed is None:
+            logger.warning(
+                "Seed not provided, using random seed. This run cannot be replayed."
+            )
         response = self._send_request("start_run", request.model_dump())
         return GameState.model_validate(response)
 
