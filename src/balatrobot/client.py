@@ -115,7 +115,7 @@ class BalatroClient:
 
         # Create and validate request
         request = APIRequest(name=name, arguments=arguments)
-        logger.info(f"Sending API request: {name}")
+        logger.debug(f"Sending API request: {name}")
 
         try:
             # Send request
@@ -131,7 +131,7 @@ class BalatroClient:
                 logger.error(f"API request {name} failed: {response_data.get('error')}")
                 raise create_exception_from_error_response(response_data)
 
-            logger.info(f"API request {name} completed successfully")
+            logger.debug(f"API request {name} completed successfully")
             return response_data
 
         except socket.error as e:
