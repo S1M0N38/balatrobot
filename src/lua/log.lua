@@ -17,14 +17,14 @@ end
 
 ---Logs a function call to the JSONL file
 ---@param function_name string The name of the function being called
----@param params table The parameters passed to the function
-function LOG.write(function_name, params)
+---@param arguments table The parameters passed to the function
+function LOG.write(function_name, arguments)
   ---@type LogEntry
   local log_entry = {
     timestamp_ms = math.floor(socket.gettime() * 1000),
     ["function"] = {
       name = function_name,
-      params = params,
+      arguments = arguments,
     },
     -- game_state before the function call
     game_state = utils.get_game_state(),
@@ -57,9 +57,9 @@ end
 function LOG.hook_go_to_menu()
   local original_function = G.FUNCS.go_to_menu
   G.FUNCS.go_to_menu = function(args)
-    local params = {}
+    local arguments = {}
     local name = "go_to_menu"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.go_to_menu for logging", "LOG")
@@ -77,14 +77,14 @@ function LOG.hook_start_run()
     local timestamp = LOG.generate_iso8601_timestamp()
     LOG.current_run_file = LOG.mod_path .. "runs/" .. timestamp .. ".jsonl"
     sendInfoMessage("Starting new run log: " .. timestamp .. ".jsonl", "LOG")
-    local params = {
+    local arguments = {
       deck = G.GAME.selected_back.name,
       stake = args.stake,
       seed = args.seed,
       challenge = args.challenge and args.challenge.name,
     }
     local name = "start_run"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(game_state, args)
   end
   sendDebugMessage("Hooked into G.FUNCS.start_run for logging", "LOG")
@@ -98,9 +98,9 @@ end
 function LOG.hook_select_blind()
   local original_function = G.FUNCS.select_blind
   G.FUNCS.select_blind = function(args)
-    local params = { action = "select" }
+    local arguments = { action = "select" }
     local name = "skip_or_select_blind"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.select_blind for logging", "LOG")
@@ -110,9 +110,9 @@ end
 function LOG.hook_skip_blind()
   local original_function = G.FUNCS.skip_blind
   G.FUNCS.skip_blind = function(args)
-    local params = { action = "skip" }
+    local arguments = { action = "skip" }
     local name = "skip_or_select_blind"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.skip_blind for logging", "LOG")
@@ -132,9 +132,9 @@ function LOG.hook_play_cards_from_highlighted()
         table.insert(cards, i - 1) -- Adjust for 0-based indexing
       end
     end
-    local params = { action = "play_hand", cards = cards }
+    local arguments = { action = "play_hand", cards = cards }
     local name = "play_hand_or_discard"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.play_cards_from_highlighted for logging", "LOG")
@@ -150,9 +150,9 @@ function LOG.hook_discard_cards_from_highlighted()
         table.insert(cards, i - 1) -- Adjust for 0-based indexing
       end
     end
-    local params = { action = "discard", cards = cards }
+    local arguments = { action = "discard", cards = cards }
     local name = "play_hand_or_discard"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.discard_cards_from_highlighted for logging", "LOG")
@@ -166,9 +166,9 @@ end
 function LOG.hook_cash_out()
   local original_function = G.FUNCS.cash_out
   G.FUNCS.cash_out = function(args)
-    local params = {}
+    local arguments = {}
     local name = "cash_out"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.cash_out for logging", "LOG")
@@ -182,9 +182,9 @@ end
 function LOG.hook_toggle_shop()
   local original_function = G.FUNCS.toggle_shop
   G.FUNCS.toggle_shop = function(args)
-    local params = { action = "next_round" }
+    local arguments = { action = "next_round" }
     local name = "shop"
-    LOG.write(name, params)
+    LOG.write(name, arguments)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.toggle_shop for logging", "LOG")

@@ -53,7 +53,7 @@ class TestRunReplays:
 
             # Call the API function with recorded parameters
             actual_game_state = send_and_receive_api_message(
-                tcp_client, function_call["name"], function_call["params"]
+                tcp_client, function_call["name"], function_call["arguments"]
             )
 
             # Compare with the game_state from the next step (if it exists)
@@ -64,7 +64,7 @@ class TestRunReplays:
                 # Assert complete game state equality
                 assert actual_game_state == expected_game_state, (
                     f"Game state mismatch at step {step_num + 1} in {jsonl_file.name}\n"
-                    f"Function: {function_call['name']}({function_call['params']})\n"
+                    f"Function: {function_call['name']}({function_call['arguments']})\n"
                     f"Expected: {expected_game_state}\n"
                     f"Actual: {actual_game_state}"
                 )
