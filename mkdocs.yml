@@ -39,7 +39,6 @@ plugins:
         The project enables real-time bidirectional communication between the game and bot through TCP sockets.
       sections:
         Documentation:
-          - index.md
           - installation.md
           - developing-bots.md
           - balatrobot-api.md
