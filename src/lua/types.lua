@@ -123,7 +123,7 @@
 
 ---@class LogEntry
 ---@field timestamp_ms number Timestamp in milliseconds since epoch
----@field function {name: string, params: table} Function call information
+---@field function {name: string, arguments: table} Function call information
 ---@field game_state GameStateResponse Game state at time of logging
 
 -- =============================================================================
