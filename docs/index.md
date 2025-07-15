@@ -36,7 +36,6 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     [:octicons-arrow-right-24: Protocol API](protocol-api.md)
 
-
 - :octicons-sparkle-fill-16:{ .lg .middle } __Documentation for LLM__
 
     ---
