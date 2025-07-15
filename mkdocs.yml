@@ -61,6 +61,7 @@ nav:
   - Developing Bots: developing-bots.md
   - BalatroBot API: balatrobot-api.md
   - Protocol API: protocol-api.md
+  - Logging Systems: logging-systems.md
 markdown_extensions:
   - toc:
       toc_depth: 3
