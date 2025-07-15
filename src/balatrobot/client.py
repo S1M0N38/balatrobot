@@ -1,6 +1,7 @@
 """Main BalatroBot client for communicating with the game."""
 
 import json
+import logging
 import socket
 from typing import Any, Literal, Self
 
@@ -17,6 +18,8 @@ from .models import (
     ShopActionRequest,
     StartRunRequest,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class BalatroClient:
@@ -58,6 +61,7 @@ class BalatroClient:
         if self._connected:
             return
 
+        logger.info(f"Connecting to BalatroBot API at {self.host}:{self.port}")
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._socket.settimeout(self.timeout)
@@ -66,7 +70,11 @@ class BalatroClient:
             )
             self._socket.connect((self.host, self.port))
             self._connected = True
+            logger.info(
+                f"Successfully connected to BalatroBot API at {self.host}:{self.port}"
+            )
         except (socket.error, OSError) as e:
+            logger.error(f"Failed to connect to {self.host}:{self.port}: {e}")
             raise ConnectionFailedError(
                 f"Failed to connect to {self.host}:{self.port}",
                 error_code="E008",
@@ -76,6 +84,7 @@ class BalatroClient:
     def disconnect(self) -> None:
         """Disconnect from the BalatroBot game API."""
         if self._socket:
+            logger.info(f"Disconnecting from BalatroBot API at {self.host}:{self.port}")
             self._socket.close()
             self._socket = None
         self._connected = False
@@ -106,6 +115,7 @@ class BalatroClient:
 
         # Create and validate request
         request = APIRequest(name=name, arguments=arguments)
+        logger.info(f"Sending API request: {name}")
 
         try:
             # Send request
@@ -118,17 +128,21 @@ class BalatroClient:
 
             # Check for error response
             if "error" in response_data:
+                logger.error(f"API request {name} failed: {response_data.get('error')}")
                 raise create_exception_from_error_response(response_data)
 
+            logger.info(f"API request {name} completed successfully")
             return response_data
 
         except socket.error as e:
+            logger.error(f"Socket error during API request {name}: {e}")
             raise ConnectionFailedError(
                 f"Socket error during communication: {e}",
                 error_code="E008",
                 context={"error": str(e)},
             ) from e
         except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON response from API request {name}: {e}")
             raise BalatroError(
                 f"Invalid JSON response from game: {e}",
                 error_code="E001",
