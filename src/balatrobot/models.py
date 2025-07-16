@@ -112,10 +112,30 @@ class APIRequest(BalatroBaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str = Field(..., description="Function name to call")
-    arguments: dict[str, Any] = Field(..., description="Function arguments")
+    arguments: dict[str, Any] | list = Field(
+        ..., description="Arguments for the function"
+    )
 
 
 class APIResponse(BalatroBaseModel):
     """Model for API responses from the game."""
 
-    model_config = ConfigDict(extra="allow")  # Allow extra fields for game state
+    model_config = ConfigDict(extra="allow")
+
+
+# JSONL Log Entry
+class JSONLLogEntry(BalatroBaseModel):
+    """Model for JSONL log entries that record game actions."""
+
+    timestamp_ms: int = Field(
+        ...,
+        description="Unix timestamp in milliseconds when the action occurred",
+    )
+    function: APIRequest = Field(
+        ...,
+        description="The game function that was called",
+    )
+    game_state: GameState = Field(
+        ...,
+        description="Complete game state before the function execution",
+    )
