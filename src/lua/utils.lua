@@ -25,6 +25,7 @@ function utils.get_game_state()
       blind_on_deck = G.GAME.blind_on_deck,
       current_round = {
         discards_left = G.GAME.current_round.discards_left,
+        hands_left = G.GAME.current_round.hands_left,
       },
     }
   end
