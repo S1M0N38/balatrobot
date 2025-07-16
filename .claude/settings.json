@@ -23,7 +23,7 @@
           },
           {
             "type": "command",
-            "command": "ruff check --select I --fix src/balatrobot tests/ && ruff format -s src/balatrobot tests/"
+            "command": "ruff check --select I --fix . && ruff format -s ."
           },
           {
             "type": "command",
