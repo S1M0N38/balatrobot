@@ -329,6 +329,15 @@ API.functions["skip_or_select_blind"] = function(args)
   end
   local blind_pane = G.blind_select_opts[string.lower(current_blind)]
 
+  if G.GAME.blind_on_deck == "Boss" and args.action == "skip" then
+    API.send_error_response(
+      "Cannot skip Boss blind. Use select instead",
+      ERROR_CODES.INVALID_PARAMETER,
+      { current_state = G.STATE }
+    )
+    return
+  end
+
   if args.action == "select" then
     local button = blind_pane:get_UIE_by_ID("select_blind_button")
     G.FUNCS.select_blind(button)
