@@ -324,6 +324,79 @@ class TestSkipOrSelectBlind:
             ErrorCode.INVALID_GAME_STATE.value,
         )
 
+    def test_boss_blind_skip_prevention(self, tcp_client: socket.socket) -> None:
+        """Test that trying to skip a Boss blind returns INVALID_PARAMETER error."""
+        # Skip small blind to reach big blind
+        skip_small_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_small_args
+        )
+        assert game_state["game"]["blind_on_deck"] == "Big"
+
+        # Skip big blind to reach boss blind
+        skip_big_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_big_args
+        )
+        assert game_state["game"]["blind_on_deck"] == "Boss"
+
+        # Try to skip boss blind - should return error
+        skip_boss_args = {"action": "skip"}
+        error_response = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_boss_args
+        )
+
+        # Verify error response
+        assert_error_response(
+            error_response,
+            "Cannot skip Boss blind. Use select instead",
+            ["current_state"],
+            ErrorCode.INVALID_PARAMETER.value,
+        )
+
+    def test_boss_blind_select_still_works(self, tcp_client: socket.socket) -> None:
+        """Test that selecting a Boss blind still works correctly."""
+        # Skip small blind to reach big blind
+        skip_small_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_small_args
+        )
+        assert game_state["game"]["blind_on_deck"] == "Big"
+
+        # Skip big blind to reach boss blind
+        skip_big_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_big_args
+        )
+        assert game_state["game"]["blind_on_deck"] == "Boss"
+
+        # Select boss blind - should work successfully
+        select_boss_args = {"action": "select"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", select_boss_args
+        )
+
+        # Verify we successfully selected the boss blind and transitioned to hand selection
+        assert game_state["state"] == State.SELECTING_HAND.value
+
+    def test_non_boss_blind_skip_still_works(self, tcp_client: socket.socket) -> None:
+        """Test that skipping Small and Big blinds still works correctly."""
+        # Skip small blind - should work fine
+        skip_small_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_small_args
+        )
+        assert game_state["state"] == State.BLIND_SELECT.value
+        assert game_state["game"]["blind_on_deck"] == "Big"
+
+        # Skip big blind - should also work fine
+        skip_big_args = {"action": "skip"}
+        game_state = send_and_receive_api_message(
+            tcp_client, "skip_or_select_blind", skip_big_args
+        )
+        assert game_state["state"] == State.BLIND_SELECT.value
+        assert game_state["game"]["blind_on_deck"] == "Boss"
+
 
 class TestPlayHandOrDiscard:
     """Tests for the play_hand_or_discard API endpoint."""
