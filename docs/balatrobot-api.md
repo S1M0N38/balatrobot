@@ -7,28 +7,35 @@ The API is organized into several key components: the `BalatroClient` for managi
 ## Client
 
 ::: balatrobot.client.BalatroClient
-options:
-heading_level: 3
+    options:
+      heading_level: 3
+      show_source: true
 
 ---
 
 ## Enums
 
 ::: balatrobot.enums.State
-options:
-heading_level: 3
+    options:
+      heading_level: 3
+      show_source: true
+
 ::: balatrobot.enums.Actions
-options:
-heading_level: 3
+    options:
+      heading_level: 3
+      show_source: true
 ::: balatrobot.enums.Decks
-options:
-heading_level: 3
+    options:
+      heading_level: 3
+      show_source: true
 ::: balatrobot.enums.Stakes
-options:
-heading_level: 3
+    options:
+      heading_level: 3
+      show_source: true
 ::: balatrobot.enums.ErrorCode
-options:
-heading_level: 3
+    options:
+      heading_level: 3
+      show_source: true
 
 ---
 
