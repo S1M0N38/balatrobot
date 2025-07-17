@@ -2,8 +2,8 @@
 
 import logging
 
-from src.balatrobot.client import BalatroClient
-from src.balatrobot.exceptions import BalatroError
+from balatrobot.client import BalatroClient
+from balatrobot.exceptions import BalatroError
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
