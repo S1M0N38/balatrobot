@@ -82,7 +82,7 @@ class BalatroClient:
             self._socket = None
         self._connected = False
 
-    def send_message(self, name: str, arguments: dict) -> dict:
+    def send_message(self, name: str, arguments: dict = {}) -> dict:
         """Send JSON message to Balatro and receive response
 
         Args:
