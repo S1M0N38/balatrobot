@@ -9,7 +9,7 @@ authors = [
   { name = "besteon" },
   { name = "phughesion" },
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = ["pydantic>=2.11.7"]
 classifiers = [
   "Development Status :: 1 - Planning",
