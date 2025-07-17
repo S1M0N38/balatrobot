@@ -5,8 +5,8 @@ import logging
 import sys
 from pathlib import Path
 
-from src.balatrobot.client import BalatroClient
-from src.balatrobot.exceptions import BalatroError, ConnectionFailedError
+from balatrobot.client import BalatroClient
+from balatrobot.exceptions import BalatroError, ConnectionFailedError
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

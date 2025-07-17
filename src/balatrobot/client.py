@@ -45,7 +45,7 @@ class BalatroClient:
         """Exit context manager and disconnect from the game."""
         self.disconnect()
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to Balatro TCP server
 
         Raises:
@@ -82,7 +82,7 @@ class BalatroClient:
             self._socket = None
         self._connected = False
 
-    def send_message(self, name: str, arguments: dict = {}) -> dict:
+    def send_message(self, name: str, arguments: dict | None = None) -> dict:
         """Send JSON message to Balatro and receive response
 
         Args:
@@ -96,6 +96,9 @@ class BalatroClient:
             ConnectionFailedError: If not connected to the game
             BalatroError: If the API returns an error
         """
+        if arguments is None:
+            arguments = {}
+
         if not self._connected or not self._socket:
             raise ConnectionFailedError(
                 "Not connected to the game API",
