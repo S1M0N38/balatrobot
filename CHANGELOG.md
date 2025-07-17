@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0](https://github.com/S1M0N38/balatrobot/compare/v0.4.1...v0.5.0) (2025-07-17)
+
+
+### Features
+
+* **api:** add hands_left to current_round game state ([79cec38](https://github.com/S1M0N38/balatrobot/commit/79cec3832a679215fea5d77f83507ce2e611a643))
+* **bot:** add TCP-based replay bot for JSONL files ([b5b6cf8](https://github.com/S1M0N38/balatrobot/commit/b5b6cf8869c374c38b036353e5a81f8ded1a3b69))
+* **log:** add JSONLLogEntry model and flexible arguments field ([3e8307a](https://github.com/S1M0N38/balatrobot/commit/3e8307a22277470b0627b1129149303b9f672ce5))
+* **log:** add logging to BalatroClient connection and API calls ([3776c9c](https://github.com/S1M0N38/balatrobot/commit/3776c9c58eae1971393b8e738f6454e87ee2ba83))
+
+
+### Bug Fixes
+
+* **api:** add seed warning for non-reproducible runs ([b996f45](https://github.com/S1M0N38/balatrobot/commit/b996f45ff41252fa91fdb341c1f1c96b93b73712))
+* **api:** prevent skipping Boss blind in skip_or_select_blind ([dc66e7e](https://github.com/S1M0N38/balatrobot/commit/dc66e7e75aeaaaf6cd9b32c30c424688a40ab548))
+* **client:** make arguments optional in send_message ([56419f5](https://github.com/S1M0N38/balatrobot/commit/56419f55c6a87e9fc74b5bc10ed6dfd1b4890bb2))
+
+
+### Documentation
+
+* add comprehensive logging systems documentation ([b09d830](https://github.com/S1M0N38/balatrobot/commit/b09d8302cd5ca536f4aee0297326e534d36553db))
+* clean up formatting and mkdocs configuration ([4ec6e21](https://github.com/S1M0N38/balatrobot/commit/4ec6e218dd14ff92301685dc190c8d73a9878b70))
+* improve MkDocs API documentation formatting ([7a537c2](https://github.com/S1M0N38/balatrobot/commit/7a537c21bd11dcfb94c21e028458555014325511))
+
 ## [0.4.1](https://github.com/S1M0N38/balatrobot/compare/v0.4.0...v0.4.1) (2025-07-14)
 
 
