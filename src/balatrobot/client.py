@@ -3,47 +3,36 @@
 import json
 import logging
 import socket
-from typing import Any, Literal, Self
+from typing import Self
 
 from .exceptions import (
     BalatroError,
     ConnectionFailedError,
     create_exception_from_error_response,
 )
-from .models import (
-    APIRequest,
-    BlindActionRequest,
-    GameState,
-    HandActionRequest,
-    ShopActionRequest,
-    StartRunRequest,
-)
+from .models import APIRequest
 
 logger = logging.getLogger(__name__)
 
 
 class BalatroClient:
-    """Client for communicating with the BalatroBot game API."""
+    """Client for communicating with the BalatroBot game API.
 
-    def __init__(
-        self,
-        host: str = "127.0.0.1",
-        port: int = 12346,
-        timeout: float = 10.0,
-        buffer_size: int = 65536,
-    ) -> None:
-        """Initialize the BalatroBot client.
+    Attributes:
+        host: Host address to connect to
+        port: Port number to connect to
+        timeout: Socket timeout in seconds
+        buffer_size: Socket buffer size in bytes
+        _socket: Socket connection to BalatroBot
+    """
 
-        Args:
-            host: Host address to connect to
-            port: Port number to connect to
-            timeout: Socket timeout in seconds
-            buffer_size: Socket buffer size in bytes
-        """
-        self.host = host
-        self.port = port
-        self.timeout = timeout
-        self.buffer_size = buffer_size
+    host = "127.0.0.1"
+    port = 12346
+    timeout = 10.0
+    buffer_size = 65536
+
+    def __init__(self):
+        """Initialize BalatroBot client"""
         self._socket: socket.socket | None = None
         self._connected = False
 
@@ -56,8 +45,12 @@ class BalatroClient:
         """Exit context manager and disconnect from the game."""
         self.disconnect()
 
-    def connect(self) -> None:
-        """Connect to the BalatroBot game API."""
+    def connect(self):
+        """Connect to Balatro TCP server
+
+        Raises:
+            ConnectionFailedError: If not connected to the game
+        """
         if self._connected:
             return
 
@@ -89,8 +82,8 @@ class BalatroClient:
             self._socket = None
         self._connected = False
 
-    def _send_request(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        """Send a request to the game API and return the response.
+    def send_message(self, name: str, arguments: dict) -> dict:
+        """Send JSON message to Balatro and receive response
 
         Args:
             name: Function name to call
@@ -148,103 +141,3 @@ class BalatroClient:
                 error_code="E001",
                 context={"error": str(e)},
             ) from e
-
-    def get_game_state(self) -> GameState:
-        """Get the current game state.
-
-        Returns:
-            Current game state
-        """
-        response = self._send_request("get_game_state", {})
-        return GameState.model_validate(response)
-
-    def go_to_menu(self) -> GameState:
-        """Navigate to the main menu.
-
-        Returns:
-            Game state after navigation
-        """
-        response = self._send_request("go_to_menu", {})
-        return GameState.model_validate(response)
-
-    def start_run(
-        self,
-        deck: str,
-        stake: int = 1,
-        seed: str | None = None,
-        challenge: str | None = None,
-    ) -> GameState:
-        """Start a new game run.
-
-        Args:
-            deck: Name of the deck to use
-            stake: Stake level (1-8)
-            seed: Optional seed for the run
-            challenge: Optional challenge name
-
-        Returns:
-            Game state after starting the run
-        """
-        request = StartRunRequest(
-            deck=deck,
-            stake=stake,
-            seed=seed,
-            challenge=challenge,
-        )
-        if request.seed is None:
-            logger.warning(
-                "Seed not provided, using random seed. This run cannot be replayed."
-            )
-        response = self._send_request("start_run", request.model_dump())
-        return GameState.model_validate(response)
-
-    def skip_or_select_blind(self, action: Literal["skip", "select"]) -> GameState:
-        """Skip or select the current blind.
-
-        Args:
-            action: Either "skip" or "select"
-
-        Returns:
-            Game state after the action
-        """
-        request = BlindActionRequest(action=action)
-        response = self._send_request("skip_or_select_blind", request.model_dump())
-        return GameState.model_validate(response)
-
-    def play_hand_or_discard(
-        self, action: Literal["play_hand", "discard"], cards: list[int]
-    ) -> GameState:
-        """Play selected cards or discard them.
-
-        Args:
-            action: Either "play_hand" or "discard"
-            cards: List of card indices (0-indexed)
-
-        Returns:
-            Game state after the action
-        """
-        request = HandActionRequest(action=action, cards=cards)
-        response = self._send_request("play_hand_or_discard", request.model_dump())
-        return GameState.model_validate(response)
-
-    def cash_out(self) -> GameState:
-        """Cash out from the current round to enter the shop.
-
-        Returns:
-            Game state after cashing out
-        """
-        response = self._send_request("cash_out", {})
-        return GameState.model_validate(response)
-
-    def shop(self, action: Literal["next_round"]) -> GameState:
-        """Perform a shop action.
-
-        Args:
-            action: Shop action to perform (currently only "next_round")
-
-        Returns:
-            Game state after the action
-        """
-        request = ShopActionRequest(action=action)
-        response = self._send_request("shop", request.model_dump())
-        return GameState.model_validate(response)
