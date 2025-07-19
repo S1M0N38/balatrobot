@@ -100,7 +100,10 @@ function utils.table_to_json(obj, depth)
       local sanitized = {}
       for k, v in pairs(value) do
         local key = type(k) == "string" and k or tostring(k)
-        sanitized[key] = sanitize_for_json(v, current_depth - 1)
+        -- Skip keys that start with capital letters (UI-related)
+        if not (type(key) == "string" and string.sub(key, 1, 1):match("[A-Z]")) then
+          sanitized[key] = sanitize_for_json(v, current_depth - 1)
+        end
       end
       return sanitized
     else
