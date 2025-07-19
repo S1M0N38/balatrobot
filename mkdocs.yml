@@ -71,7 +71,7 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight:
-      anchor_linenums: true
+      linenums_style: inline
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite

@@ -19,7 +19,6 @@ The API is organized into several key components: the `BalatroClient` for managi
     options:
       heading_level: 3
       show_source: true
-
 ::: balatrobot.enums.Actions
     options:
       heading_level: 3
