@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.1](https://github.com/S1M0N38/balatrobot/compare/v0.5.0...v0.5.1) (2025-07-19)
+
+
+### Documentation
+
+* add pre-1.0 development warnings to README and docs ([3d70496](https://github.com/S1M0N38/balatrobot/commit/3d704966b42eecbd20a9e031905bdda0d45b2196))
+* tmp fix for line numbers in code blocks ([939146a](https://github.com/S1M0N38/balatrobot/commit/939146a242fd4dad65c3eb3acd6ff6a649d32a47))
+
 ## [0.5.0](https://github.com/S1M0N38/balatrobot/compare/v0.4.1...v0.5.0) (2025-07-17)
 
 
