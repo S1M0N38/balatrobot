@@ -87,6 +87,34 @@
 
 ---@class GameRound
 ---@field discards_left number Number of discards remaining in the current round
+---@field hands_left number Number of hands remaining in the current round
+
+---@class RoundResets
+---@field hands number Number of hands before round modifiers
+---@field discards number Number of discards before round modifiers
+---@field reroll_cost number Base reroll cost as of this round
+---@field temp_reroll_cost number Temporary reroll cost, effected by some jokers
+---@field temp_handsize number Temporary hand size
+---@field ante number Ante
+---@field blind_ante number Blind ante
+---@field blind_states any Blind states
+---@field loc_blind_states any Local blind states
+---@field blind_choices any Blind choices
+---@field boss_rerolled boolean Whether the boss has been rerolled
+
+---@class HandStatistics
+---@field visible boolean Whether this hand type is visible to the player
+---@field order integer Display order in the UI
+---@field mult number Base multiplier for the hand
+---@field chips number Base chip value for the hand
+---@field s_mult number Scored multiplier (used for scoring?)
+---@field s_chips number Scored chips value
+---@field level number Current level of the hand upgrade
+---@field l_mult number Multiplier increase on level up
+---@field l_chips number Chip increase on level up
+---@field played integer Times this hand has been played overall
+---@field played_this_round integer Times this hand has been played in the current round
+---@field example table Example representation of the hand (array of `{string, boolean}` tuples)
 
 ---@class GameState
 ---@field hands_played number Total hands played in the run
@@ -100,6 +128,10 @@
 ---@field bankrupt_at number Money threshold for bankruptcy
 ---@field chips number Current chip count
 ---@field blind_on_deck string Current blind type ("Small", "Large", "Boss")
+---@field won boolean Whether the player has won the run
+---@field win_ante number Ante required to win the run
+---@field round_resets RoundResets Round reset information
+---@field hands table<string, HandStatistics> Statistics for each poker hand type
 ---@field current_round GameRound Current round information
 
 ---@class GameStateResponse
@@ -135,3 +167,4 @@
 ---@field dt number Tells the game that every update is dt seconds long
 ---@field max_fps integer? Maximum frames per second
 ---@field vsync_enabled boolean Whether vertical sync is enabled
+
