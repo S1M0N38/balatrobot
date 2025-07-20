@@ -167,4 +167,3 @@
 ---@field dt number Tells the game that every update is dt seconds long
 ---@field max_fps integer? Maximum frames per second
 ---@field vsync_enabled boolean Whether vertical sync is enabled
-
