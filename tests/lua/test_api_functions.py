@@ -782,6 +782,58 @@ class TestShop:
         assert "Burglar" in card_labels
         assert "Jupiter" in card_labels
 
+    def test_shop_vouchers_structure(self, tcp_client: socket.socket) -> None:
+        """Test that shop_vouchers contains expected structure when in shop state."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # Verify shop_vouchers exists and has correct structure
+        assert "shop_vouchers" in game_state
+        shop_vouchers = game_state["shop_vouchers"]
+
+        # Verify top-level structure
+        assert "cards" in shop_vouchers
+        assert "config" in shop_vouchers
+        assert isinstance(shop_vouchers["cards"], list)
+        assert isinstance(shop_vouchers["config"], dict)
+
+        # Verify config structure
+        config = shop_vouchers["config"]
+        assert "card_count" in config
+        assert "card_limit" in config
+        assert isinstance(config["card_count"], int)
+        assert isinstance(config["card_limit"], int)
+
+        # Verify each voucher card has required fields
+        for card in shop_vouchers["cards"]:
+            assert "ability" in card
+            assert "config" in card
+            assert "cost" in card
+            assert "debuff" in card
+            assert "facing" in card
+            assert "highlighted" in card
+            assert "label" in card
+            assert "sell_cost" in card
+
+            # Verify card config has center_key (vouchers use center_key not card_key)
+            assert "center_key" in card["config"]
+            assert isinstance(card["config"]["center_key"], str)
+
+            # Verify ability has set field with "Voucher" value
+            assert "set" in card["ability"]
+            assert card["ability"]["set"] == "Voucher"
+
+        # Verify we have expected voucher from the reference game state
+        center_keys = [card["config"]["center_key"] for card in shop_vouchers["cards"]]
+        card_labels = [card["label"] for card in shop_vouchers["cards"]]
+
+        # Should contain Hone voucher based on reference
+        assert "v_hone" in center_keys
+        assert "Hone" in card_labels
+
     def test_shop_buy_card(self, tcp_client: socket.socket) -> None:
         """Test buying a card from shop."""
         # TODO: Implement test
