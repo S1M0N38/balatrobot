@@ -81,6 +81,21 @@ end
 function utils.table_to_json(obj, depth)
   depth = depth or 3
 
+  -- Fields to skip during serialization to avoid circular references and large data
+  local skip_fields = {
+    children = true,
+    parent = true,
+    velocity = true,
+    area = true,
+    alignment = true,
+    container = true,
+    h_popup = true,
+    role = true,
+    colour = true,
+    back_overlay = true,
+    center = true,
+  }
+
   local function sanitize_for_json(value, current_depth)
     if current_depth <= 0 then
       return "..."
@@ -101,7 +116,8 @@ function utils.table_to_json(obj, depth)
       for k, v in pairs(value) do
         local key = type(k) == "string" and k or tostring(k)
         -- Skip keys that start with capital letters (UI-related)
-        if not (type(key) == "string" and string.sub(key, 1, 1):match("[A-Z]")) then
+        -- Skip predefined fields to avoid circular references and large data
+        if not (type(key) == "string" and string.sub(key, 1, 1):match("[A-Z]")) and not skip_fields[key] then
           sanitized[key] = sanitize_for_json(v, current_depth - 1)
         end
       end
