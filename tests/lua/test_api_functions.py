@@ -764,21 +764,21 @@ class TestShop:
             assert "label" in card
             assert "sell_cost" in card
 
-            # Verify card config has card_key
-            assert "card_key" in card["config"]
-            assert isinstance(card["config"]["card_key"], str)
+            # Verify card config has center_key
+            assert "center_key" in card["config"]
+            assert isinstance(card["config"]["center_key"], str)
 
             # Verify ability has set field
             assert "set" in card["ability"]
             assert isinstance(card["ability"]["set"], str)
 
         # Verify we have expected cards from the reference game state
-        card_keys = [card["config"]["card_key"] for card in shop_jokers["cards"]]
+        center_key = [card["config"]["center_key"] for card in shop_jokers["cards"]]
         card_labels = [card["label"] for card in shop_jokers["cards"]]
 
         # Should contain Burglar joker and Jupiter planet card based on reference
-        assert "j_burglar" in card_keys
-        assert "c_jupiter" in card_keys
+        assert "j_burglar" in center_key
+        assert "c_jupiter" in center_key
         assert "Burglar" in card_labels
         assert "Jupiter" in card_labels
 
