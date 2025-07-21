@@ -391,10 +391,44 @@ function utils.get_game_state()
       for i, card in pairs(G.shop_jokers.cards) do
         cards[i] = {
           ability = {
+            set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
+          },
+          config = {
+            center_key = card.config.center_key, -- id of the card
+          },
+          debuff = card.debuff, -- bool. True if the card is a debuff
+          cost = card.cost, -- int. The cost of the card
+          label = card.label, -- str. The label of the card
+          facing = card.facing, -- str. The facing of the card: front | back
+          highlighted = card.highlighted, -- bool. True if the card is highlighted
+          sell_cost = card.sell_cost, -- int. The sell cost of the card
+        }
+      end
+    end
+    shop_jokers = {
+      config = config,
+      cards = cards,
+    }
+  end
+
+  local shop_vouchers = nil
+  if G.shop_vouchers then
+    local config = {}
+    if G.shop_vouchers.config then
+      config = {
+        card_count = G.shop_vouchers.config.card_count,
+        card_limit = G.shop_vouchers.config.card_limit,
+      }
+    end
+    local cards = {}
+    if G.shop_vouchers.cards then
+      for i, card in pairs(G.shop_vouchers.cards) do
+        cards[i] = {
+          ability = {
             set = card.ability.set,
           },
           config = {
-            card_key = card.config.center_key,
+            center_key = card.config.center_key,
           },
           debuff = card.debuff,
           cost = card.cost,
@@ -405,7 +439,7 @@ function utils.get_game_state()
         }
       end
     end
-    shop_jokers = {
+    shop_vouchers = {
       config = config,
       cards = cards,
     }
@@ -419,9 +453,9 @@ function utils.get_game_state()
     hand = hand,
     jokers = jokers,
     shop_jokers = shop_jokers, -- NOTE: This contains all cards in the shop, not only jokers.
+    shop_vouchers = shop_vouchers,
 
     -- TODO: add later
-    -- shop_vouchers = G.shop_vouchers,
     -- shop_booster = G.shop_booster,
   }
 end
