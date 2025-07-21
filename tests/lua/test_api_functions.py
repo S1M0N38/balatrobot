@@ -728,6 +728,65 @@ class TestShop:
             ErrorCode.INVALID_ACTION.value,
         )
 
+    def test_shop_jokers_structure(self, tcp_client: socket.socket) -> None:
+        """Test that shop_jokers contains expected structure when in shop state."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # Verify shop_jokers exists and has correct structure
+        assert "shop_jokers" in game_state
+        shop_jokers = game_state["shop_jokers"]
+
+        # Verify top-level structure
+        assert "cards" in shop_jokers
+        assert "config" in shop_jokers
+        assert isinstance(shop_jokers["cards"], list)
+        assert isinstance(shop_jokers["config"], dict)
+
+        # Verify config structure
+        config = shop_jokers["config"]
+        assert "card_count" in config
+        assert "card_limit" in config
+        assert isinstance(config["card_count"], int)
+        assert isinstance(config["card_limit"], int)
+
+        # Verify each card has required fields
+        for card in shop_jokers["cards"]:
+            assert "ability" in card
+            assert "config" in card
+            assert "cost" in card
+            assert "debuff" in card
+            assert "facing" in card
+            assert "highlighted" in card
+            assert "label" in card
+            assert "sell_cost" in card
+
+            # Verify card config has card_key
+            assert "card_key" in card["config"]
+            assert isinstance(card["config"]["card_key"], str)
+
+            # Verify ability has set field
+            assert "set" in card["ability"]
+            assert isinstance(card["ability"]["set"], str)
+
+        # Verify we have expected cards from the reference game state
+        card_keys = [card["config"]["card_key"] for card in shop_jokers["cards"]]
+        card_labels = [card["label"] for card in shop_jokers["cards"]]
+
+        # Should contain Burglar joker and Jupiter planet card based on reference
+        assert "j_burglar" in card_keys
+        assert "c_jupiter" in card_keys
+        assert "Burglar" in card_labels
+        assert "Jupiter" in card_labels
+
+    def test_shop_buy_card(self, tcp_client: socket.socket) -> None:
+        """Test buying a card from shop."""
+        # TODO: Implement test
+        ...
+
     def test_shop_invalid_state_error(self, tcp_client: socket.socket) -> None:
         """Test shop returns error when not in shop state."""
         # Go to menu first to ensure we're not in shop state
