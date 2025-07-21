@@ -445,7 +445,39 @@ function utils.get_game_state()
     }
   end
 
-  -- TODO: add consumables, ante, and shop
+  local shop_booster = nil
+  if G.shop_booster then
+    -- NOTE: In the game these are called "packs"
+    -- but the variable name is "cards" in the API.
+    local config = {}
+    if G.shop_booster.config then
+      config = {
+        card_count = G.shop_booster.config.card_count,
+        card_limit = G.shop_booster.config.card_limit,
+      }
+    end
+    local cards = {}
+    if G.shop_booster.cards then
+      for i, card in pairs(G.shop_booster.cards) do
+        cards[i] = {
+          ability = {
+            set = card.ability.set,
+          },
+          config = {
+            center_key = card.config.center_key,
+          },
+          cost = card.cost,
+          label = card.label,
+          highlighted = card.highlighted,
+          sell_cost = card.sell_cost,
+        }
+      end
+    end
+    shop_booster = {
+      config = config,
+      cards = cards,
+    }
+  end
 
   return {
     state = G.STATE,
@@ -454,9 +486,7 @@ function utils.get_game_state()
     jokers = jokers,
     shop_jokers = shop_jokers, -- NOTE: This contains all cards in the shop, not only jokers.
     shop_vouchers = shop_vouchers,
-
-    -- TODO: add later
-    -- shop_booster = G.shop_booster,
+    shop_booster = shop_booster,
   }
 end
 
