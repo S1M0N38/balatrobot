@@ -6,6 +6,8 @@ The API is organized into several key components: the `BalatroClient` for managi
 
 ## Client
 
+The `BalatroClient` is the main interface for communicating with the Balatro game through TCP connections. It handles connection management, message serialization, and error handling.
+
 ::: balatrobot.client.BalatroClient
     options:
       heading_level: 3
@@ -69,7 +71,15 @@ The API is organized into several key components: the `BalatroClient` for managi
 
 ## Models
 
+The BalatroBot API uses Pydantic models to provide type-safe data structures that exactly match the game's internal state representation. All models inherit from `BalatroBaseModel` which provides consistent validation and serialization.
+
+#### Base Model
+
+::: balatrobot.models.BalatroBaseModel
+
 ### Request Models
+
+These models define the structure for specific API requests:
 
 ::: balatrobot.models.StartRunRequest
 ::: balatrobot.models.BlindActionRequest
@@ -78,15 +88,49 @@ The API is organized into several key components: the `BalatroClient` for managi
 
 ### Game State Models
 
-::: balatrobot.models.Card
-::: balatrobot.models.Game
-::: balatrobot.models.GameState
+The game state models provide comprehensive access to all Balatro game information, structured hierarchically to match the Lua API:
+
+#### Root Game State
+
+::: balatrobot.models.G
+
+#### Game Information
+
+::: balatrobot.models.GGame
+::: balatrobot.models.GGameCurrentRound
+::: balatrobot.models.GGameLastBlind
+::: balatrobot.models.GGamePreviousRound
+::: balatrobot.models.GGameProbabilities
+::: balatrobot.models.GGamePseudorandom
+::: balatrobot.models.GGameRoundBonus
+::: balatrobot.models.GGameRoundScores
+::: balatrobot.models.GGameSelectedBack
+::: balatrobot.models.GGameShop
+::: balatrobot.models.GGameStartingParams
+::: balatrobot.models.GGameTags
+
+#### Hand Management
+
+::: balatrobot.models.GHand
+::: balatrobot.models.GHandCards
+::: balatrobot.models.GHandCardsBase
+::: balatrobot.models.GHandCardsConfig
+::: balatrobot.models.GHandCardsConfigCard
+::: balatrobot.models.GHandConfig
+
+#### Joker Information
+
+::: balatrobot.models.GJokersCards
+::: balatrobot.models.GJokersCardsConfig
 
 ### Communication Models
 
-::: balatrobot.models.ErrorResponse
+These models handle the communication protocol between your bot and the game:
+
 ::: balatrobot.models.APIRequest
 ::: balatrobot.models.APIResponse
+::: balatrobot.models.ErrorResponse
+::: balatrobot.models.JSONLLogEntry
 
 ## Usage Examples
 
