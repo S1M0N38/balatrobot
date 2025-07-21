@@ -1,6 +1,7 @@
 """Example usage of the BalatroBot API."""
 
 import logging
+import time
 
 from balatrobot.client import BalatroClient
 from balatrobot.exceptions import BalatroError
