@@ -1,7 +1,7 @@
 """Tests for exception handling and error response creation."""
 
-from src.balatrobot.enums import ErrorCode
-from src.balatrobot.exceptions import (
+from balatrobot.enums import ErrorCode
+from balatrobot.exceptions import (
     BalatroError,
     ConnectionFailedError,
     InvalidJSONError,

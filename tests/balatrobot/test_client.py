@@ -6,10 +6,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.balatrobot.client import BalatroClient
-from src.balatrobot.enums import State
-from src.balatrobot.exceptions import BalatroError, ConnectionFailedError
-from src.balatrobot.models import GameState
+from balatrobot.client import BalatroClient
+from balatrobot.enums import State
+from balatrobot.exceptions import BalatroError, ConnectionFailedError
+from balatrobot.models import G
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -18,7 +18,7 @@ def reset_game_to_menu():
     try:
         with BalatroClient() as client:
             response = client.send_message("go_to_menu", {})
-            game_state = GameState.model_validate(response)
+            game_state = G.model_validate(response)
             assert game_state.state_enum == State.MENU
     except (ConnectionFailedError, BalatroError):
         # Game not running or other API error, skip setup
@@ -54,8 +54,8 @@ class TestBalatroClient:
 
             # Test that we can get game state
             response = client.send_message("get_game_state", {})
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_manual_connect_disconnect_with_game_running(self):
         """Test manual connection and disconnection with game running."""
@@ -68,8 +68,8 @@ class TestBalatroClient:
 
         # Test that we can get game state
         response = client.send_message("get_game_state", {})
-        game_state = GameState.model_validate(response)
-        assert isinstance(game_state, GameState)
+        game_state = G.model_validate(response)
+        assert isinstance(game_state, G)
 
         # Test disconnection
         client.disconnect()
@@ -80,9 +80,9 @@ class TestBalatroClient:
         """Test getting game state with game running."""
         with BalatroClient() as client:
             response = client.send_message("get_game_state", {})
-            game_state = GameState.model_validate(response)
+            game_state = G.model_validate(response)
 
-            assert isinstance(game_state, GameState)
+            assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
     def test_go_to_menu_with_game_running(self):
@@ -90,9 +90,9 @@ class TestBalatroClient:
         with BalatroClient() as client:
             # Test go_to_menu from any state
             response = client.send_message("go_to_menu", {})
-            game_state = GameState.model_validate(response)
+            game_state = G.model_validate(response)
 
-            assert isinstance(game_state, GameState)
+            assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
     def test_double_connect_is_safe(self):
@@ -170,8 +170,8 @@ class TestBalatroClient:
             response = client.send_message(
                 "start_run", {"deck": "Red Deck", "seed": "OOOO155"}
             )
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
             # Test with all parameters
             response = client.send_message(
@@ -183,26 +183,26 @@ class TestBalatroClient:
                     "challenge": "test_challenge",
                 },
             )
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_skip_or_select_blind_with_game_running(self):
         """Test skip_or_select_blind method with game running."""
         with BalatroClient() as client:
             # First start a run to get to blind selection state
             response = client.send_message("start_run", {"deck": "Red Deck"})
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
             # Test skip action
             response = client.send_message("skip_or_select_blind", {"action": "skip"})
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
             # Test select action
             response = client.send_message("skip_or_select_blind", {"action": "select"})
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_play_hand_or_discard_with_game_running(self):
         """Test play_hand_or_discard method with game running."""
@@ -212,8 +212,8 @@ class TestBalatroClient:
                 response = client.send_message(
                     "play_hand_or_discard", {"action": "play_hand", "cards": [0, 1, 2]}
                 )
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in selecting hand state
                 pass
@@ -223,8 +223,8 @@ class TestBalatroClient:
                 response = client.send_message(
                     "play_hand_or_discard", {"action": "discard", "cards": [0]}
                 )
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in selecting hand state
                 pass
@@ -234,8 +234,8 @@ class TestBalatroClient:
         with BalatroClient() as client:
             try:
                 response = client.send_message("cash_out", {})
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in correct state for cash out
                 pass
@@ -245,8 +245,8 @@ class TestBalatroClient:
         with BalatroClient() as client:
             try:
                 response = client.send_message("shop", {"action": "next_round"})
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in shop state
                 pass
@@ -328,25 +328,25 @@ class TestBalatroClient:
 
         # Test skip_or_select_blind success
         response = client.send_message("skip_or_select_blind", {"action": "skip"})
-        game_state = GameState.model_validate(response)
-        assert isinstance(game_state, GameState)
+        game_state = G.model_validate(response)
+        assert isinstance(game_state, G)
 
         # Test play_hand_or_discard success
         response = client.send_message(
             "play_hand_or_discard", {"action": "play_hand", "cards": [0, 1]}
         )
-        game_state = GameState.model_validate(response)
-        assert isinstance(game_state, GameState)
+        game_state = G.model_validate(response)
+        assert isinstance(game_state, G)
 
         # Test cash_out success
         response = client.send_message("cash_out", {})
-        game_state = GameState.model_validate(response)
-        assert isinstance(game_state, GameState)
+        game_state = G.model_validate(response)
+        assert isinstance(game_state, G)
 
         # Test shop success
         response = client.send_message("shop", {"action": "next_round"})
-        game_state = GameState.model_validate(response)
-        assert isinstance(game_state, GameState)
+        game_state = G.model_validate(response)
+        assert isinstance(game_state, G)
 
 
 class TestSendMessageAPIFunctions:
@@ -357,10 +357,10 @@ class TestSendMessageAPIFunctions:
         with BalatroClient() as client:
             response = client.send_message("get_game_state", {})
 
-            # Response should be a dict that can be validated as GameState
+            # Response should be a dict that can be validated as G
             assert isinstance(response, dict)
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
     def test_send_message_go_to_menu(self):
@@ -369,8 +369,8 @@ class TestSendMessageAPIFunctions:
             response = client.send_message("go_to_menu", {})
 
             assert isinstance(response, dict)
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
     def test_send_message_start_run_minimal(self):
@@ -379,8 +379,8 @@ class TestSendMessageAPIFunctions:
             response = client.send_message("start_run", {"deck": "Red Deck"})
 
             assert isinstance(response, dict)
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_send_message_start_run_with_all_params(self):
         """Test send_message with start_run function (all parameters)."""
@@ -396,8 +396,8 @@ class TestSendMessageAPIFunctions:
             )
 
             assert isinstance(response, dict)
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_send_message_skip_or_select_blind_skip(self):
         """Test send_message with skip_or_select_blind function (skip action)."""
@@ -408,8 +408,8 @@ class TestSendMessageAPIFunctions:
             response = client.send_message("skip_or_select_blind", {"action": "skip"})
 
             assert isinstance(response, dict)
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_send_message_skip_or_select_blind_select(self):
         """Test send_message with skip_or_select_blind function (select action)."""
@@ -420,8 +420,8 @@ class TestSendMessageAPIFunctions:
             response = client.send_message("skip_or_select_blind", {"action": "select"})
 
             assert isinstance(response, dict)
-            game_state = GameState.model_validate(response)
-            assert isinstance(game_state, GameState)
+            game_state = G.model_validate(response)
+            assert isinstance(game_state, G)
 
     def test_send_message_play_hand_or_discard_play_hand(self):
         """Test send_message with play_hand_or_discard function (play_hand action)."""
@@ -433,8 +433,8 @@ class TestSendMessageAPIFunctions:
                 )
 
                 assert isinstance(response, dict)
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in selecting hand state
                 pass
@@ -449,8 +449,8 @@ class TestSendMessageAPIFunctions:
                 )
 
                 assert isinstance(response, dict)
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in selecting hand state
                 pass
@@ -462,8 +462,8 @@ class TestSendMessageAPIFunctions:
                 response = client.send_message("cash_out", {})
 
                 assert isinstance(response, dict)
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in correct state for cash out
                 pass
@@ -475,8 +475,8 @@ class TestSendMessageAPIFunctions:
                 response = client.send_message("shop", {"action": "next_round"})
 
                 assert isinstance(response, dict)
-                game_state = GameState.model_validate(response)
-                assert isinstance(game_state, GameState)
+                game_state = G.model_validate(response)
+                assert isinstance(game_state, G)
             except BalatroError:
                 # Expected if game is not in shop state
                 pass
