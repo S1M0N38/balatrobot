@@ -293,8 +293,6 @@ function utils.get_game_state()
         -- ...
       },
 
-      -- TODO: continue from here (in the select blind state), maybe try to skip a blind
-      --
       -- tag_tally = -- int (default 0), -- what's a tally?
       tags = tags,
       tarot_rate = G.GAME.tarot_rate, -- int (default 4), -- prob that a tarot card appear in the shop
