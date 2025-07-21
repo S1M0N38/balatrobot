@@ -3,7 +3,7 @@
 from .client import BalatroClient
 from .enums import Actions, Decks, Stakes, State
 from .exceptions import BalatroError
-from .models import GameState
+from .models import G
 
 __version__ = "0.5.0"
 __all__ = [
@@ -17,5 +17,5 @@ __all__ = [
     # Exception
     "BalatroError",
     # Models
-    "GameState",
+    "G",
 ]
