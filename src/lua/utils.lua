@@ -106,7 +106,7 @@ function utils.get_game_state()
         discards_left = G.GAME.current_round.discards_left, -- Number of discards left for this round
         discards_used = G.GAME.current_round.discards_used, -- int (default 0) Number of discard used in this round
 
-        -- "dollars": int, (default 0) -- maybe dollars earned in this round?
+        --"dollars": int, (default 0) -- maybe dollars earned in this round?
         -- "dollars_to_be_earned": str, (default "") -- ??
         -- "free_rerolls": int, (default 0) -- Number  of free rerolls in the shop?
         hands_left = G.GAME.current_round.hands_left, -- Number of hands left for this round
@@ -377,6 +377,40 @@ function utils.get_game_state()
     end
   end
 
+  local shop_jokers = nil
+  if G.shop_jokers then
+    local config = {}
+    if G.shop_jokers.config then
+      config = {
+        card_count = G.shop_jokers.config.card_count, -- int. how many cards are in the the shop
+        card_limit = G.shop_jokers.config.card_limit, -- int. how many cards can be in the shop
+      }
+    end
+    local cards = {}
+    if G.shop_jokers.cards then
+      for i, card in pairs(G.shop_jokers.cards) do
+        cards[i] = {
+          ability = {
+            set = card.ability.set,
+          },
+          config = {
+            card_key = card.config.center_key,
+          },
+          debuff = card.debuff,
+          cost = card.cost,
+          label = card.label,
+          facing = card.facing,
+          highlighted = card.highlighted,
+          sell_cost = card.sell_cost,
+        }
+      end
+    end
+    shop_jokers = {
+      config = config,
+      cards = cards,
+    }
+  end
+
   -- TODO: add consumables, ante, and shop
 
   return {
@@ -384,6 +418,11 @@ function utils.get_game_state()
     game = game,
     hand = hand,
     jokers = jokers,
+    shop_jokers = shop_jokers, -- NOTE: This contains all cards in the shop, not only jokers.
+
+    -- TODO: add later
+    -- shop_vouchers = G.shop_vouchers,
+    -- shop_booster = G.shop_booster,
   }
 end
 
