@@ -209,7 +209,7 @@ class TestSkipOrSelectBlind:
         assert game_state["state"] == State.SELECTING_HAND.value
 
         # Assert that there are 8 cards in the hand
-        assert len(game_state["hand"]) == 8
+        assert len(game_state["hand"]["cards"]) == 8
 
     def test_skip_blind(self, tcp_client: socket.socket) -> None:
         """Test skipping a blind during the blind selection phase."""
@@ -444,17 +444,17 @@ class TestPlayHandOrDiscard:
         play_hand_args = {"action": "play_hand", "cards": cards}
 
         init_card_keys = [
-            card["config"]["card"]["card_key"] for card in initial_game_state["hand"]
+            card["config"]["card_key"] for card in initial_game_state["hand"]["cards"]
         ]
         played_hand_keys = [
-            initial_game_state["hand"][i]["config"]["card"]["card_key"]
+            initial_game_state["hand"]["cards"][i]["config"]["card_key"]
             for i in play_hand_args["cards"]
         ]
         game_state = send_and_receive_api_message(
             tcp_client, "play_hand_or_discard", play_hand_args
         )
         final_card_keys = [
-            card["config"]["card"]["card_key"] for card in game_state["hand"]
+            card["config"]["card_key"] for card in game_state["hand"]["cards"]
         ]
         assert game_state["state"] == State.SELECTING_HAND.value
         assert game_state["game"]["hands_played"] == 1
@@ -533,17 +533,17 @@ class TestPlayHandOrDiscard:
         discard_hand_args = {"action": "discard", "cards": cards}
 
         init_card_keys = [
-            card["config"]["card"]["card_key"] for card in initial_game_state["hand"]
+            card["config"]["card_key"] for card in initial_game_state["hand"]["cards"]
         ]
         discarded_hand_keys = [
-            initial_game_state["hand"][i]["config"]["card"]["card_key"]
+            initial_game_state["hand"]["cards"][i]["config"]["card_key"]
             for i in discard_hand_args["cards"]
         ]
         game_state = send_and_receive_api_message(
             tcp_client, "play_hand_or_discard", discard_hand_args
         )
         final_card_keys = [
-            card["config"]["card"]["card_key"] for card in game_state["hand"]
+            card["config"]["card_key"] for card in game_state["hand"]["cards"]
         ]
         assert game_state["state"] == State.SELECTING_HAND.value
         assert game_state["game"]["hands_played"] == 0
