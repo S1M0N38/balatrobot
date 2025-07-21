@@ -834,6 +834,58 @@ class TestShop:
         assert "v_hone" in center_keys
         assert "Hone" in card_labels
 
+    def test_shop_booster_structure(self, tcp_client: socket.socket) -> None:
+        """Test that shop_booster contains expected structure when in shop state."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # Verify shop_booster exists and has correct structure
+        assert "shop_booster" in game_state
+        shop_booster = game_state["shop_booster"]
+
+        # Verify top-level structure
+        assert "cards" in shop_booster
+        assert "config" in shop_booster
+        assert isinstance(shop_booster["cards"], list)
+        assert isinstance(shop_booster["config"], dict)
+
+        # Verify config structure
+        config = shop_booster["config"]
+        assert "card_count" in config
+        assert "card_limit" in config
+        assert isinstance(config["card_count"], int)
+        assert isinstance(config["card_limit"], int)
+
+        # Verify each booster card has required fields
+        for card in shop_booster["cards"]:
+            assert "ability" in card
+            assert "config" in card
+            assert "cost" in card
+            assert "highlighted" in card
+            assert "label" in card
+            assert "sell_cost" in card
+
+            # Verify card config has center_key
+            assert "center_key" in card["config"]
+            assert isinstance(card["config"]["center_key"], str)
+
+            # Verify ability has set field with "Booster" value
+            assert "set" in card["ability"]
+            assert card["ability"]["set"] == "Booster"
+
+        # Verify we have expected booster packs from the reference game state
+        center_keys = [card["config"]["center_key"] for card in shop_booster["cards"]]
+        card_labels = [card["label"] for card in shop_booster["cards"]]
+
+        # Should contain Buffoon Pack and Jumbo Buffoon Pack based on reference
+        assert "p_buffoon_normal_1" in center_keys
+        assert "p_buffoon_jumbo_1" in center_keys
+        assert "Buffoon Pack" in card_labels
+        assert "Jumbo Buffoon Pack" in card_labels
+
     def test_shop_buy_card(self, tcp_client: socket.socket) -> None:
         """Test buying a card from shop."""
         # TODO: Implement test
