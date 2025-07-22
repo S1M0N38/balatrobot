@@ -104,6 +104,7 @@ function API.update(_)
 
   -- Process pending requests
   for key, request in pairs(API.pending_requests) do
+    ---@cast request PendingRequest
     if request.condition() then
       request.action()
       API.pending_requests[key] = nil
@@ -119,6 +120,7 @@ function API.update(_)
         API.send_error_response("Invalid JSON", ERROR_CODES.INVALID_JSON)
         return
       end
+      ---@cast data APIRequest
       if data.name == nil then
         API.send_error_response("Message must contain a name", ERROR_CODES.MISSING_NAME)
       elseif data.arguments == nil then
@@ -167,14 +169,13 @@ end
 ---@param context? table Optional additional context about the error
 function API.send_error_response(message, error_code, context)
   sendErrorMessage(message, "API")
+  ---@type ErrorResponse
   local response = {
     error = message,
     error_code = error_code,
     state = G.STATE,
+    context = context,
   }
-  if context then
-    response.context = context
-  end
   API.send_response(response)
 end
 
@@ -281,6 +282,7 @@ API.functions["start_run"] = function(args)
   G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj })
 
   -- Defer sending response until the run has started
+  ---@type PendingRequest
   API.pending_requests["start_run"] = {
     condition = function()
       return G.STATE == G.STATES.BLIND_SELECT
@@ -341,6 +343,7 @@ API.functions["skip_or_select_blind"] = function(args)
   if args.action == "select" then
     local button = blind_pane:get_UIE_by_ID("select_blind_button")
     G.FUNCS.select_blind(button)
+    ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
       condition = function()
         return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
@@ -355,6 +358,7 @@ API.functions["skip_or_select_blind"] = function(args)
     local tag_element = blind_pane:get_UIE_by_ID("tag_" .. current_blind)
     local button = tag_element.children[2]
     G.FUNCS.skip_blind(button)
+    ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
       condition = function()
         local prev_state = {
@@ -462,6 +466,7 @@ API.functions["play_hand_or_discard"] = function(args)
   end
 
   -- Defer sending response until the run has started
+  ---@type PendingRequest
   API.pending_requests["play_hand_or_discard"] = {
     condition = function()
       if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
@@ -581,6 +586,7 @@ API.functions["cash_out"] = function(_)
   end
 
   G.FUNCS.cash_out({ config = {} })
+  ---@type PendingRequest
   API.pending_requests["cash_out"] = {
     condition = function()
       return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
@@ -618,6 +624,7 @@ API.functions["shop"] = function(args)
   local action = args.action
   if action == "next_round" then
     G.FUNCS.toggle_shop({})
+    ---@type PendingRequest
     API.pending_requests["shop"] = {
       condition = function()
         return G.STATE == G.STATES.BLIND_SELECT

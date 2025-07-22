@@ -61,7 +61,21 @@ class TestRunReplays:
                 next_step = steps[step_num + 1]
                 expected_game_state = next_step["game_state"]
 
-                # Assert complete game state equality
+                # HACK: Remove highlighted field from cards before comparison
+                # The logger hook, log the game state after the card selection,
+                # so in the replay we have the highlighted cards, while the game_state
+                # before the action has the non-highlighted cards.
+                if "hand" in actual_game_state and "cards" in actual_game_state["hand"]:
+                    for card in actual_game_state["hand"]["cards"]:
+                        card.pop("highlighted", None)
+                if (
+                    "hand" in expected_game_state
+                    and "cards" in expected_game_state["hand"]
+                ):
+                    for card in expected_game_state["hand"]["cards"]:
+                        card.pop("highlighted", None)
+
+                # Assert game state equality
                 assert actual_game_state == expected_game_state, (
                     f"Game state mismatch at step {step_num + 1} in {jsonl_file.name}\n"
                     f"Function: {function_call['name']}({function_call['arguments']})\n"

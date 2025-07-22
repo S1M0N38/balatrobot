@@ -209,7 +209,7 @@ class TestSkipOrSelectBlind:
         assert game_state["state"] == State.SELECTING_HAND.value
 
         # Assert that there are 8 cards in the hand
-        assert len(game_state["hand"]) == 8
+        assert len(game_state["hand"]["cards"]) == 8
 
     def test_skip_blind(self, tcp_client: socket.socket) -> None:
         """Test skipping a blind during the blind selection phase."""
@@ -444,17 +444,17 @@ class TestPlayHandOrDiscard:
         play_hand_args = {"action": "play_hand", "cards": cards}
 
         init_card_keys = [
-            card["config"]["card"]["card_key"] for card in initial_game_state["hand"]
+            card["config"]["card_key"] for card in initial_game_state["hand"]["cards"]
         ]
         played_hand_keys = [
-            initial_game_state["hand"][i]["config"]["card"]["card_key"]
+            initial_game_state["hand"]["cards"][i]["config"]["card_key"]
             for i in play_hand_args["cards"]
         ]
         game_state = send_and_receive_api_message(
             tcp_client, "play_hand_or_discard", play_hand_args
         )
         final_card_keys = [
-            card["config"]["card"]["card_key"] for card in game_state["hand"]
+            card["config"]["card_key"] for card in game_state["hand"]["cards"]
         ]
         assert game_state["state"] == State.SELECTING_HAND.value
         assert game_state["game"]["hands_played"] == 1
@@ -533,17 +533,17 @@ class TestPlayHandOrDiscard:
         discard_hand_args = {"action": "discard", "cards": cards}
 
         init_card_keys = [
-            card["config"]["card"]["card_key"] for card in initial_game_state["hand"]
+            card["config"]["card_key"] for card in initial_game_state["hand"]["cards"]
         ]
         discarded_hand_keys = [
-            initial_game_state["hand"][i]["config"]["card"]["card_key"]
+            initial_game_state["hand"]["cards"][i]["config"]["card_key"]
             for i in discard_hand_args["cards"]
         ]
         game_state = send_and_receive_api_message(
             tcp_client, "play_hand_or_discard", discard_hand_args
         )
         final_card_keys = [
-            card["config"]["card"]["card_key"] for card in game_state["hand"]
+            card["config"]["card_key"] for card in game_state["hand"]["cards"]
         ]
         assert game_state["state"] == State.SELECTING_HAND.value
         assert game_state["game"]["hands_played"] == 0
@@ -727,6 +727,169 @@ class TestShop:
             ["action"],
             ErrorCode.INVALID_ACTION.value,
         )
+
+    def test_shop_jokers_structure(self, tcp_client: socket.socket) -> None:
+        """Test that shop_jokers contains expected structure when in shop state."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # Verify shop_jokers exists and has correct structure
+        assert "shop_jokers" in game_state
+        shop_jokers = game_state["shop_jokers"]
+
+        # Verify top-level structure
+        assert "cards" in shop_jokers
+        assert "config" in shop_jokers
+        assert isinstance(shop_jokers["cards"], list)
+        assert isinstance(shop_jokers["config"], dict)
+
+        # Verify config structure
+        config = shop_jokers["config"]
+        assert "card_count" in config
+        assert "card_limit" in config
+        assert isinstance(config["card_count"], int)
+        assert isinstance(config["card_limit"], int)
+
+        # Verify each card has required fields
+        for card in shop_jokers["cards"]:
+            assert "ability" in card
+            assert "config" in card
+            assert "cost" in card
+            assert "debuff" in card
+            assert "facing" in card
+            assert "highlighted" in card
+            assert "label" in card
+            assert "sell_cost" in card
+
+            # Verify card config has center_key
+            assert "center_key" in card["config"]
+            assert isinstance(card["config"]["center_key"], str)
+
+            # Verify ability has set field
+            assert "set" in card["ability"]
+            assert isinstance(card["ability"]["set"], str)
+
+        # Verify we have expected cards from the reference game state
+        center_key = [card["config"]["center_key"] for card in shop_jokers["cards"]]
+        card_labels = [card["label"] for card in shop_jokers["cards"]]
+
+        # Should contain Burglar joker and Jupiter planet card based on reference
+        assert "j_burglar" in center_key
+        assert "c_jupiter" in center_key
+        assert "Burglar" in card_labels
+        assert "Jupiter" in card_labels
+
+    def test_shop_vouchers_structure(self, tcp_client: socket.socket) -> None:
+        """Test that shop_vouchers contains expected structure when in shop state."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # Verify shop_vouchers exists and has correct structure
+        assert "shop_vouchers" in game_state
+        shop_vouchers = game_state["shop_vouchers"]
+
+        # Verify top-level structure
+        assert "cards" in shop_vouchers
+        assert "config" in shop_vouchers
+        assert isinstance(shop_vouchers["cards"], list)
+        assert isinstance(shop_vouchers["config"], dict)
+
+        # Verify config structure
+        config = shop_vouchers["config"]
+        assert "card_count" in config
+        assert "card_limit" in config
+        assert isinstance(config["card_count"], int)
+        assert isinstance(config["card_limit"], int)
+
+        # Verify each voucher card has required fields
+        for card in shop_vouchers["cards"]:
+            assert "ability" in card
+            assert "config" in card
+            assert "cost" in card
+            assert "debuff" in card
+            assert "facing" in card
+            assert "highlighted" in card
+            assert "label" in card
+            assert "sell_cost" in card
+
+            # Verify card config has center_key (vouchers use center_key not card_key)
+            assert "center_key" in card["config"]
+            assert isinstance(card["config"]["center_key"], str)
+
+            # Verify ability has set field with "Voucher" value
+            assert "set" in card["ability"]
+            assert card["ability"]["set"] == "Voucher"
+
+        # Verify we have expected voucher from the reference game state
+        center_keys = [card["config"]["center_key"] for card in shop_vouchers["cards"]]
+        card_labels = [card["label"] for card in shop_vouchers["cards"]]
+
+        # Should contain Hone voucher based on reference
+        assert "v_hone" in center_keys
+        assert "Hone" in card_labels
+
+    def test_shop_booster_structure(self, tcp_client: socket.socket) -> None:
+        """Test that shop_booster contains expected structure when in shop state."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Verify we're in shop state
+        assert game_state["state"] == State.SHOP.value
+
+        # Verify shop_booster exists and has correct structure
+        assert "shop_booster" in game_state
+        shop_booster = game_state["shop_booster"]
+
+        # Verify top-level structure
+        assert "cards" in shop_booster
+        assert "config" in shop_booster
+        assert isinstance(shop_booster["cards"], list)
+        assert isinstance(shop_booster["config"], dict)
+
+        # Verify config structure
+        config = shop_booster["config"]
+        assert "card_count" in config
+        assert "card_limit" in config
+        assert isinstance(config["card_count"], int)
+        assert isinstance(config["card_limit"], int)
+
+        # Verify each booster card has required fields
+        for card in shop_booster["cards"]:
+            assert "ability" in card
+            assert "config" in card
+            assert "cost" in card
+            assert "highlighted" in card
+            assert "label" in card
+            assert "sell_cost" in card
+
+            # Verify card config has center_key
+            assert "center_key" in card["config"]
+            assert isinstance(card["config"]["center_key"], str)
+
+            # Verify ability has set field with "Booster" value
+            assert "set" in card["ability"]
+            assert card["ability"]["set"] == "Booster"
+
+        # Verify we have expected booster packs from the reference game state
+        center_keys = [card["config"]["center_key"] for card in shop_booster["cards"]]
+        card_labels = [card["label"] for card in shop_booster["cards"]]
+
+        # Should contain Buffoon Pack and Jumbo Buffoon Pack based on reference
+        assert "p_buffoon_normal_1" in center_keys
+        assert "p_buffoon_jumbo_1" in center_keys
+        assert "Buffoon Pack" in card_labels
+        assert "Jumbo Buffoon Pack" in card_labels
+
+    def test_shop_buy_card(self, tcp_client: socket.socket) -> None:
+        """Test buying a card from shop."""
+        # TODO: Implement test
+        ...
 
     def test_shop_invalid_state_error(self, tcp_client: socket.socket) -> None:
         """Test shop returns error when not in shop state."""
