@@ -317,6 +317,7 @@ function utils.get_game_state()
         label = card.label, -- str (default "Base Card") | ... | ... | ?
         -- playing_card = card.config.card.playing_card, -- int. The card index in the deck for the current round ?
         -- sell_cost = card.sell_cost, -- int (default 1). The dollars you get if you sell this card ?
+        sort_id = card.sort_id, -- int. Unique identifier for this card instance
         base = {
           -- These should be the valude for the original base card
           -- without any modifications
