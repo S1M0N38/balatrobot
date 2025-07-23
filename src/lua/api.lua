@@ -490,6 +490,9 @@ API.functions["play_hand_or_discard"] = function(args)
   }
 end
 
+---Rearranges the hand based on the given card indices
+---Call G.FUNCS.rearrange_hand(new_hand)
+---@param args RearrangeHandArgs The card indices to rearrange the hand with
 API.functions["rearrange_hand"] = function(args)
   -- Validate required parameters
   local success, error_message, error_code, context = validate_request(args, { "action", "cards" })
@@ -521,45 +524,41 @@ API.functions["rearrange_hand"] = function(args)
     return
   end
 
-  -- adjust from 0-based to 1-based indexing
+  -- Convert incoming indices from 0-based to 1-based
   for i, card_index in ipairs(args.cards) do
     args.cards[i] = card_index + 1
   end
 
-  -- Set new order
-  -- Set each card's order to its desired position
- for i, old_index in ipairs(args.cards) do
+  -- Create a new hand to swap card indices
+  local new_hand = {}
+  for _, old_index in ipairs(args.cards) do
     local card = G.hand.cards[old_index]
-    -- Store original order if it exists (for cleanup)
-    if not card.original_order then
-        card.original_order = card.config.card.order or card.config.center.order
+    if not card then
+      API.send_error_response(
+        "Card index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = old_index, max_index = #G.hand.cards }
+      )
+      return
     end
-    -- Set new order to desired position
-    if card.config.card then
-        card.config.card.order = i
-    else
-        card.config.center.order = i
+    table.insert(new_hand, card)
+  end
+
+  G.hand.cards = new_hand
+
+  -- Update each card's order field so future sort('order') calls work correctly
+  for i, card in ipairs(G.hand.cards) do
+    card.config.card.order = i
+    if card.config.center then
+      card.config.center.order = i
     end
   end
 
-  -- Use existing sort function
-  G.hand:sort('order')
+  -- Update ranks and realign the hand for correct rendering
+  G.hand:set_ranks()
+  G.hand:align_cards()
 
-
-  -- Clean up temporary order values
-  for _, card in ipairs(G.hand.cards) do
-    if card.original_order then
-        if card.config.card then
-            card.config.card.order = card.original_order
-        else
-            card.config.center.order = card.original_order
-        end
-        card.original_order = nil
-    end
-  end
-
-  -- G.hand:set_ranks()
-
+  ---@type PendingRequest
   API.pending_requests["rearrange_hand"] = {
     condition = function()
       return G.STATE == G.STATES.SELECTING_HAND

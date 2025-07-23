@@ -47,6 +47,11 @@
 ---@field action "play_hand" | "discard" The action to perform
 ---@field cards number[] Array of card indices (0-based)
 
+---@class RearrangeHandArgs
+---@field action "rearrange" The action to perform
+---@field cards number[] Array of card indices for every card in hand (0-based)
+
+
 ---@class ShopActionArgs
 ---@field action "next_round" The action to perform
 
