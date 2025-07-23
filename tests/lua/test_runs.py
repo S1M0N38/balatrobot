@@ -61,19 +61,22 @@ class TestRunReplays:
                 next_step = steps[step_num + 1]
                 expected_game_state = next_step["game_state"]
 
-                # HACK: Remove highlighted field from cards before comparison
+                # HACK: Remove non-deterministic fields from cards before comparison
                 # The logger hook, log the game state after the card selection,
                 # so in the replay we have the highlighted cards, while the game_state
                 # before the action has the non-highlighted cards.
+                # sort_id is also non-deterministic and changes between runs.
                 if "hand" in actual_game_state and "cards" in actual_game_state["hand"]:
                     for card in actual_game_state["hand"]["cards"]:
                         card.pop("highlighted", None)
+                        card.pop("sort_id", None)
                 if (
                     "hand" in expected_game_state
                     and "cards" in expected_game_state["hand"]
                 ):
                     for card in expected_game_state["hand"]["cards"]:
                         card.pop("highlighted", None)
+                        card.pop("sort_id", None)
 
                 # Assert game state equality
                 assert actual_game_state == expected_game_state, (
