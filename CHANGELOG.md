@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.6.0](https://github.com/S1M0N38/balatrobot/compare/v0.5.0...v0.6.0) (2025-07-23)
+
+
+### Features
+
+* **api:** add shop booster field to game state ([48c4fd6](https://github.com/S1M0N38/balatrobot/commit/48c4fd6c0ea026b082c65f7bb84befa19a9a5fec))
+* **api:** add shop jokers field to game state ([ad062bb](https://github.com/S1M0N38/balatrobot/commit/ad062bb5635839227882150735bfb92206ac4127))
+* **api:** add shop vouchers field to game state ([b998062](https://github.com/S1M0N38/balatrobot/commit/b998062f4fcbcbe8e6bf1fc8c9abe81713e8cf2c))
+* **api:** new improved game state object ([4e2f5ac](https://github.com/S1M0N38/balatrobot/commit/4e2f5ac3b28b982f77f90724ef122989e36941cb))
+* **api:** new types for the G game state object ([7a23f6f](https://github.com/S1M0N38/balatrobot/commit/7a23f6f0a40c1bb2f1617c5892d112c2d70509ff))
+* update models to match lua types ([0a224ea](https://github.com/S1M0N38/balatrobot/commit/0a224ea43078eff4ca3a81e9ad26d44e7419a896))
+
+
+### Bug Fixes
+
+* **utils:** prevent UI-related keys from being sanitized ([d37c2aa](https://github.com/S1M0N38/balatrobot/commit/d37c2aa3f3414e12ee0e6b26263601e6f3a1b2fd))
+
+
+### Documentation
+
+* add contributing.md ([b149388](https://github.com/S1M0N38/balatrobot/commit/b149388c2c32858f797d46cb8d11ebc622eb58f3))
+* add pre-1.0 development warnings to README and docs ([3d70496](https://github.com/S1M0N38/balatrobot/commit/3d704966b42eecbd20a9e031905bdda0d45b2196))
+* add project link to readme ([bddbad1](https://github.com/S1M0N38/balatrobot/commit/bddbad1b87a593940716452d058be20055a8ea81))
+* tmp fix for line numbers in code blocks ([939146a](https://github.com/S1M0N38/balatrobot/commit/939146a242fd4dad65c3eb3acd6ff6a649d32a47))
+* update balatrobot api with new models ([d611270](https://github.com/S1M0N38/balatrobot/commit/d611270d80d8f9b4806353470662135374819cc2))
+* use mkdocs admonition for warning ([11a0b0e](https://github.com/S1M0N38/balatrobot/commit/11a0b0e017df8565a694c2fa78320af3addc6703))
+
 ## [0.5.0](https://github.com/S1M0N38/balatrobot/compare/v0.4.1...v0.5.0) (2025-07-17)
 
 
