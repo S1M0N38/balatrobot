@@ -228,19 +228,20 @@ function LOG.hook_hand_rearrange()
         end
 
         if order_changed then
-          -- TODO: compute the rearrangement from previous_order and current_order
-          -- and use as the arguments to the rearrange_hand API call
-          -- So remove previous_order and current_order and use cards
-          -- Then remove sendInfoMessage calls
-          local arguments = {
-            previous_order = previous_order,
-            current_order = current_order,
-          }
-          local name = "rearrange_hand"
-          sendInfoMessage("Hand rearranged - cards reordered", "LOG")
-          sendInfoMessage("Before: " .. json.encode(previous_order), "LOG")
-          sendInfoMessage("After: " .. json.encode(current_order), "LOG")
-          LOG.write(name, arguments)
+          -- Compute rearrangement to interpret the action
+          -- Map every card-id → its position in the old list
+          local lookup = {}
+          for pos, card_id in ipairs(previous_order) do
+            lookup[card_id] = pos - 1 -- zero-based for the API
+          end
+
+          -- Walk the new order and translate
+          local cards = {}
+          for pos, card_id in ipairs(current_order) do
+            cards[pos] = lookup[card_id]
+          end
+
+          LOG.write("rearrange_hand", { cards = cards })
         end
       end
 
