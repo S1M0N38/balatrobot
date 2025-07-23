@@ -492,6 +492,29 @@ function utils.get_game_state()
 end
 
 -- ==========================================================================
+-- Utility Functions
+-- ==========================================================================
+
+function utils.sets_equal(list1, list2)
+  if #list1 ~= #list2 then
+    return false
+  end
+
+  local set = {}
+  for _, v in ipairs(list1) do
+    set[v] = true
+  end
+
+  for _, v in ipairs(list2) do
+    if not set[v] then
+      return false
+    end
+  end
+
+  return true
+end
+
+-- ==========================================================================
 -- Debugging Utilities
 -- ==========================================================================
 
