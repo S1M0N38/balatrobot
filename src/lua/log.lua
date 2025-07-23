@@ -190,6 +190,70 @@ function LOG.hook_toggle_shop()
   sendDebugMessage("Hooked into G.FUNCS.toggle_shop for logging", "LOG")
 end
 
+-- -----------------------------------------------------------------------------
+-- hand_rearrange Hook
+-- -----------------------------------------------------------------------------
+
+---Hooks into CardArea:align_cards for hand reordering detection
+function LOG.hook_hand_rearrange()
+  local original_function = CardArea.align_cards
+  local previous_order = {}
+  CardArea.align_cards = function(self, ...)
+    -- Only monitor hand cards
+    ---@diagnostic disable-next-line: undefined-field
+    if self.config and self.config.type == "hand" and self.cards then
+      -- Call the original function with all arguments
+      local result = original_function(self, ...)
+
+      ---@diagnostic disable-next-line: undefined-field
+      if self.config.card_count ~= #self.cards then
+        -- We're drawing cards from the deck
+        return result
+      end
+
+      -- Capture current card order after alignment
+      local current_order = {}
+      ---@diagnostic disable-next-line: undefined-field
+      for i, card in ipairs(self.cards) do
+        current_order[i] = card.sort_id
+      end
+
+      if utils.sets_equal(previous_order, current_order) then
+        local order_changed = false
+        for i = 1, #current_order do
+          if previous_order[i] ~= current_order[i] then
+            order_changed = true
+            break
+          end
+        end
+
+        if order_changed then
+          -- TODO: compute the rearrangement from previous_order and current_order
+          -- and use as the arguments to the rearrange_hand API call
+          -- So remove previous_order and current_order and use cards
+          -- Then remove sendInfoMessage calls
+          local arguments = {
+            previous_order = previous_order,
+            current_order = current_order,
+          }
+          local name = "rearrange_hand"
+          sendInfoMessage("Hand rearranged - cards reordered", "LOG")
+          sendInfoMessage("Before: " .. json.encode(previous_order), "LOG")
+          sendInfoMessage("After: " .. json.encode(current_order), "LOG")
+          LOG.write(name, arguments)
+        end
+      end
+
+      previous_order = current_order
+      return result
+    else
+      -- For non-hand card areas, just call the original function
+      return original_function(self, ...)
+    end
+  end
+  sendInfoMessage("Hooked into CardArea:align_cards for hand rearrange logging", "LOG")
+end
+
 -- TODO: add hooks for other shop functions
 
 -- =============================================================================
@@ -216,6 +280,7 @@ function LOG.init()
   LOG.hook_discard_cards_from_highlighted()
   LOG.hook_cash_out()
   LOG.hook_toggle_shop()
+  LOG.hook_hand_rearrange()
 
   sendInfoMessage("Logger initialized", "LOG")
 end
