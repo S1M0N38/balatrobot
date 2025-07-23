@@ -134,7 +134,7 @@ ruff check --select I --fix .
 ruff format .
 
 # Markdown formatting (docs and specific files)
-mdformat --number docs/index.md docs/installation.md docs/developing-bots.md docs/protocol-api.md CONTRIBUTING.md README.md
+mdformat --number docs/index.md docs/installation.md docs/developing-bots.md docs/protocol-api.md docs/contributing.md README.md
 
 # Type checking
 basedpyright
@@ -152,7 +152,7 @@ basedpyright
 pytest -x
 
 # Run specific test file
-pytest -x tests/test_api_functions.py
+pytest -x tests/lua/test_api_functions.py
 
 # Run with verbose output
 pytest -vx
@@ -160,8 +160,8 @@ pytest -vx
 
 **Test Suite Overview**:
 
-- 55 tests covering API functions and TCP communication
-- ~160 seconds execution time
+- 102 tests covering API functions and TCP communication
+- ~210 seconds execution time
 - Tests game state transitions, socket communication, error handling
 
 **Troubleshooting Test Failures**:
@@ -185,7 +185,7 @@ mkdocs build
 
 ### Python Development
 
-- **Style**: Follow modern Python 3.12+ patterns
+- **Style**: Follow modern Python 3.13+ patterns
 - **Type Hints**: Use pipe operator for unions (`str | int | None`)
 - **Type Aliases**: Use `type` statement
 - **Docstrings**: Google-style without type information (types in annotations)
