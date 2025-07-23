@@ -495,7 +495,7 @@ end
 ---@param args RearrangeHandArgs The card indices to rearrange the hand with
 API.functions["rearrange_hand"] = function(args)
   -- Validate required parameters
-  local success, error_message, error_code, context = validate_request(args, { "action", "cards" })
+  local success, error_message, error_code, context = validate_request(args, { "cards" })
 
   if not success then
     ---@cast error_message string
