@@ -142,7 +142,8 @@ basedpyright
 
 ### Testing Requirements
 
-**⚠️ Important**: All tests require Balatro to be running in the background.
+!!! warning
+    All tests require Balatro to be running in the background.
 
 ```bash
 # Start Balatro first
