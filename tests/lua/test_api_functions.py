@@ -1011,7 +1011,7 @@ class TestRearrangeHand:
         final_state = send_and_receive_api_message(
             tcp_client,
             "rearrange_hand",
-            {"action": "rearrange_hand", "cards": new_order},
+            {"cards": new_order},
         )
 
         # Ensure we remain in selecting hand state
@@ -1038,7 +1038,7 @@ class TestRearrangeHand:
         final_state = send_and_receive_api_message(
             tcp_client,
             "rearrange_hand",
-            {"action": "rearrange_hand", "cards": current_order},
+            {"cards": current_order},
         )
 
         assert final_state["state"] == State.SELECTING_HAND.value
@@ -1063,7 +1063,7 @@ class TestRearrangeHand:
         response = send_and_receive_api_message(
             tcp_client,
             "rearrange_hand",
-            {"action": "rearrange_hand", "cards": invalid_order},
+            {"cards": invalid_order},
         )
 
         assert_error_response(
@@ -1084,7 +1084,7 @@ class TestRearrangeHand:
         response = send_and_receive_api_message(
             tcp_client,
             "rearrange_hand",
-            {"action": "rearrange_hand", "cards": order},
+            {"cards": order},
         )
 
         assert_error_response(
@@ -1102,7 +1102,7 @@ class TestRearrangeHand:
         response = send_and_receive_api_message(
             tcp_client,
             "rearrange_hand",
-            {"action": "rearrange_hand", "cards": [0]},
+            {"cards": [0]},
         )
 
         assert_error_response(
