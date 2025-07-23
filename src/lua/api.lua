@@ -554,14 +554,12 @@ API.functions["rearrange_hand"] = function(args)
     end
   end
 
-  -- Update ranks and realign the hand for correct rendering
-  G.hand:set_ranks()
-  G.hand:align_cards()
-
   ---@type PendingRequest
   API.pending_requests["rearrange_hand"] = {
     condition = function()
       return G.STATE == G.STATES.SELECTING_HAND
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
     end,
     action = function()
       local game_state = utils.get_game_state()
