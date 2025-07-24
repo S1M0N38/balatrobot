@@ -43,8 +43,9 @@ plugins:
           - developing-bots.md
           - balatrobot-api.md
           - protocol-api.md
+          - contributing.md
       full_output: llms-full.txt
-      autoclean: false
+      autoclean: true
   - mkdocstrings:
       handlers:
         python:
@@ -62,6 +63,7 @@ nav:
   - BalatroBot API: balatrobot-api.md
   - Protocol API: protocol-api.md
   - Logging Systems: logging-systems.md
+  - Contributing: contributing.md
 markdown_extensions:
   - toc:
       toc_depth: 3
@@ -71,7 +73,6 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight:
-      linenums_style: inline
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
