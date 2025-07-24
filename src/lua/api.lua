@@ -555,6 +555,84 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
+  elseif action == "buy_card" then
+
+    -- TODO: Implement buy card.
+    -- Get card to buy from zero-based index
+    -- Execute buy_from_shop action in G.FUNCS
+    -- Defer sending response until the shop has updated
+
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response(
+        "Missing required field: index",
+        ERROR_CODES.INVALID_PARAMETER,
+        { field = "index" }
+      )
+      return
+    end
+    if type(args.index) ~= "number" or args.index < 0 then
+      API.send_error_response(
+        "Index must be a non-negative number",
+        ERROR_CODES.INVALID_PARAMETER,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Get card buy button from zero based index
+    local card_pos = args.index + 1            -- Lua is 1-based
+    local area = G.shop_jokers
+
+    -- Validate card index is in range
+    if not area or not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Card index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, max_index = #area.cards - 1 }
+      )
+      return
+    end
+
+    -- Get card buy button from zero based index
+    local card      = area.cards[card_pos]
+    local buy_btn   = card.children and card.children.buy_button
+
+    if not buy_btn then
+      API.send_error_response(
+        "Card has no buy button",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Validate card is purchasable
+    if not buy_btn:can_buy() then
+      API.send_error_response(
+        "Card is not purchasable",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Execute buy_from_shop action in G.FUNCS
+    G.FUNCS.buy_from_shop(buy_btn)
+
+    -- send response once shop is updated
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return G.STATE == G.STATES.SHOP
+          and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+          and G.STATE_COMPLETE
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
   -- TODO: add other shop actions
   else
     API.send_error_response(
