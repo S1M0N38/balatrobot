@@ -17,42 +17,41 @@ local json = require("json")
 ---Extracts the current game state including game info, hand, and jokers
 ---@return G game_state The complete game state
 function utils.get_game_state()
-  local tags = {}
-  if G.GAME.tags then
-    for i, tag in pairs(G.GAME.tags) do
-      tags[i] = {
-        -- There are a couples of fieds regarding UI. we are not intersted in that.
-        -- HUD_tag = table/list, -- ??
-        -- ID = int -- id used in the UI or tag id?
-        -- ability = table/list, -- ??
-        -- config = table/list, -- ??
-        key = tag.key, -- id string of the tag (e.g. "tag_foil")
-        name = tag.name, -- text string of the tag (e.g. "Foil Tag")
-        -- pos = table/list, coords of the tags in the UI
-        -- tag_sprite = table/list, sprite of the tag for the UI
-        -- tally = int (default 0), -- ??
-        -- triggered = bool (default false), -- false when the tag will be trigger in later stages.
-        -- For exaple double money trigger instantly and it's not even add to the tags talbe,
-        -- while other tags trigger in the next shop phase.
-      }
-    end
-  end
-
-  local last_blind = {
-    boss = false,
-    name = "",
-  }
-  if G.GAME.last_blind then
-    last_blind = {
-      boss = G.GAME.last_blind.boss, -- bool. True if the last blind was a boss
-      name = G.GAME.last_blind.name, -- str (default "" before entering round 1)
-      -- When entering round 1, the last blind is set to "Small Blind".
-      -- So I think that the last blind refers  to the blind selected in the most recent BLIND_SELECT state.
-    }
-  end
-
   local game = nil
   if G.GAME then
+    local tags = {}
+    if G.GAME.tags then
+      for i, tag in pairs(G.GAME.tags) do
+        tags[i] = {
+          -- There are a couples of fieds regarding UI. we are not intersted in that.
+          -- HUD_tag = table/list, -- ??
+          -- ID = int -- id used in the UI or tag id?
+          -- ability = table/list, -- ??
+          -- config = table/list, -- ??
+          key = tag.key, -- id string of the tag (e.g. "tag_foil")
+          name = tag.name, -- text string of the tag (e.g. "Foil Tag")
+          -- pos = table/list, coords of the tags in the UI
+          -- tag_sprite = table/list, sprite of the tag for the UI
+          -- tally = int (default 0), -- ??
+          -- triggered = bool (default false), -- false when the tag will be trigger in later stages.
+          -- For exaple double money trigger instantly and it's not even add to the tags talbe,
+          -- while other tags trigger in the next shop phase.
+        }
+      end
+    end
+
+    local last_blind = {
+      boss = false,
+      name = "",
+    }
+    if G.GAME.last_blind then
+      last_blind = {
+        boss = G.GAME.last_blind.boss, -- bool. True if the last blind was a boss
+        name = G.GAME.last_blind.name, -- str (default "" before entering round 1)
+        -- When entering round 1, the last blind is set to "Small Blind".
+        -- So I think that the last blind refers  to the blind selected in the most recent BLIND_SELECT state.
+      }
+    end
     game = {
       -- STOP_USE = int (default 0), -- ??
       bankrupt_at = G.GAME.bankrupt_at,
