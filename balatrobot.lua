@@ -15,13 +15,15 @@ BALATRO_BOT_CONFIG = {
 
 -- Load minimal required files
 assert(SMODS.load_file("src/lua/utils.lua"))()
-assert(SMODS.load_file("src/lua/log.lua"))()
 assert(SMODS.load_file("src/lua/api.lua"))()
+assert(SMODS.load_file("src/lua/log.lua"))()
+
+-- Initialize API
+API.init()
 
 -- Initialize Logger
 LOG.init()
 
--- Initialize API
-API.init()
+G.SETTINGS.skip_splash = "Yes"
 
 sendInfoMessage("BalatroBot loaded - version " .. SMODS.current_mod.version, "BALATROBOT")
