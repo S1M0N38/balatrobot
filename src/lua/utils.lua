@@ -17,42 +17,41 @@ local json = require("json")
 ---Extracts the current game state including game info, hand, and jokers
 ---@return G game_state The complete game state
 function utils.get_game_state()
-  local tags = {}
-  if G.GAME.tags then
-    for i, tag in pairs(G.GAME.tags) do
-      tags[i] = {
-        -- There are a couples of fieds regarding UI. we are not intersted in that.
-        -- HUD_tag = table/list, -- ??
-        -- ID = int -- id used in the UI or tag id?
-        -- ability = table/list, -- ??
-        -- config = table/list, -- ??
-        key = tag.key, -- id string of the tag (e.g. "tag_foil")
-        name = tag.name, -- text string of the tag (e.g. "Foil Tag")
-        -- pos = table/list, coords of the tags in the UI
-        -- tag_sprite = table/list, sprite of the tag for the UI
-        -- tally = int (default 0), -- ??
-        -- triggered = bool (default false), -- false when the tag will be trigger in later stages.
-        -- For exaple double money trigger instantly and it's not even add to the tags talbe,
-        -- while other tags trigger in the next shop phase.
-      }
-    end
-  end
-
-  local last_blind = {
-    boss = false,
-    name = "",
-  }
-  if G.GAME.last_blind then
-    last_blind = {
-      boss = G.GAME.last_blind.boss, -- bool. True if the last blind was a boss
-      name = G.GAME.last_blind.name, -- str (default "" before entering round 1)
-      -- When entering round 1, the last blind is set to "Small Blind".
-      -- So I think that the last blind refers  to the blind selected in the most recent BLIND_SELECT state.
-    }
-  end
-
   local game = nil
   if G.GAME then
+    local tags = {}
+    if G.GAME.tags then
+      for i, tag in pairs(G.GAME.tags) do
+        tags[i] = {
+          -- There are a couples of fieds regarding UI. we are not intersted in that.
+          -- HUD_tag = table/list, -- ??
+          -- ID = int -- id used in the UI or tag id?
+          -- ability = table/list, -- ??
+          -- config = table/list, -- ??
+          key = tag.key, -- id string of the tag (e.g. "tag_foil")
+          name = tag.name, -- text string of the tag (e.g. "Foil Tag")
+          -- pos = table/list, coords of the tags in the UI
+          -- tag_sprite = table/list, sprite of the tag for the UI
+          -- tally = int (default 0), -- ??
+          -- triggered = bool (default false), -- false when the tag will be trigger in later stages.
+          -- For exaple double money trigger instantly and it's not even add to the tags talbe,
+          -- while other tags trigger in the next shop phase.
+        }
+      end
+    end
+
+    local last_blind = {
+      boss = false,
+      name = "",
+    }
+    if G.GAME.last_blind then
+      last_blind = {
+        boss = G.GAME.last_blind.boss, -- bool. True if the last blind was a boss
+        name = G.GAME.last_blind.name, -- str (default "" before entering round 1)
+        -- When entering round 1, the last blind is set to "Small Blind".
+        -- So I think that the last blind refers  to the blind selected in the most recent BLIND_SELECT state.
+      }
+    end
     game = {
       -- STOP_USE = int (default 0), -- ??
       bankrupt_at = G.GAME.bankrupt_at,
@@ -594,5 +593,75 @@ if success and dpAPI.isVersionCompatible(1) then
     end,
   })
 end
+
+-- ==========================================================================
+-- Completion Conditions
+-- ==========================================================================
+
+-- The threshold for determining when game state transitions are complete.
+-- This value represents the maximum number of events allowed in the game's event queue
+-- to consider the game idle and waiting for user action. When the queue has fewer than
+-- 3 events, the game is considered stable enough to process API responses. This is a
+-- heuristic based on empirical testing to ensure smooth gameplay without delays.
+local EVENT_QUEUE_THRESHOLD = 3
+
+---Completion conditions for different game actions to determine when action execution is complete
+---These are shared between API and LOG systems to ensure consistent timing
+---@type table<string, function>
+utils.COMPLETION_CONDITIONS = {
+  get_game_state = function()
+    return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+  end,
+
+  go_to_menu = function()
+    return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
+  end,
+
+  start_run = function()
+    return G.STATE == G.STATES.BLIND_SELECT
+      and G.GAME.blind_on_deck
+      and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+  end,
+
+  skip_or_select_blind = function()
+    -- Check if we're selecting a blind (facing_blind is set)
+    if G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND then
+      return true
+    end
+    -- Check if we skipped a blind (any blind is marked as "Skipped")
+    if G.prev_small_state == "Skipped" or G.prev_large_state == "Skipped" or G.prev_boss_state == "Skipped" then
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+    end
+    return false
+  end,
+
+  play_hand_or_discard = function()
+    if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
+      -- round still going
+      if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
+        return true
+      -- round won and entering cash out state (ROUND_EVAL state)
+      elseif G.STATE == G.STATES.ROUND_EVAL then
+        return true
+      -- game over state
+      elseif G.STATE == G.STATES.GAME_OVER then
+        return true
+      end
+    end
+    return false
+  end,
+
+  rearrange_hand = function()
+    return G.STATE == G.STATES.SELECTING_HAND and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+
+  cash_out = function()
+    return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+
+  shop = function()
+    return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+}
 
 return utils

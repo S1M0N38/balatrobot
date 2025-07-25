@@ -1,48 +1,66 @@
 local json = require("json")
 local socket = require("socket")
 
-LOG = {}
-LOG.mod_path = nil
-LOG.current_run_file = nil
+LOG = {
+  mod_path = nil,
+  current_run_file = nil,
+  pending_logs = {},
+  game_state_before = {},
+}
 
 -- =============================================================================
 -- Utility Functions
 -- =============================================================================
 
----Generates an ISO 8601 timestamp for filename
----@return string ISO 8601 timestamp in format YYYYMMDDTHHMMSS
-function LOG.generate_iso8601_timestamp()
-  return tostring(os.date("!%Y%m%dT%H%M%S"))
-end
-
----Logs a function call to the JSONL file
----@param function_name string The name of the function being called
----@param arguments table The parameters passed to the function
-function LOG.write(function_name, arguments)
-  ---@type LogEntry
-  local log_entry = {
-    timestamp_ms = math.floor(socket.gettime() * 1000),
-    ["function"] = {
-      name = function_name,
-      arguments = arguments,
-    },
-    -- game_state before the function call
-    game_state = utils.get_game_state(),
-  }
-  sendDebugMessage("Writing log entry: " .. utils.table_to_json(log_entry, 4), "LOG")
-  local log_line = json.encode(log_entry) .. "\n"
-
-  local log_file_path
+---Writes a log entry to the JSONL file
+---@param log_entry LogEntry The log entry to write
+function LOG.write(log_entry)
   if LOG.current_run_file then
-    log_file_path = LOG.current_run_file
-    local file = io.open(log_file_path, "a")
+    local log_line = json.encode(log_entry) .. "\n"
+    local file = io.open(LOG.current_run_file, "a")
     if file then
       file:write(log_line)
       file:close()
     else
-      sendErrorMessage("Failed to open log file for writing: " .. log_file_path, "LOG")
+      sendErrorMessage("Failed to open log file for writing: " .. LOG.current_run_file, "LOG")
     end
   end
+end
+
+---Processes pending logs by checking completion conditions
+function LOG.update()
+  for key, pending_log in pairs(LOG.pending_logs) do
+    if pending_log.condition() then
+      -- Update the log entry with after function call info
+      pending_log.log_entry["timestamp_ms_after"] = math.floor(socket.gettime() * 1000)
+      pending_log.log_entry["game_state_after"] = utils.get_game_state()
+      LOG.write(pending_log.log_entry)
+      -- Prepare for the next log entry
+      LOG.game_state_before = pending_log.log_entry.game_state_after
+      LOG.pending_logs[key] = nil
+    end
+  end
+end
+
+--- Schedules a log entry to be written when the condition is met
+---@param function_call FunctionCall The function call to log
+function LOG.schedule_write(function_call)
+  sendInfoMessage(function_call.name .. "(" .. json.encode(function_call.arguments) .. ")", "LOG")
+
+  local log_entry = {
+    ["function"] = function_call,
+    -- before function call
+    timestamp_ms_before = math.floor(socket.gettime() * 1000),
+    game_state_before = LOG.game_state_before,
+    -- after function call (will be filled in by LOG.write)
+    timestamp_ms_after = nil,
+    game_state_after = nil,
+  }
+  local pending_key = function_call.name .. "_" .. tostring(socket.gettime())
+  LOG.pending_logs[pending_key] = {
+    log_entry = log_entry,
+    condition = utils.COMPLETION_CONDITIONS[function_call.name],
+  }
 end
 
 -- =============================================================================
@@ -54,13 +72,15 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.go_to_menu
-function LOG.hook_go_to_menu()
+function hook_go_to_menu()
   local original_function = G.FUNCS.go_to_menu
-  G.FUNCS.go_to_menu = function(args)
-    local arguments = {}
-    local name = "go_to_menu"
-    LOG.write(name, arguments)
-    return original_function(args)
+  G.FUNCS.go_to_menu = function(...)
+    local function_call = {
+      name = "go_to_menu",
+      arguments = {},
+    }
+    LOG.schedule_write(function_call)
+    return original_function(...)
   end
   sendDebugMessage("Hooked into G.FUNCS.go_to_menu for logging", "LOG")
 end
@@ -70,21 +90,34 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.start_run
-function LOG.hook_start_run()
+function hook_start_run()
   local original_function = G.FUNCS.start_run
   G.FUNCS.start_run = function(game_state, args)
     -- Generate new log file for this run
-    local timestamp = LOG.generate_iso8601_timestamp()
-    LOG.current_run_file = LOG.mod_path .. "runs/" .. timestamp .. ".jsonl"
-    sendInfoMessage("Starting new run log: " .. timestamp .. ".jsonl", "LOG")
-    local arguments = {
-      deck = G.GAME.selected_back.name,
-      stake = args.stake,
-      seed = args.seed,
-      challenge = args.challenge and args.challenge.name,
+    if args.log_path then
+      local file = io.open(args.log_path, "r")
+      if file then
+        file:close()
+        sendErrorMessage("Log file already exists, refusing to overwrite: " .. args.log_path, "LOG")
+        return
+      end
+      LOG.current_run_file = args.log_path
+      sendInfoMessage("Starting new run log: " .. args.log_path, "LOG")
+    else
+      local timestamp = tostring(os.date("!%Y%m%dT%H%M%S"))
+      LOG.current_run_file = LOG.mod_path .. "runs/" .. timestamp .. ".jsonl"
+      sendInfoMessage("Starting new run log: " .. timestamp .. ".jsonl", "LOG")
+    end
+    local function_call = {
+      name = "start_run",
+      arguments = {
+        deck = G.GAME.selected_back.name,
+        stake = args.stake,
+        seed = args.seed,
+        challenge = args.challenge and args.challenge.name,
+      },
     }
-    local name = "start_run"
-    LOG.write(name, arguments)
+    LOG.schedule_write(function_call)
     return original_function(game_state, args)
   end
   sendDebugMessage("Hooked into G.FUNCS.start_run for logging", "LOG")
@@ -95,24 +128,22 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.select_blind
-function LOG.hook_select_blind()
+function hook_select_blind()
   local original_function = G.FUNCS.select_blind
   G.FUNCS.select_blind = function(args)
-    local arguments = { action = "select" }
-    local name = "skip_or_select_blind"
-    LOG.write(name, arguments)
+    local function_call = { name = "skip_or_select_blind", arguments = { action = "select" } }
+    LOG.schedule_write(function_call)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.select_blind for logging", "LOG")
 end
 
 ---Hooks into G.FUNCS.skip_blind
-function LOG.hook_skip_blind()
+function hook_skip_blind()
   local original_function = G.FUNCS.skip_blind
   G.FUNCS.skip_blind = function(args)
-    local arguments = { action = "skip" }
-    local name = "skip_or_select_blind"
-    LOG.write(name, arguments)
+    local function_call = { name = "skip_or_select_blind", arguments = { action = "skip" } }
+    LOG.schedule_write(function_call)
     return original_function(args)
   end
   sendDebugMessage("Hooked into G.FUNCS.skip_blind for logging", "LOG")
@@ -123,37 +154,35 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.play_cards_from_highlighted
-function LOG.hook_play_cards_from_highlighted()
+function hook_play_cards_from_highlighted()
   local original_function = G.FUNCS.play_cards_from_highlighted
-  G.FUNCS.play_cards_from_highlighted = function(args)
+  G.FUNCS.play_cards_from_highlighted = function(...)
     local cards = {}
     for i, card in ipairs(G.hand.cards) do
       if card.highlighted then
         table.insert(cards, i - 1) -- Adjust for 0-based indexing
       end
     end
-    local arguments = { action = "play_hand", cards = cards }
-    local name = "play_hand_or_discard"
-    LOG.write(name, arguments)
-    return original_function(args)
+    local function_call = { name = "play_hand_or_discard", arguments = { action = "play_hand", cards = cards } }
+    LOG.schedule_write(function_call)
+    return original_function(...)
   end
   sendDebugMessage("Hooked into G.FUNCS.play_cards_from_highlighted for logging", "LOG")
 end
 
 ---Hooks into G.FUNCS.discard_cards_from_highlighted
-function LOG.hook_discard_cards_from_highlighted()
+function hook_discard_cards_from_highlighted()
   local original_function = G.FUNCS.discard_cards_from_highlighted
-  G.FUNCS.discard_cards_from_highlighted = function(args)
+  G.FUNCS.discard_cards_from_highlighted = function(...)
     local cards = {}
     for i, card in ipairs(G.hand.cards) do
       if card.highlighted then
         table.insert(cards, i - 1) -- Adjust for 0-based indexing
       end
     end
-    local arguments = { action = "discard", cards = cards }
-    local name = "play_hand_or_discard"
-    LOG.write(name, arguments)
-    return original_function(args)
+    local function_call = { name = "play_hand_or_discard", arguments = { action = "discard", cards = cards } }
+    LOG.schedule_write(function_call)
+    return original_function(...)
   end
   sendDebugMessage("Hooked into G.FUNCS.discard_cards_from_highlighted for logging", "LOG")
 end
@@ -163,13 +192,12 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.cash_out
-function LOG.hook_cash_out()
+function hook_cash_out()
   local original_function = G.FUNCS.cash_out
-  G.FUNCS.cash_out = function(args)
-    local arguments = {}
-    local name = "cash_out"
-    LOG.write(name, arguments)
-    return original_function(args)
+  G.FUNCS.cash_out = function(...)
+    local function_call = { name = "cash_out", arguments = {} }
+    LOG.schedule_write(function_call)
+    return original_function(...)
   end
   sendDebugMessage("Hooked into G.FUNCS.cash_out for logging", "LOG")
 end
@@ -179,13 +207,12 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.toggle_shop
-function LOG.hook_toggle_shop()
+function hook_toggle_shop()
   local original_function = G.FUNCS.toggle_shop
-  G.FUNCS.toggle_shop = function(args)
-    local arguments = { action = "next_round" }
-    local name = "shop"
-    LOG.write(name, arguments)
-    return original_function(args)
+  G.FUNCS.toggle_shop = function(...)
+    local function_call = { name = "shop", arguments = { action = "next_round" } }
+    LOG.schedule_write(function_call)
+    return original_function(...)
   end
   sendDebugMessage("Hooked into G.FUNCS.toggle_shop for logging", "LOG")
 end
@@ -195,7 +222,7 @@ end
 -- -----------------------------------------------------------------------------
 
 ---Hooks into CardArea:align_cards for hand reordering detection
-function LOG.hook_hand_rearrange()
+function hook_hand_rearrange()
   local original_function = CardArea.align_cards
   local previous_order = {}
   CardArea.align_cards = function(self, ...)
@@ -241,7 +268,35 @@ function LOG.hook_hand_rearrange()
             cards[pos] = lookup[card_id]
           end
 
-          LOG.write("rearrange_hand", { cards = cards })
+          local function_call = {
+            name = "rearrange_hand",
+            arguments = { cards = cards },
+          }
+
+          -- NOTE: We cannot schedule a log write at this point because we do not have
+          -- access to the game state before the function call. The game state is only
+          -- available after the function executes, so we need to recreate the "before"
+          -- state manually by using the most recent known state (LOG.game_state_before).
+
+          -- HACK: The timestamp for the log entry is problematic because this hook runs
+          -- within the game loop, and we cannot accurately compute the "before" timestamp
+          -- at the time of the function call. To address this, we use the same timestamp
+          -- for both "before" and "after" states. This approach ensures that the log entry
+          -- is consistent, but it may slightly reduce the accuracy of the timing information.
+
+          local timestamp_ms = math.floor(socket.gettime() * 1000)
+
+          local log_entry = {
+            ["function"] = function_call,
+            timestamp_ms_before = timestamp_ms,
+            game_state_before = LOG.game_state_before,
+            timestamp_ms_after = timestamp_ms,
+            game_state_after = utils.get_game_state(),
+          }
+
+          sendInfoMessage(function_call.name .. "(" .. json.encode(function_call.arguments) .. ")", "LOG")
+          LOG.write(log_entry)
+          LOG.game_state_before = log_entry.game_state_after
         end
       end
 
@@ -272,18 +327,32 @@ function LOG.init()
     return
   end
 
+  -- Hook into the API update loop to process pending logs
+  if API and API.update then
+    local original_api_update = API.update
+    ---@diagnostic disable-next-line: duplicate-set-field
+    API.update = function(dt)
+      original_api_update(dt)
+      LOG.update()
+    end
+    sendDebugMessage("Hooked into API.update for pending log processing", "LOG")
+  else
+    sendErrorMessage("API not available - pending log processing disabled", "LOG")
+  end
+
   -- Init hooks
-  LOG.hook_go_to_menu()
-  LOG.hook_start_run()
-  LOG.hook_select_blind()
-  LOG.hook_skip_blind()
-  LOG.hook_play_cards_from_highlighted()
-  LOG.hook_discard_cards_from_highlighted()
-  LOG.hook_cash_out()
-  LOG.hook_toggle_shop()
-  LOG.hook_hand_rearrange()
+  hook_go_to_menu()
+  hook_start_run()
+  hook_select_blind()
+  hook_skip_blind()
+  hook_play_cards_from_highlighted()
+  hook_discard_cards_from_highlighted()
+  hook_cash_out()
+  hook_toggle_shop()
+  hook_hand_rearrange()
 
   sendInfoMessage("Logger initialized", "LOG")
 end
 
+---@type Log
 return LOG

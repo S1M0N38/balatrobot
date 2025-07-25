@@ -70,6 +70,7 @@ API.pending_requests = {}
 
 ---Updates the API by processing TCP messages and pending requests
 ---@param _ number Delta time (not used)
+---@diagnostic disable-next-line: duplicate-set-field
 function API.update(_)
   -- Create server socket if it doesn't exist
   if not API.server_socket then
@@ -206,8 +207,16 @@ end
 ---Gets the current game state
 ---@param _ table Arguments (not used)
 API.functions["get_game_state"] = function(_)
-  local game_state = utils.get_game_state()
-  API.send_response(game_state)
+  ---@type PendingRequest
+  API.pending_requests["get_game_state"] = {
+    condition = function()
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+    end,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
 end
 
 ---Navigates to the main menu.
@@ -235,6 +244,7 @@ end
 
 ---Starts a new game run with specified parameters
 ---Call G.FUNCS.start_run() to start a new game run with specified parameters.
+---If log_path is provided, the run log will be saved to the specified full path (must include .jsonl extension), otherwise uses runs/timestamp.jsonl.
 ---@param args StartRunArgs The run configuration
 API.functions["start_run"] = function(args)
   -- Validate required parameters
@@ -279,7 +289,7 @@ API.functions["start_run"] = function(args)
   G.GAME.challenge_name = args.challenge
 
   -- Start the run
-  G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj })
+  G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj, log_path = args.log_path })
 
   -- Defer sending response until the run has started
   ---@type PendingRequest
