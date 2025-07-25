@@ -124,13 +124,13 @@ The BalatroBot API provides core functions that correspond to the main game acti
 
 The following table details the parameters required for each function. Note that `get_game_state` and `go_to_menu` require no parameters:
 
-| Name                   | Parameters                                                                                                                                                                   |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start_run`            | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name |
-| `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                 |
-| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                   |
-| `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                      |
-| `shop`                 | `action` (string): Shop action to perform ("next_round")                                                                                                                     |
+| Name                   | Parameters                                                                                                                                                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_run`            | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name<br>`log_path` (string, optional): Full file path for run log (must include .jsonl extension) |
+| `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                                                                                                              |
+| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                                |
+| `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
+| `shop`                 | `action` (string): Shop action to perform ("next_round")                                                                                                                                                                                                                  |
 
 ### Errors
 
