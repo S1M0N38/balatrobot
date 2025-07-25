@@ -273,12 +273,16 @@ function hook_hand_rearrange()
             arguments = { cards = cards },
           }
 
-          -- NOTE: we cannot schedule a log write because we don't have access to the
-          -- state before the function call. We need to recreate it.
+          -- NOTE: We cannot schedule a log write at this point because we do not have
+          -- access to the game state before the function call. The game state is only
+          -- available after the function executes, so we need to recreate the "before"
+          -- state manually by using the most recent known state (LOG.game_state_before).
 
-          -- HACK: we cannot compute the timestamp before in the right way the function
-          -- call because because this hook run with the game loop. So we use the
-          -- timestamp for after and before
+          -- HACK: The timestamp for the log entry is problematic because this hook runs
+          -- within the game loop, and we cannot accurately compute the "before" timestamp
+          -- at the time of the function call. To address this, we use the same timestamp
+          -- for both "before" and "after" states. This approach ensures that the log entry
+          -- is consistent, but it may slightly reduce the accuracy of the timing information.
 
           local timestamp_ms = math.floor(socket.gettime() * 1000)
 
