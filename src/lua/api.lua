@@ -732,18 +732,23 @@ API.functions["shop"] = function(args)
       return
     end
 
+
+      -- Used to ensure dollars and shop have been updated before responding, not inheritly atomic
+    local dollars_before    = G.GAME.dollars
+    local expected_dollars  = dollars_before - card.cost
+    local shop_size_before  = #G.shop_jokers.cards
+
     -- activate the buy button using the UI element handler
     G.FUNCS.buy_from_shop(card_buy_button)
-
 
     -- send response once shop is updated
     ---@type PendingRequest
     API.pending_requests["shop"] = {
-      -- TODO: This sends the update before the dollars have been updated.
       condition = function()
         return G.STATE == G.STATES.SHOP
-          and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-          and G.STATE_COMPLETE
+        and #G.shop_jokers.cards == shop_size_before - 1
+        and G.GAME.dollars == expected_dollars
+        and G.STATE_COMPLETE
       end,
       action = function()
         local game_state = utils.get_game_state()
