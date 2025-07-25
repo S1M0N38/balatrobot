@@ -34,7 +34,8 @@ def normalize_step(step: dict[str, Any]) -> dict[str, Any]:
     normalized = copy.deepcopy(step)
 
     # Remove timestamp as it's non-deterministic
-    normalized.pop("timestamp_ms", None)
+    normalized.pop("timestamp_ms_before", None)
+    normalized.pop("timestamp_ms_after", None)
 
     # Remove log_path from start_run function arguments as it's non-deterministic
     if "function" in normalized and normalized["function"]["name"] == "start_run":
@@ -127,16 +128,19 @@ class TestLog:
                 else:
                     call_args = function_call["arguments"]
 
-                # Call the function and get the new state
+                # Create Python log entry
+                log_entry = {
+                    "function": function_call,
+                    "timestamp_ms_before": int(time.time_ns() // 1_000_000),
+                    "game_state_before": game_state_before,
+                }
+
                 current_state = client.send_message(function_call["name"], call_args)
 
-                # Create Python log entry (use original arguments, not modified ones)
-                log_entry = {
-                    "timestamp_ms": int(time.time_ns() // 1_000_000),
-                    "function": function_call,
-                    "game_state_before": game_state_before,
-                    "game_state_after": current_state,
-                }
+                # Update the log entry with after function call info
+                log_entry["timestamp_ms_after"] = int(time.time_ns() // 1_000_000)
+                log_entry["game_state_after"] = current_state
+
                 python_log_entries.append(log_entry)
 
             # Write Python log file
