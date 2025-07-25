@@ -53,7 +53,8 @@
 ---@field cards number[] Array of card indices for every card in hand (0-based)
 
 ---@class ShopActionArgs
----@field action "next_round" The action to perform
+---@field action "next_round" | "buy_card" The action to perform
+---@field index? number The index of the card to act on (buy, buy_and_use, redeem, open) (0-based)
 
 -- TODO: add the other actions "reroll" | "buy" | "buy_and_use" | "redeem" | "open"
 --@field item number? The item to buy/buy_and_use/redeem/open (0-based)
@@ -96,7 +97,7 @@
 ---@field interest_amount number Interest amount per dollar
 ---@field interest_cap number Maximum interest that can be earned
 ---@field last_blind GGameLastBlind Last blind information
----@field max_jokers number Maximum number of jokers allowed
+---@field max_jokers number Maximum number of jokers in card area
 ---@field planet_rate number Probability for planet cards in shop
 ---@field playing_card_rate number Probability for playing cards in shop
 ---@field previous_round GGamePreviousRound Previous round information
@@ -213,6 +214,8 @@
 -- Joker card configuration (G.jokers.cards[].config)
 ---@class GJokersCardsConfig
 ---@field center table Center configuration for joker
+---@field card_count number Number of cards in joker area
+---@field card_limit number Maximum number of cards in joker area
 
 -- =============================================================================
 -- Utility Module (implemented in utils.lua)

@@ -643,7 +643,120 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-  -- TODO: add other shop actions
+  elseif action == "buy_card" then
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response(
+        "Missing required field: index",
+        ERROR_CODES.INVALID_PARAMETER,
+        { field = "index" }
+      )
+      return
+    end
+    if type(args.index) ~= "number" or args.index < 0 then
+      API.send_error_response(
+        "Index must be a non-negative number",
+        ERROR_CODES.INVALID_PARAMETER,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Get card index (1-based) and shop area
+    local card_pos = args.index + 1
+    local area = G.shop_jokers
+
+    -- Validate card index is in range
+    if not area or not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Card index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, max_index = #area.cards - 1 }
+      )
+      return
+    end
+
+    -- Evaluate card
+    local card = area.cards[card_pos]
+
+    -- Check if the card can be afforded
+    if card.cost > G.GAME.dollars then
+      API.send_error_response(
+        "Card is not affordable",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index, cost = card.cost, dollars = G.GAME.dollars }
+      )
+      return
+    end
+
+    -- Ensure card has an ability set (should be redundant)
+    if not card.ability or not card.ability.set then
+      API.send_error_response(
+        "Card has no ability set, can't check consumable area",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Ensure card area is not full
+    if card.ability.set == "Joker" then
+      -- Check for free joker slots
+      if G.jokers and G.jokers.cards and G.jokers.card_limit and #G.jokers.cards >= G.jokers.card_limit then
+        API.send_error_response(
+          "Can't purchase joker card, joker slots are full",
+          ERROR_CODES.INVALID_ACTION,
+          { index = args.index }
+        )
+      end
+    elseif card.ability.set == "Planet" or card.ability.set == "Tarot" or card.ability.set == "Spectral" then
+      -- Check for free consumable slots (typo is intentional, present in source)
+      if G.GAME.consumeables and G.GAME.consumeables.cards and G.GAME.consumeables.card_limit and #G.GAME.consumeables.cards >= G.GAME.consumeables.card_limit then
+        API.send_error_response(
+          "Can't purchase consumable card, consumable slots are full",
+          ERROR_CODES.INVALID_ACTION,
+          { index = args.index }
+        )
+      end
+    end
+
+
+    -- Validate that some purchase button exists (should be a redundant check)
+    local card_buy_button = card.children.buy_button and card.children.buy_button.definition
+    if not card_buy_button then
+      API.send_error_response(
+        "Card has no buy button",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
+
+    -- Used to ensure dollars and shop have been updated before responding, not inheritly atomic
+    local dollars_before    = G.GAME.dollars
+    local expected_dollars  = dollars_before - card.cost
+    local shop_size_before  = #G.shop_jokers.cards
+
+    -- activate the buy button using the UI element handler
+    G.FUNCS.buy_from_shop(card_buy_button)
+
+    -- send response once shop is updated
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return G.STATE == G.STATES.SHOP
+        and #G.shop_jokers.cards == shop_size_before - 1
+        and G.GAME.dollars == expected_dollars
+        and G.STATE_COMPLETE
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+
+  -- TODO: add other shop actions [buy_and_use | reroll | open_pack | redeem_voucher]
   else
     API.send_error_response(
       "Invalid action for shop",
