@@ -214,6 +214,8 @@
 -- Joker card configuration (G.jokers.cards[].config)
 ---@class GJokersCardsConfig
 ---@field center table Center configuration for joker
+---@field card_count number Number of cards in joker area
+---@field card_limit number Maximum number of cards in joker area
 
 -- =============================================================================
 -- Utility Module (implemented in utils.lua)
