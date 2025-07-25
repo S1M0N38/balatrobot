@@ -232,6 +232,9 @@
 ---@field current_run_file? string Path to the current run's log file
 ---@field pending_logs? table<string, PendingLog> Map of pending log entries awaiting conditions
 ---@field previous_game_state? G Game state before function call
+---@field init fun(self: Log) Initializes the logger by setting up hooks
+---@field write fun(self: Log, original_function: function, function_call: FunctionCall, ...) Writes a log entry to the JSONL file
+---@field update fun(self: Log) Processes pending logs by checking completion conditions
 
 ---@class PendingLog
 ---@field log_entry table The log entry data to be written when condition is met
