@@ -50,6 +50,10 @@ def normalize_step(step: dict[str, Any]) -> dict[str, Any]:
                     card.pop("highlighted", None)
                     card.pop("sort_id", None)
 
+    # we don't care about the game_state_before when starting a run
+    if step.get("function", {}).get("name") == "start_run":
+        normalized.pop("game_state_before", None)
+
     return normalized
 
 
@@ -163,8 +167,6 @@ class TestLog:
 
         # Compare each step
         for i, (original_step, lua_step) in enumerate(zip(orig_steps, lua_steps)):
-            if i == 0:
-                continue  # BUG: The first game_state_before is not the same as the original
             context = f"step {i} in {original_jsonl.name} (Origianl vs Lua logs)"
             assert_steps_equal(lua_step, original_step, context)
 
@@ -188,7 +190,5 @@ class TestLog:
 
         # Compare each step
         for i, (original_step, python_step) in enumerate(zip(orig_steps, python_steps)):
-            if i == 0:
-                continue  # BUG: The first game_state_before is not the same as the original
             context = f"step {i} in {original_jsonl.name} (Original vs Python logs)"
             assert_steps_equal(python_step, original_step, context)
