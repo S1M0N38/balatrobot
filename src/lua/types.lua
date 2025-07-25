@@ -228,13 +228,14 @@
 -- =============================================================================
 
 ---@class Log
----@field mod_path? string Path to the mod directory for log file storage
----@field current_run_file? string Path to the current run's log file
----@field pending_logs? table<string, PendingLog> Map of pending log entries awaiting conditions
----@field previous_game_state? G Game state before function call
----@field init fun(self: Log) Initializes the logger by setting up hooks
----@field write fun(self: Log, original_function: function, function_call: FunctionCall, ...) Writes a log entry to the JSONL file
----@field update fun(self: Log) Processes pending logs by checking completion conditions
+---@field mod_path string? Path to the mod directory for log file storage
+---@field current_run_file string? Path to the current run's log file
+---@field pending_logs table<string, PendingLog> Map of pending log entries awaiting conditions
+---@field game_state_before G Game state before function call
+---@field init fun() Initializes the logger by setting up hooks
+---@field write fun(log_entry: LogEntry) Writes a log entry to the JSONL file
+---@field update fun() Processes pending logs by checking completion conditions
+---@field schedule_write fun(function_call: FunctionCall) Schedules a log entry to be written when condition is met
 
 ---@class PendingLog
 ---@field log_entry table The log entry data to be written when condition is met
@@ -245,10 +246,11 @@
 ---@field arguments table The parameters passed to the function
 
 ---@class LogEntry
----@field timestamp_ms number Timestamp in milliseconds since epoch
+---@field timestamp_ms_before number Timestamp in milliseconds since epoch before function call
+---@field timestamp_ms_after number? Timestamp in milliseconds since epoch after function call
 ---@field function FunctionCall Function call information
 ---@field game_state_before G Game state before function call
----@field game_state_after G Game state after function call
+---@field game_state_after G? Game state after function call
 
 -- =============================================================================
 -- Configuration Types (used in balatrobot.lua)
