@@ -235,6 +235,7 @@ end
 
 ---Starts a new game run with specified parameters
 ---Call G.FUNCS.start_run() to start a new game run with specified parameters.
+---If log_path is provided, the run log will be saved to the specified full path (must include .jsonl extension), otherwise uses runs/timestamp.jsonl.
 ---@param args StartRunArgs The run configuration
 API.functions["start_run"] = function(args)
   -- Validate required parameters
@@ -279,7 +280,7 @@ API.functions["start_run"] = function(args)
   G.GAME.challenge_name = args.challenge
 
   -- Start the run
-  G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj })
+  G.FUNCS.start_run(nil, { stake = args.stake, seed = args.seed, challenge = challenge_obj, log_path = args.log_path })
 
   -- Defer sending response until the run has started
   ---@type PendingRequest
