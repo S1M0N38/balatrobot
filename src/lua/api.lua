@@ -207,8 +207,16 @@ end
 ---Gets the current game state
 ---@param _ table Arguments (not used)
 API.functions["get_game_state"] = function(_)
-  local game_state = utils.get_game_state()
-  API.send_response(game_state)
+  ---@type PendingRequest
+  API.pending_requests["get_game_state"] = {
+    condition = function()
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+    end,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
 end
 
 ---Navigates to the main menu.
