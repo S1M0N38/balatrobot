@@ -97,7 +97,7 @@
 ---@field interest_amount number Interest amount per dollar
 ---@field interest_cap number Maximum interest that can be earned
 ---@field last_blind GGameLastBlind Last blind information
----@field max_jokers number Maximum number of jokers allowed
+---@field max_jokers number Maximum number of jokers in card area
 ---@field planet_rate number Probability for planet cards in shop
 ---@field playing_card_rate number Probability for playing cards in shop
 ---@field previous_round GGamePreviousRound Previous round information

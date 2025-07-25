@@ -190,7 +190,7 @@ function utils.get_game_state()
       last_blind = last_blind,
       -- legendary_mod = G.GAME.legendary_mod, -- (default 1) maybe the probality/modifier to find a legendary joker in the shop?
 
-      max_jokers = G.GAME.max_jokers, --(default 0) the total number of jokers slots?
+      max_jokers = G.GAME.max_jokers, --(default 0) the number of held jokers?
 
       -- modifiers = list/table, -- ??
       -- orbital_choices = { -- what's an orbital choice?? This is a list (table with int keys). related to pseudorandom
