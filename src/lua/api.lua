@@ -490,6 +490,84 @@ API.functions["play_hand_or_discard"] = function(args)
   }
 end
 
+---Rearranges the hand based on the given card indices
+---Call G.FUNCS.rearrange_hand(new_hand)
+---@param args RearrangeHandArgs The card indices to rearrange the hand with
+API.functions["rearrange_hand"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "cards" })
+
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  -- Validate current game state is appropriate for rearranging cards
+  if G.STATE ~= G.STATES.SELECTING_HAND then
+    API.send_error_response(
+      "Cannot rearrange hand when not selecting hand",
+      ERROR_CODES.INVALID_GAME_STATE,
+      { current_state = G.STATE }
+    )
+    return
+  end
+
+  -- Validate number of cards is equal to the number of cards in hand
+  if #args.cards ~= #G.hand.cards then
+    API.send_error_response(
+      "Invalid number of cards to rearrange",
+      ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+      { cards_count = #args.cards, valid_range = tostring(#G.hand.cards) }
+    )
+    return
+  end
+
+  -- Convert incoming indices from 0-based to 1-based
+  for i, card_index in ipairs(args.cards) do
+    args.cards[i] = card_index + 1
+  end
+
+  -- Create a new hand to swap card indices
+  local new_hand = {}
+  for _, old_index in ipairs(args.cards) do
+    local card = G.hand.cards[old_index]
+    if not card then
+      API.send_error_response(
+        "Card index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = old_index, max_index = #G.hand.cards }
+      )
+      return
+    end
+    table.insert(new_hand, card)
+  end
+
+  G.hand.cards = new_hand
+
+  -- Update each card's order field so future sort('order') calls work correctly
+  for i, card in ipairs(G.hand.cards) do
+    card.config.card.order = i
+    if card.config.center then
+      card.config.center.order = i
+    end
+  end
+
+  ---@type PendingRequest
+  API.pending_requests["rearrange_hand"] = {
+    condition = function()
+      return G.STATE == G.STATES.SELECTING_HAND
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
+    end,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
+end
+
 ---Cashes out from the current round to enter the shop
 ---Call G.FUNCS.cash_out() to cash out from the current round to enter the shop.
 ---@param _ table Arguments (not used)

@@ -7,14 +7,14 @@ BalatroBot allows you to create automated players (bots) that can play Balatro b
 A bot is a finite state machine that implements a sequence of actions to play the game.
 The bot can be in one state at a time and have access to a set of functions that can move the bot to other states.
 
-| **State**        | **Description**                              | **Functions**          |
-| ---------------- | -------------------------------------------- | ---------------------- |
-| `MENU`           | The main menu                                | `start_run`            |
-| `BLIND_SELECT`   | Selecting or skipping the blind              | `skip_or_select_blind` |
-| `SELECTING_HAND` | Selecting cards to play or discard           | `play_hand_or_discard` |
-| `ROUND_EVAL`     | Evaluating the round outcome and cashing out | `cash_out`             |
-| `SHOP`           | Buy items and move to the next round         | `shop`                 |
-| `GAME_OVER`      | Game has ended                               | –                      |
+| **State**        | **Description**                              | **Functions**                            |
+| ---------------- | -------------------------------------------- | ---------------------------------------- |
+| `MENU`           | The main menu                                | `start_run`                              |
+| `BLIND_SELECT`   | Selecting or skipping the blind              | `skip_or_select_blind`                   |
+| `SELECTING_HAND` | Selecting cards to play or discard           | `play_hand_or_discard`, `rearrange_hand` |
+| `ROUND_EVAL`     | Evaluating the round outcome and cashing out | `cash_out`                               |
+| `SHOP`           | Buy items and move to the next round         | `shop`                                   |
+| `GAME_OVER`      | Game has ended                               | –                                        |
 
 Developing a bot boils down to provide the action name and its parameters for each of the
 

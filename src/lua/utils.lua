@@ -317,6 +317,7 @@ function utils.get_game_state()
         label = card.label, -- str (default "Base Card") | ... | ... | ?
         -- playing_card = card.config.card.playing_card, -- int. The card index in the deck for the current round ?
         -- sell_cost = card.sell_cost, -- int (default 1). The dollars you get if you sell this card ?
+        sort_id = card.sort_id, -- int. Unique identifier for this card instance
         base = {
           -- These should be the valude for the original base card
           -- without any modifications
@@ -488,6 +489,29 @@ function utils.get_game_state()
     shop_vouchers = shop_vouchers,
     shop_booster = shop_booster,
   }
+end
+
+-- ==========================================================================
+-- Utility Functions
+-- ==========================================================================
+
+function utils.sets_equal(list1, list2)
+  if #list1 ~= #list2 then
+    return false
+  end
+
+  local set = {}
+  for _, v in ipairs(list1) do
+    set[v] = true
+  end
+
+  for _, v in ipairs(list2) do
+    if not set[v] then
+      return false
+    end
+  end
+
+  return true
 end
 
 -- ==========================================================================

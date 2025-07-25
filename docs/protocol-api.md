@@ -46,10 +46,7 @@ All communication uses JSON messages with a standardized structure. The protocol
   "name": "function_name",
   "arguments": {
     "param1": "value1",
-    "param2": [
-      "array",
-      "values"
-    ]
+    "param2": ["array", "values"]
   }
 }
 ```
@@ -86,14 +83,14 @@ The BalatroBot API operates as a finite state machine that mirrors the natural f
 
 The game progresses through these states in a typical flow: `MENU` → `BLIND_SELECT` → `SELECTING_HAND` → `ROUND_EVAL` → `SHOP` → `BLIND_SELECT` (or `GAME_OVER`).
 
-| State            | Value | Description                  | Available Functions    |
-| ---------------- | ----- | ---------------------------- | ---------------------- |
-| `MENU`           | 11    | Main menu screen             | `start_run`            |
-| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind` |
-| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard` |
-| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`             |
-| `SHOP`           | 5     | Shop interface               | `shop`                 |
-| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`           |
+| State            | Value | Description                  | Available Functions                      |
+| ---------------- | ----- | ---------------------------- | ---------------------------------------- |
+| `MENU`           | 11    | Main menu screen             | `start_run`                              |
+| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind`                   |
+| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard`, `rearrange_hand` |
+| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`                               |
+| `SHOP`           | 5     | Shop interface               | `shop`                                   |
+| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`                             |
 
 ### Validation
 
@@ -119,6 +116,7 @@ The BalatroBot API provides core functions that correspond to the main game acti
 | `start_run`            | Starts a new game run with specified configuration                           |
 | `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it |
 | `play_hand_or_discard` | Plays selected cards or discards them                                        |
+| `rearrange_hand`       | Reorders the current hand according to the supplied index list               |
 | `cash_out`             | Proceeds from round completion to the shop phase                             |
 | `shop`                 | Performs shop actions. Currently supports proceeding to the next round       |
 
@@ -131,6 +129,7 @@ The following table details the parameters required for each function. Note that
 | `start_run`            | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name |
 | `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                 |
 | `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                   |
+| `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                      |
 | `shop`                 | `action` (string): Shop action to perform ("next_round")                                                                                                                     |
 
 ### Errors
