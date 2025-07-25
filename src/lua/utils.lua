@@ -594,4 +594,70 @@ if success and dpAPI.isVersionCompatible(1) then
   })
 end
 
+-- ==========================================================================
+-- Completion Conditions
+-- ==========================================================================
+
+-- The threshold for determining when game state transitions are complete.
+-- This value represents the maximum number of events allowed in the game's event queue
+-- to consider the game idle and waiting for user action. When the queue has fewer than
+-- 3 events, the game is considered stable enough to process API responses. This is a
+-- heuristic based on empirical testing to ensure smooth gameplay without delays.
+local EVENT_QUEUE_THRESHOLD = 3
+
+---Completion conditions for different game actions to determine when action execution is complete
+---These are shared between API and LOG systems to ensure consistent timing
+---@type table<string, function>
+utils.COMPLETION_CONDITIONS = {
+  go_to_menu = function()
+    return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
+  end,
+
+  start_run = function()
+    return G.STATE == G.STATES.BLIND_SELECT
+      and G.GAME.blind_on_deck
+      and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+  end,
+
+  skip_or_select_blind = function()
+    -- Check if we're selecting a blind (facing_blind is set)
+    if G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND then
+      return true
+    end
+    -- Check if we skipped a blind (any blind is marked as "Skipped")
+    if G.prev_small_state == "Skipped" or G.prev_large_state == "Skipped" or G.prev_boss_state == "Skipped" then
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+    end
+    return false
+  end,
+
+  play_hand_or_discard = function()
+    if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
+      -- round still going
+      if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
+        return true
+      -- round won and entering cash out state (ROUND_EVAL state)
+      elseif G.STATE == G.STATES.ROUND_EVAL then
+        return true
+      -- game over state
+      elseif G.STATE == G.STATES.GAME_OVER then
+        return true
+      end
+    end
+    return false
+  end,
+
+  rearrange_hand = function()
+    return G.STATE == G.STATES.SELECTING_HAND and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+
+  cash_out = function()
+    return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+
+  shop = function()
+    return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+}
+
 return utils
