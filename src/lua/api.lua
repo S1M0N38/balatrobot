@@ -662,8 +662,8 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- Get card buy button from zero based index
-    local card_pos = args.index + 1            -- Lua is 1-based
+    -- Get card index (1-based) and shop area
+    local card_pos = args.index + 1
     local area = G.shop_jokers
 
     -- Validate card index is in range
@@ -676,30 +676,54 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- Get card buy button from zero based index
-    local card      = area.cards[card_pos]
+    -- Evaluate card
+    local card = area.cards[card_pos]
 
-    -- Click the card
-    card:click()
+    -- Check if the card can be afforded
+    if card.cost > G.GAME.dollars then
+      API.send_error_response(
+        "Card is not affordable",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index, cost = card.cost, dollars = G.GAME.dollars }
+      )
+      return
+    end
 
-    -- Wait for the shop to update
-    love.timer.sleep(0.5)
+    -- Ensure card has an ability set (should be redundant)
+    if not card.ability or not card.ability.set then
+      API.send_error_response(
+        "Card has no ability set, can't check consumable area",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
 
-    -- Get the buy button
-    local buy_btn   = card.children and card.children.buy_button
+    -- Ensure card area is not full
+    if card.ability.set == "Joker" then
+      -- Check for free joker slots
+      if G.jokers and G.jokers.cards and G.jokers.card_limit and #G.jokers.cards >= G.jokers.card_limit then
+        API.send_error_response(
+          "Can't purchase joker card, joker slots are full",
+          ERROR_CODES.INVALID_ACTION,
+          { index = args.index }
+        )
+      end
+    elseif card.ability.set == "Planet" or card.ability.set == "Tarot" or card.ability.set == "Spectral" then
+      -- Check for free consumable slots (typo is intentional, present in source)
+      if G.GAME.consumeables and G.GAME.consumeables.cards and G.GAME.consumeables.card_limit and #G.GAME.consumeables.cards >= G.GAME.consumeables.card_limit then
+        API.send_error_response(
+          "Can't purchase consumable card, consumable slots are full",
+          ERROR_CODES.INVALID_ACTION,
+          { index = args.index }
+        )
+      end
+    end
 
-    -- activate the buy button
-    G.FUNCS[buy_btn.config.button](buy_btn)
 
-
-    sendDebugMessage("Card: " .. tostring(card))
-    sendDebugMessage("Card Label: " .. tostring(card.label))
-    sendDebugMessage("Buy button: " .. tostring(buy_btn))
-
-    -- Wait for the shop to update
-    love.timer.sleep(0.5)
-
-    if not buy_btn then
+    -- Validate that some purchase button exists (should be a redundant check)
+    local card_buy_button = card.children.buy_button and card.children.buy_button.definition
+    if not card_buy_button then
       API.send_error_response(
         "Card has no buy button",
         ERROR_CODES.INVALID_ACTION,
@@ -708,24 +732,14 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- -- Validate card is purchasable
-    -- This is wrong, and would be a redundant check anyways.
-    -- Can_buy is used to create the buy button.
-    -- if not G.FUNCS.can_buy(buy_btn) then
-    --   API.send_error_response(
-    --     "Card is not purchasable",
-    --     ERROR_CODES.INVALID_ACTION,
-    --     { index = args.index }
-    --   )
-    --   return
-    -- end
+    -- activate the buy button using the UI element handler
+    G.FUNCS.buy_from_shop(card_buy_button)
 
-    -- Execute buy_from_shop action in G.FUNCS
-    -- G.FUNCS.buy_from_shop(buy_btn)
 
     -- send response once shop is updated
     ---@type PendingRequest
     API.pending_requests["shop"] = {
+      -- TODO: This sends the update before the dollars have been updated.
       condition = function()
         return G.STATE == G.STATES.SHOP
           and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
@@ -736,7 +750,8 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-  -- TODO: add other shop actions
+
+  -- TODO: add other shop actions [buy_and_use | reroll | open_pack | redeem_voucher]
   else
     API.send_error_response(
       "Invalid action for shop",
