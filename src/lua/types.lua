@@ -35,6 +35,7 @@
 ---@field stake? number The stake level (optional)
 ---@field seed? string The seed for the run (optional)
 ---@field challenge? string The challenge name (optional)
+---@field log_path? string The full file path for the run log (optional, must include .jsonl extension)
 
 -- =============================================================================
 -- Game Action Argument Types (used in api.lua)
@@ -226,10 +227,25 @@
 -- Log Types (used in log.lua)
 -- =============================================================================
 
+---@class Log
+---@field mod_path? string Path to the mod directory for log file storage
+---@field current_run_file? string Path to the current run's log file
+---@field pending_logs? table<string, PendingLog> Map of pending log entries awaiting conditions
+---@field previous_game_state? G Game state before function call
+
+---@class PendingLog
+---@field log_entry table The log entry data to be written when condition is met
+---@field condition function Function that returns true when the log should be written
+
+---@class FunctionCall
+---@field name string The name of the function being called
+---@field arguments table The parameters passed to the function
+
 ---@class LogEntry
 ---@field timestamp_ms number Timestamp in milliseconds since epoch
----@field function {name: string, arguments: table} Function call information
----@field game_state G Game state at time of logging
+---@field function FunctionCall Function call information
+---@field game_state_before G Game state before function call
+---@field game_state_after G Game state after function call
 
 -- =============================================================================
 -- Configuration Types (used in balatrobot.lua)
