@@ -372,6 +372,8 @@ function utils.get_game_state()
         label = card.label,
         config = {
           center = card.config.center,
+          card_limit = G.jokers.card_limit,
+          card_count = G.jokers.card_count,
         },
       }
     end
