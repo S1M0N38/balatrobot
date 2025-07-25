@@ -1,0 +1,1512 @@
+# BalatroBot
+
+> A bot framework for Balatro
+
+BalatroBot is a Python framework for developing automated bots to play the card game Balatro.
+The architecture consists of three main layers: a communication layer using TCP protocol with Lua API,
+a Python framework layer for bot development, and comprehensive testing and documentation systems.
+The project enables real-time bidirectional communication between the game and bot through TCP sockets.
+
+
+# Documentation
+
+# BalatroBot API
+
+This page provides comprehensive API documentation for the BalatroBot Python framework. The API enables you to build automated bots that interact with the Balatro card game through a structured TCP communication protocol.
+
+The API is organized into several key components: the `BalatroClient` for managing game connections and sending commands, enums that define game states and actions, exception classes for robust error handling, and data models that structure requests and responses between your bot and the game.
+
+## Client
+
+The `BalatroClient` is the main interface for communicating with the Balatro game through TCP connections. It handles connection management, message serialization, and error handling.
+
+### `balatrobot.client.BalatroClient`
+
+Client for communicating with the BalatroBot game API.
+
+Attributes:
+
+| Name          | Type     | Description                 |
+| ------------- | -------- | --------------------------- |
+| `host`        |          | Host address to connect to  |
+| `port`        |          | Port number to connect to   |
+| `timeout`     |          | Socket timeout in seconds   |
+| `buffer_size` |          | Socket buffer size in bytes |
+| `_socket`     | \`socket | None\`                      |
+
+Source code in `src/balatrobot/client.py`
+
+```python
+class BalatroClient:
+    """Client for communicating with the BalatroBot game API.
+
+    Attributes:
+        host: Host address to connect to
+        port: Port number to connect to
+        timeout: Socket timeout in seconds
+        buffer_size: Socket buffer size in bytes
+        _socket: Socket connection to BalatroBot
+    """
+
+    host = "127.0.0.1"
+    port = 12346
+    timeout = 10.0
+    buffer_size = 65536
+
+    def __init__(self):
+        """Initialize BalatroBot client"""
+        self._socket: socket.socket | None = None
+        self._connected = False
+
+    def __enter__(self) -> Self:
+        """Enter context manager and connect to the game."""
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit context manager and disconnect from the game."""
+        self.disconnect()
+
+    def connect(self) -> None:
+        """Connect to Balatro TCP server
+
+        Raises:
+            ConnectionFailedError: If not connected to the game
+        """
+        if self._connected:
+            return
+
+        logger.info(f"Connecting to BalatroBot API at {self.host}:{self.port}")
+        try:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._socket.settimeout(self.timeout)
+            self._socket.setsockopt(
+                socket.SOL_SOCKET, socket.SO_RCVBUF, self.buffer_size
+            )
+            self._socket.connect((self.host, self.port))
+            self._connected = True
+            logger.info(
+                f"Successfully connected to BalatroBot API at {self.host}:{self.port}"
+            )
+        except (socket.error, OSError) as e:
+            logger.error(f"Failed to connect to {self.host}:{self.port}: {e}")
+            raise ConnectionFailedError(
+                f"Failed to connect to {self.host}:{self.port}",
+                error_code="E008",
+                context={"host": self.host, "port": self.port, "error": str(e)},
+            ) from e
+
+    def disconnect(self) -> None:
+        """Disconnect from the BalatroBot game API."""
+        if self._socket:
+            logger.info(f"Disconnecting from BalatroBot API at {self.host}:{self.port}")
+            self._socket.close()
+            self._socket = None
+        self._connected = False
+
+    def send_message(self, name: str, arguments: dict | None = None) -> dict:
+        """Send JSON message to Balatro and receive response
+
+        Args:
+            name: Function name to call
+            arguments: Function arguments
+
+        Returns:
+            Response from the game API
+
+        Raises:
+            ConnectionFailedError: If not connected to the game
+            BalatroError: If the API returns an error
+        """
+        if arguments is None:
+            arguments = {}
+
+        if not self._connected or not self._socket:
+            raise ConnectionFailedError(
+                "Not connected to the game API",
+                error_code="E008",
+                context={
+                    "connected": self._connected,
+                    "socket": self._socket is not None,
+                },
+            )
+
+        # Create and validate request
+        request = APIRequest(name=name, arguments=arguments)
+        logger.debug(f"Sending API request: {name}")
+
+        try:
+            # Send request
+            message = request.model_dump_json() + "\n"
+            self._socket.send(message.encode())
+
+            # Receive response
+            data = self._socket.recv(self.buffer_size)
+            response_data = json.loads(data.decode().strip())
+
+            # Check for error response
+            if "error" in response_data:
+                logger.error(f"API request {name} failed: {response_data.get('error')}")
+                raise create_exception_from_error_response(response_data)
+
+            logger.debug(f"API request {name} completed successfully")
+            return response_data
+
+        except socket.error as e:
+            logger.error(f"Socket error during API request {name}: {e}")
+            raise ConnectionFailedError(
+                f"Socket error during communication: {e}",
+                error_code="E008",
+                context={"error": str(e)},
+            ) from e
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON response from API request {name}: {e}")
+            raise BalatroError(
+                f"Invalid JSON response from game: {e}",
+                error_code="E001",
+                context={"error": str(e)},
+            ) from e
+
+```
+
+#### `connect()`
+
+Connect to Balatro TCP server
+
+Raises:
+
+| Type                    | Description                  |
+| ----------------------- | ---------------------------- |
+| `ConnectionFailedError` | If not connected to the game |
+
+Source code in `src/balatrobot/client.py`
+
+```python
+def connect(self) -> None:
+    """Connect to Balatro TCP server
+
+    Raises:
+        ConnectionFailedError: If not connected to the game
+    """
+    if self._connected:
+        return
+
+    logger.info(f"Connecting to BalatroBot API at {self.host}:{self.port}")
+    try:
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.settimeout(self.timeout)
+        self._socket.setsockopt(
+            socket.SOL_SOCKET, socket.SO_RCVBUF, self.buffer_size
+        )
+        self._socket.connect((self.host, self.port))
+        self._connected = True
+        logger.info(
+            f"Successfully connected to BalatroBot API at {self.host}:{self.port}"
+        )
+    except (socket.error, OSError) as e:
+        logger.error(f"Failed to connect to {self.host}:{self.port}: {e}")
+        raise ConnectionFailedError(
+            f"Failed to connect to {self.host}:{self.port}",
+            error_code="E008",
+            context={"host": self.host, "port": self.port, "error": str(e)},
+        ) from e
+
+```
+
+#### `disconnect()`
+
+Disconnect from the BalatroBot game API.
+
+Source code in `src/balatrobot/client.py`
+
+```python
+def disconnect(self) -> None:
+    """Disconnect from the BalatroBot game API."""
+    if self._socket:
+        logger.info(f"Disconnecting from BalatroBot API at {self.host}:{self.port}")
+        self._socket.close()
+        self._socket = None
+    self._connected = False
+
+```
+
+#### `send_message(name, arguments=None)`
+
+Send JSON message to Balatro and receive response
+
+Parameters:
+
+| Name        | Type   | Description           | Default            |
+| ----------- | ------ | --------------------- | ------------------ |
+| `name`      | `str`  | Function name to call | *required*         |
+| `arguments` | \`dict | None\`                | Function arguments |
+
+Returns:
+
+| Type   | Description                |
+| ------ | -------------------------- |
+| `dict` | Response from the game API |
+
+Raises:
+
+| Type                    | Description                  |
+| ----------------------- | ---------------------------- |
+| `ConnectionFailedError` | If not connected to the game |
+| `BalatroError`          | If the API returns an error  |
+
+Source code in `src/balatrobot/client.py`
+
+```python
+def send_message(self, name: str, arguments: dict | None = None) -> dict:
+    """Send JSON message to Balatro and receive response
+
+    Args:
+        name: Function name to call
+        arguments: Function arguments
+
+    Returns:
+        Response from the game API
+
+    Raises:
+        ConnectionFailedError: If not connected to the game
+        BalatroError: If the API returns an error
+    """
+    if arguments is None:
+        arguments = {}
+
+    if not self._connected or not self._socket:
+        raise ConnectionFailedError(
+            "Not connected to the game API",
+            error_code="E008",
+            context={
+                "connected": self._connected,
+                "socket": self._socket is not None,
+            },
+        )
+
+    # Create and validate request
+    request = APIRequest(name=name, arguments=arguments)
+    logger.debug(f"Sending API request: {name}")
+
+    try:
+        # Send request
+        message = request.model_dump_json() + "\n"
+        self._socket.send(message.encode())
+
+        # Receive response
+        data = self._socket.recv(self.buffer_size)
+        response_data = json.loads(data.decode().strip())
+
+        # Check for error response
+        if "error" in response_data:
+            logger.error(f"API request {name} failed: {response_data.get('error')}")
+            raise create_exception_from_error_response(response_data)
+
+        logger.debug(f"API request {name} completed successfully")
+        return response_data
+
+    except socket.error as e:
+        logger.error(f"Socket error during API request {name}: {e}")
+        raise ConnectionFailedError(
+            f"Socket error during communication: {e}",
+            error_code="E008",
+            context={"error": str(e)},
+        ) from e
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON response from API request {name}: {e}")
+        raise BalatroError(
+            f"Invalid JSON response from game: {e}",
+            error_code="E001",
+            context={"error": str(e)},
+        ) from e
+
+```
+
+______________________________________________________________________
+
+## Enums
+
+### `balatrobot.enums.State`
+
+Game state values representing different phases of gameplay in Balatro, from menu navigation to active card play and shop interactions.
+
+Source code in `src/balatrobot/enums.py`
+
+```python
+@unique
+class State(Enum):
+    """Game state values representing different phases of gameplay in Balatro,
+    from menu navigation to active card play and shop interactions."""
+
+    SELECTING_HAND = 1
+    HAND_PLAYED = 2
+    DRAW_TO_HAND = 3
+    GAME_OVER = 4
+    SHOP = 5
+    PLAY_TAROT = 6
+    BLIND_SELECT = 7
+    ROUND_EVAL = 8
+    TAROT_PACK = 9
+    PLANET_PACK = 10
+    MENU = 11
+    TUTORIAL = 12
+    SPLASH = 13
+    SANDBOX = 14
+    SPECTRAL_PACK = 15
+    DEMO_CTA = 16
+    STANDARD_PACK = 17
+    BUFFOON_PACK = 18
+    NEW_ROUND = 19
+
+```
+
+### `balatrobot.enums.Actions`
+
+Bot action values corresponding to user interactions available in different game states, from card play to shop purchases and inventory management.
+
+Source code in `src/balatrobot/enums.py`
+
+```python
+@unique
+class Actions(Enum):
+    """Bot action values corresponding to user interactions available in
+    different game states, from card play to shop purchases and inventory
+    management."""
+
+    SELECT_BLIND = 1
+    SKIP_BLIND = 2
+    PLAY_HAND = 3
+    DISCARD_HAND = 4
+    END_SHOP = 5
+    REROLL_SHOP = 6
+    BUY_CARD = 7
+    BUY_VOUCHER = 8
+    BUY_BOOSTER = 9
+    SELECT_BOOSTER_CARD = 10
+    SKIP_BOOSTER_PACK = 11
+    SELL_JOKER = 12
+    USE_CONSUMABLE = 13
+    SELL_CONSUMABLE = 14
+    REARRANGE_JOKERS = 15
+    REARRANGE_CONSUMABLES = 16
+    REARRANGE_HAND = 17
+    PASS = 18
+    START_RUN = 19
+    SEND_GAMESTATE = 20
+
+```
+
+### `balatrobot.enums.Decks`
+
+Starting deck types in Balatro, each providing unique starting conditions, card modifications, or special abilities that affect gameplay throughout the run.
+
+Source code in `src/balatrobot/enums.py`
+
+```python
+@unique
+class Decks(Enum):
+    """Starting deck types in Balatro, each providing unique starting
+    conditions, card modifications, or special abilities that affect gameplay
+    throughout the run."""
+
+    RED = "Red Deck"
+    BLUE = "Blue Deck"
+    YELLOW = "Yellow Deck"
+    GREEN = "Green Deck"
+    BLACK = "Black Deck"
+    MAGIC = "Magic Deck"
+    NEBULA = "Nebula Deck"
+    GHOST = "Ghost Deck"
+    ABANDONED = "Abandoned Deck"
+    CHECKERED = "Checkered Deck"
+    ZODIAC = "Zodiac Deck"
+    PAINTED = "Painted Deck"
+    ANAGLYPH = "Anaglyph Deck"
+    PLASMA = "Plasma Deck"
+    ERRATIC = "Erratic Deck"
+
+```
+
+### `balatrobot.enums.Stakes`
+
+Difficulty stake levels in Balatro that increase game difficulty through various modifiers and restrictions, with higher stakes providing greater challenges and rewards.
+
+Source code in `src/balatrobot/enums.py`
+
+```python
+@unique
+class Stakes(Enum):
+    """Difficulty stake levels in Balatro that increase game difficulty through
+    various modifiers and restrictions, with higher stakes providing greater
+    challenges and rewards."""
+
+    WHITE = 1
+    RED = 2
+    GREEN = 3
+    BLACK = 4
+    BLUE = 5
+    PURPLE = 6
+    ORANGE = 7
+    GOLD = 8
+
+```
+
+### `balatrobot.enums.ErrorCode`
+
+Standardized error codes used in BalatroBot API that match those defined in src/lua/api.lua for consistent error handling across the entire system.
+
+Source code in `src/balatrobot/enums.py`
+
+```python
+@unique
+class ErrorCode(Enum):
+    """Standardized error codes used in BalatroBot API that match those defined in src/lua/api.lua for consistent error handling across the entire system."""
+
+    # Protocol errors (E001-E005)
+    INVALID_JSON = "E001"
+    MISSING_NAME = "E002"
+    MISSING_ARGUMENTS = "E003"
+    UNKNOWN_FUNCTION = "E004"
+    INVALID_ARGUMENTS = "E005"
+
+    # Network errors (E006-E008)
+    SOCKET_CREATE_FAILED = "E006"
+    SOCKET_BIND_FAILED = "E007"
+    CONNECTION_FAILED = "E008"
+
+    # Validation errors (E009-E012)
+    INVALID_GAME_STATE = "E009"
+    INVALID_PARAMETER = "E010"
+    PARAMETER_OUT_OF_RANGE = "E011"
+    MISSING_GAME_OBJECT = "E012"
+
+    # Game logic errors (E013-E016)
+    DECK_NOT_FOUND = "E013"
+    INVALID_CARD_INDEX = "E014"
+    NO_DISCARDS_LEFT = "E015"
+    INVALID_ACTION = "E016"
+
+```
+
+______________________________________________________________________
+
+## Exceptions
+
+### Connection and Socket Errors
+
+#### `balatrobot.exceptions.SocketCreateFailedError`
+
+Socket creation failed (E006).
+
+#### `balatrobot.exceptions.SocketBindFailedError`
+
+Socket bind failed (E007).
+
+#### `balatrobot.exceptions.ConnectionFailedError`
+
+Connection failed (E008).
+
+### Game State and Logic Errors
+
+#### `balatrobot.exceptions.InvalidGameStateError`
+
+Invalid game state for requested action (E009).
+
+#### `balatrobot.exceptions.InvalidActionError`
+
+Invalid action for current context (E016).
+
+#### `balatrobot.exceptions.DeckNotFoundError`
+
+Deck not found (E013).
+
+#### `balatrobot.exceptions.InvalidCardIndexError`
+
+Invalid card index (E014).
+
+#### `balatrobot.exceptions.NoDiscardsLeftError`
+
+No discards remaining (E015).
+
+### API and Parameter Errors
+
+#### `balatrobot.exceptions.InvalidJSONError`
+
+Invalid JSON in request (E001).
+
+#### `balatrobot.exceptions.MissingNameError`
+
+Message missing required 'name' field (E002).
+
+#### `balatrobot.exceptions.MissingArgumentsError`
+
+Message missing required 'arguments' field (E003).
+
+#### `balatrobot.exceptions.UnknownFunctionError`
+
+Unknown function name (E004).
+
+#### `balatrobot.exceptions.InvalidArgumentsError`
+
+Invalid arguments provided (E005).
+
+#### `balatrobot.exceptions.InvalidParameterError`
+
+Invalid or missing required parameter (E010).
+
+#### `balatrobot.exceptions.ParameterOutOfRangeError`
+
+Parameter value out of valid range (E011).
+
+#### `balatrobot.exceptions.MissingGameObjectError`
+
+Required game object missing (E012).
+
+______________________________________________________________________
+
+## Models
+
+The BalatroBot API uses Pydantic models to provide type-safe data structures that exactly match the game's internal state representation. All models inherit from `BalatroBaseModel` which provides consistent validation and serialization.
+
+#### Base Model
+
+#### `balatrobot.models.BalatroBaseModel`
+
+Base model for all BalatroBot API models.
+
+### Request Models
+
+These models define the structure for specific API requests:
+
+#### `balatrobot.models.StartRunRequest`
+
+Request model for starting a new run.
+
+#### `balatrobot.models.BlindActionRequest`
+
+Request model for skip or select blind actions.
+
+#### `balatrobot.models.HandActionRequest`
+
+Request model for playing hand or discarding cards.
+
+#### `balatrobot.models.ShopActionRequest`
+
+Request model for shop actions.
+
+### Game State Models
+
+The game state models provide comprehensive access to all Balatro game information, structured hierarchically to match the Lua API:
+
+#### Root Game State
+
+#### `balatrobot.models.G`
+
+Root game state response matching G in Lua types.
+
+##### `state_enum`
+
+Get the state as an enum value.
+
+##### `convert_empty_list_to_none_for_hand(v)`
+
+Convert empty list to None for hand field.
+
+#### Game Information
+
+#### `balatrobot.models.GGame`
+
+Game state matching GGame in Lua types.
+
+##### `convert_empty_list_to_dict(v)`
+
+Convert empty list to empty dict.
+
+##### `convert_empty_list_to_none(v)`
+
+Convert empty list to None for optional nested objects.
+
+#### `balatrobot.models.GGameCurrentRound`
+
+Current round info matching GGameCurrentRound in Lua types.
+
+##### `convert_empty_list_to_dict(v)`
+
+Convert empty list to empty dict.
+
+#### `balatrobot.models.GGameLastBlind`
+
+Last blind info matching GGameLastBlind in Lua types.
+
+#### `balatrobot.models.GGamePreviousRound`
+
+Previous round info matching GGamePreviousRound in Lua types.
+
+#### `balatrobot.models.GGameProbabilities`
+
+Game probabilities matching GGameProbabilities in Lua types.
+
+#### `balatrobot.models.GGamePseudorandom`
+
+Pseudorandom data matching GGamePseudorandom in Lua types.
+
+#### `balatrobot.models.GGameRoundBonus`
+
+Round bonus matching GGameRoundBonus in Lua types.
+
+#### `balatrobot.models.GGameRoundScores`
+
+Round scores matching GGameRoundScores in Lua types.
+
+#### `balatrobot.models.GGameSelectedBack`
+
+Selected deck info matching GGameSelectedBack in Lua types.
+
+#### `balatrobot.models.GGameShop`
+
+Shop configuration matching GGameShop in Lua types.
+
+#### `balatrobot.models.GGameStartingParams`
+
+Starting parameters matching GGameStartingParams in Lua types.
+
+#### `balatrobot.models.GGameTags`
+
+Game tags model matching GGameTags in Lua types.
+
+#### Hand Management
+
+#### `balatrobot.models.GHand`
+
+Hand structure matching GHand in Lua types.
+
+#### `balatrobot.models.GHandCards`
+
+Hand card matching GHandCards in Lua types.
+
+#### `balatrobot.models.GHandCardsBase`
+
+Hand card base properties matching GHandCardsBase in Lua types.
+
+##### `convert_int_to_string(v)`
+
+Convert integer values to strings.
+
+#### `balatrobot.models.GHandCardsConfig`
+
+Hand card configuration matching GHandCardsConfig in Lua types.
+
+#### `balatrobot.models.GHandCardsConfigCard`
+
+Hand card config card data matching GHandCardsConfigCard in Lua types.
+
+#### `balatrobot.models.GHandConfig`
+
+Hand configuration matching GHandConfig in Lua types.
+
+#### Joker Information
+
+#### `balatrobot.models.GJokersCards`
+
+Joker card matching GJokersCards in Lua types.
+
+#### `balatrobot.models.GJokersCardsConfig`
+
+Joker card configuration matching GJokersCardsConfig in Lua types.
+
+### Communication Models
+
+These models handle the communication protocol between your bot and the game:
+
+#### `balatrobot.models.APIRequest`
+
+Model for API requests sent to the game.
+
+#### `balatrobot.models.APIResponse`
+
+Model for API responses from the game.
+
+#### `balatrobot.models.ErrorResponse`
+
+Model for API error responses matching Lua ErrorResponse.
+
+#### `balatrobot.models.JSONLLogEntry`
+
+Model for JSONL log entries that record game actions.
+
+## Usage Examples
+
+For practical implementation examples:
+
+- Follow the [Developing Bots](../developing-bots/) guide for complete bot setup
+- Understand the underlying [Protocol API](../protocol-api/) for advanced usage
+- Reference the [Installation](../installation/) guide for environment setup
+
+# Contributing to BalatroBot
+
+Welcome to BalatroBot! We're excited that you're interested in contributing to this Python framework and Lua mod for creating automated bots to play Balatro.
+
+BalatroBot uses a unique dual-architecture approach with a Python framework that communicates with a Lua mod running inside Balatro via TCP sockets. This allows for real-time bot automation and game state analysis.
+
+## Project Status & Priorities
+
+We track all development work using the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7). This is the best place to see current priorities, ongoing work, and opportunities for contribution.
+
+**Current Focus**: We're heavily refactoring the Python framework while focusing development efforts on the Lua API (`src/lua/api.lua`). The existing Python code serves as reference but will be drastically simplified in future versions.
+
+## Getting Started
+
+### Prerequisites
+
+Before contributing, ensure you have:
+
+- **Balatro**: Version 1.0.1o-FULL
+- **SMODS (Steamodded)**: Version 1.0.0-beta-0711a or newer
+- **Python**: 3.13+ (managed via uv)
+- **uv**: Python package manager ([Installation Guide](https://docs.astral.sh/uv/))
+
+### Recommended Tools
+
+- **[DebugPlus](https://github.com/WilsontheWolf/DebugPlus)**: Essential for Lua API development and debugging
+
+### Development Environment Setup
+
+1. **Fork and Clone**
+
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/balatrobot.git
+   cd balatrobot
+
+   ```
+
+1. **Install Dependencies**
+
+   ```bash
+   uv sync --all-extras
+
+   ```
+
+1. **Set Up Balatro with Mods**
+
+   **macOS** (currently supported):
+
+   ```bash
+   ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo 'Balatro started and ready'
+
+   ```
+
+   - **Linux**: We need a robust cross-platform script! Feel free to [open an issue](https://github.com/S1M0N38/balatrobot/issues/new) and contribute a Linux-compatible version.
+   - **Windows**: Development on Windows is not currently supported.
+
+Tip
+
+Right now I'm using this [`balatro.sh`](https://gist.github.com/S1M0N38/4653c532bf048474100df3a270822bb4) script to start balatro with mods.
+
+1. **Verify Game Setup**
+
+   ```bash
+   # Check if Balatro is running
+   ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
+
+   # Monitor startup logs
+   tail -n 100 balatro.log
+
+   ```
+
+   Look for these success indicators:
+
+   - "BalatrobotAPI initialized"
+   - "BalatroBot loaded - version X.X.X"
+   - "TCP socket created on port 12346"
+
+## How to Contribute
+
+### Types of Contributions Welcome
+
+- **Bug Fixes**: Issues tracked in our GitHub project
+- **Feature Development**: New bot strategies, API enhancements
+- **Performance Improvements**: Optimization of TCP communication or game interaction
+- **Documentation**: Improvements to guides, API documentation, or examples
+- **Testing**: Additional test coverage, edge case handling
+
+### Contribution Workflow
+
+1. **Check Issues First** (Highly Encouraged)
+
+   - Browse the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7)
+   - Comment on issues you'd like to work on
+   - Create new issues for bugs or feature requests
+
+1. **Fork & Branch**
+
+   ```bash
+   git checkout -b feature/your-feature-name
+   # or
+   git checkout -b fix/issue-description
+
+   ```
+
+1. **Make Changes**
+
+   - Follow our code style guidelines (see below)
+   - Add tests for new functionality
+   - Update documentation as needed
+
+1. **Create Pull Request**
+
+   - **Important**: Enable "Allow edits from maintainers" when creating your PR
+   - Link to related issues
+   - Provide clear description of changes
+   - Include testing instructions
+
+### Commit Messages
+
+We highly encourage following [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```text
+feat(api): add new game state detection
+fix(tcp): resolve connection timeout issues
+docs(readme): update setup instructions
+test(api): add shop booster validation tests
+
+```
+
+## Development & Testing
+
+### Code Quality Tools
+
+```bash
+# Python linting and formatting
+ruff check .
+ruff check --select I --fix .
+ruff format .
+
+# Markdown formatting (docs and specific files)
+mdformat --number docs/index.md docs/installation.md docs/developing-bots.md docs/protocol-api.md docs/contributing.md README.md
+
+# Type checking
+basedpyright
+
+```
+
+### Testing Requirements
+
+Warning
+
+All tests require Balatro to be running in the background.
+
+```bash
+# Start Balatro first
+./balatro.sh > balatro.log 2>&1 & sleep 10
+
+# Run all tests (stops on first failure)
+pytest -x
+
+# Run specific test file
+pytest -x tests/lua/test_api_functions.py
+
+# Run with verbose output
+pytest -vx
+
+```
+
+**Test Suite Overview**:
+
+- 102 tests covering API functions and TCP communication
+- ~210 seconds execution time
+- Tests game state transitions, socket communication, error handling
+
+**Troubleshooting Test Failures**:
+
+- **Connection timeouts**: Ensure TCP port 12346 is available
+- **Game state errors**: Verify game is responsive and hasn't crashed
+- **Invalid responses**: Check mod loaded correctly in `balatro.log`
+- **Balatro crashes**: Stop testing immediately, investigate crash logs, restart game before retrying
+
+### Documentation
+
+```bash
+# Serve documentation locally
+mkdocs serve
+
+# Build documentation
+mkdocs build
+
+```
+
+## Technical Guidelines
+
+### Python Development
+
+- **Style**: Follow modern Python 3.13+ patterns
+- **Type Hints**: Use pipe operator for unions (`str | int | None`)
+- **Type Aliases**: Use `type` statement
+- **Docstrings**: Google-style without type information (types in annotations)
+- **Generics**: Modern syntax (`class Container[T]:`)
+
+### Lua Development
+
+- **Focus Area**: Primary development is on `src/lua/api.lua`
+- **Communication**: TCP protocol on port 12346
+- **Protocol**: Bot sends "HELLO" → Game responds with JSON state → Bot sends actions
+- **Debugging**: Use DebugPlus mod for enhanced debugging capabilities
+
+### Architecture Context
+
+The project consists of:
+
+- **Lua API** (`src/lua/api.lua`): Game-side mod handling socket communication
+- **Python Framework** (`src/balatrobot/`): Bot development framework (being refactored)
+- **TCP Communication**: Real-time bidirectional communication
+- **Testing Suite**: Comprehensive API and integration tests
+
+## Communication & Community
+
+### Preferred Channels
+
+- **GitHub Issues**: Primary communication for bugs, features, and project coordination
+- **Discord**: Join us at the [Balatro Discord](https://discord.com/channels/1116389027176787968/1391371948629426316) for real-time discussions
+
+______________________________________________________________________
+
+## Questions?
+
+- Check the [GitHub Project](https://github.com/users/S1M0N38/projects/7) for current priorities
+- [Open an issue](https://github.com/S1M0N38/balatrobot/issues/new) for bugs or questions
+- Join the [Discord discussion](https://discord.com/channels/1116389027176787968/1391371948629426316)
+
+Happy contributing!
+
+# Developing Bots
+
+BalatroBot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a TCP socket connection actions to perform and receiving back the game state.
+
+## Bot Architecture
+
+A bot is a finite state machine that implements a sequence of actions to play the game. The bot can be in one state at a time and have access to a set of functions that can move the bot to other states.
+
+| **State**        | **Description**                              | **Functions**                            |
+| ---------------- | -------------------------------------------- | ---------------------------------------- |
+| `MENU`           | The main menu                                | `start_run`                              |
+| `BLIND_SELECT`   | Selecting or skipping the blind              | `skip_or_select_blind`                   |
+| `SELECTING_HAND` | Selecting cards to play or discard           | `play_hand_or_discard`, `rearrange_hand` |
+| `ROUND_EVAL`     | Evaluating the round outcome and cashing out | `cash_out`                               |
+| `SHOP`           | Buy items and move to the next round         | `shop`                                   |
+| `GAME_OVER`      | Game has ended                               | –                                        |
+
+Developing a bot boils down to provide the action name and its parameters for each of the
+
+### State Diagram
+
+The following diagram illustrates the possible states of the game and how the functions can be used to move the bot between them:
+
+- Start (◉) and End (⦾) states
+- States are written in uppercase (e.g., `MENU`, `BLIND_SELECT`, ...)
+- Functions are written in lowercase (e.g., `start_run`, `skip_or_select_blind`, ...)
+- Functions parameters are written in italics (e.g., `action = play_hand`). Not all parameters are reported in the diagram.
+- Comments are reported in parentheses (e.g., `(win round)`, `(lose round)`).
+- Abstract groups are written with Capital letters (e.g., `Run`, `Round`, ...)
+
+```
+stateDiagram-v2
+  direction TB
+
+  BLIND_SELECT_1:BLIND_SELECT
+
+  [*] --> MENU: go_to_menu
+  MENU --> BLIND_SELECT: start_run
+
+  state Run{
+
+    BLIND_SELECT --> skip_or_select_blind
+
+    skip_or_select_blind --> BLIND_SELECT: *action = skip*</br>(small or big blind)
+    skip_or_select_blind --> SELECTING_HAND: *action = select*
+
+    state Round {
+      SELECTING_HAND --> play_hand_or_discard
+
+      play_hand_or_discard --> SELECTING_HAND: *action = play_hand*
+      play_hand_or_discard --> SELECTING_HAND: *action = discard*
+      play_hand_or_discard --> ROUND_EVAL: *action = play_hand*<br/>(win round)
+      play_hand_or_discard --> GAME_OVER: *action = play_hand*<br/>(lose round)
+    }
+
+    state RoundEval {
+      ROUND_EVAL --> SHOP: *cash_out*
+    }
+
+    state Shop {
+      SHOP --> shop
+      shop --> BLIND_SELECT_1: *action = next_round*
+    }
+
+    state GameOver {
+      GAME_OVER --> [*]
+    }
+
+  }
+
+  state skip_or_select_blind <<choice>>
+  state play_hand_or_discard <<choice>>
+  state shop <<choice>>
+```
+
+## Development Environment Setup
+
+The BalatroBot project provides a complete development environment with all necessary tools and resources for developing bots.
+
+### Environment Setup
+
+Before developing or running bots, you need to set up the development environment by configuring the `.envrc` file:
+
+```sh
+cd %AppData%/Balatro/Mods/balatrobot
+copy .envrc.example .envrc
+.envrc
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
+cp .envrc.example .envrc
+source .envrc
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
+cp .envrc.example .envrc
+source .envrc
+
+```
+
+Always Source Environment
+
+Remember to source the `.envrc` file every time you start a new terminal session before developing or running bots. The environment variables are essential for proper bot functionality.
+
+Automatic Environment Loading with direnv
+
+For a better development experience, consider using [direnv](https://direnv.net/) to automatically load and unload environment variables when entering and leaving the project directory.
+
+After installing direnv and hooking it into your shell:
+
+```sh
+# Allow direnv to load the .envrc file automatically
+direnv allow .
+
+```
+
+This eliminates the need to manually source `.envrc` every time you work on the project.
+
+### Bot File Location
+
+When developing new bots, place your files in the `bots/` directory using one of these recommended patterns:
+
+- **Single file bots**: `bots/my_new_bot.py`
+- **Complex bots**: `bots/my_new_bot/main.py` (for bots with multiple modules)
+
+## Next Steps
+
+After setting up your development environment:
+
+- Explore the [BalatroBot API](../balatrobot-api/) for detailed client and model documentation
+- Learn about the underlying [Protocol API](../protocol-api/) for TCP communication details
+
+# Installation Guide
+
+This guide will walk you through installing and setting up BalatroBot.
+
+## Prerequisites
+
+Before installing BalatroBot, ensure you have:
+
+- **[balatro](https://store.steampowered.com/app/2379780/Balatro/)**: Steam version (>= 1.0.1)
+- **[git](https://git-scm.com/downloads)**: for cloning the repository
+- **[uv](https://docs.astral.sh/uv/)**: for managing Python installations, environments and dependencies
+- **[lovely](https://github.com/ethangreen-dev/lovely-injector)**: for injecting Lua code into Balatro (>= 0.8.0)
+- **[steamodded](https://github.com/Steamodded/smods)**: for loading and injecting mods (>=1.0.0)
+
+## Step 1: Install BalatroBot
+
+BalatroBot is installed like any other Steamodded mod.
+
+```sh
+cd %AppData%/Balatro
+mkdir -p Mods
+cd Mods
+git clone https://github.com/S1M0N38/balatrobot.git
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro"
+mkdir -p Mods
+cd Mods
+git clone https://github.com/S1M0N38/balatrobot.git
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro
+mkdir -p Mods
+cd Mods
+git clone https://github.com/S1M0N38/balatrobot.git
+
+```
+
+Tip
+
+You can also clone the repository somewhere else and then provide a symlink to the `balatrobot` directory in the `Mods` directory.
+
+```sh
+# Clone repository to a custom location
+cd C:\your\custom\path
+git clone https://github.com/S1M0N38/balatrobot.git
+
+# Create symlink in Mods directory
+cd %AppData%/Balatro/Mods
+mklink /D balatrobot C:\your\custom\path\balatrobot
+
+```
+
+```sh
+# Clone repository to a custom location
+cd /your/custom/path
+git clone https://github.com/S1M0N38/balatrobot.git
+
+# Create symlink in Mods directory
+cd "/Users/$USER/Library/Application Support/Balatro/Mods"
+ln -s /your/custom/path/balatrobot balatrobot
+
+```
+
+```sh
+# Clone repository to a custom location
+cd /your/custom/path
+git clone https://github.com/S1M0N38/balatrobot.git
+
+# Create symlink in Mods directory
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods
+ln -s /your/custom/path/balatrobot balatrobot
+
+```
+
+Update BalatroBot
+
+Updating BalatroBot is as simple as pulling the latest changes from the repository.
+
+```sh
+cd %AppData%/Balatro/Mods/balatrobot
+git pull
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
+git pull
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
+git pull
+
+```
+
+Uninstall BalatroBot
+
+Simply delete the balatrobot mod directory.
+
+```sh
+cd %AppData%/Balatro/Mods
+rmdir /S /Q balatrobot
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro/Mods"
+rm -rf balatrobot
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods
+rm -rf balatrobot
+
+```
+
+## Step 2: Setup Python Environment
+
+Uv takes care of managing Python installations, virtual environments creation and dependencies installation. To setup the Python environment for running BalatroBot bots simply run:
+
+```sh
+cd %AppData%/Balatro/Mods/balatrobot
+uv sync
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
+uv sync
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
+uv sync
+
+```
+
+The same command can be used to update the Python environment and dependencies in the future.
+
+Remove Python Environment
+
+To uninstall the Python environment and dependencies, simply remove the `.venv` directory.
+
+```sh
+cd %AppData%/Balatro/Mods/balatrobot
+rmdir /S /Q .venv
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
+rm -rf .venv
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
+rm -rf .venv
+
+```
+
+## Step 3: Test Installation
+
+### Launch Balatro with Mods
+
+1. Start Balatro through Steam
+1. In the main menu, click "Mods"
+1. Verify "BalatroBot" appears in the mod list
+1. Enable the mod if it's not already enabled and restart the game
+
+macOS Steam Client Issue
+
+On macOS, you cannot start Balatro through the Steam App due to a bug in the Steam client. Instead, you must use the `run_lovely_macos.sh` script.
+
+```sh
+cd "/Users/$USER/Library/Application Support/Steam/steamapps/common/Balatro"
+./run_lovely_macos.sh
+
+```
+
+**First-time setup:** If this is your first time running the script, macOS Security & Privacy settings will prevent it from executing. Open **System Preferences** → **Security & Privacy** and click "Allow" when prompted, then run the script again.
+
+### Quick Test with Example Bot
+
+With Balatro running and the mod enabled, you can quickly test if everything is set up correctly using the provided example bot.
+
+```sh
+cd %AppData%/Balatro/Mods/balatrobot
+uv run bots/example.py
+
+```
+
+```sh
+cd "/Users/$USER/Library/Application Support/Balatro/Mods/balatrobot"
+uv run bots/example.py
+
+```
+
+```sh
+cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods/balatrobot
+uv run bots/example.py
+
+```
+
+Tip
+
+You can also navigate to the `balatrobot` directory, activate the Python environment and run the bot with `python bots/example.py` if you prefer. However, remember to always activate the virtual environment first.
+
+The bot is working correctly if:
+
+1. Game starts automatically
+1. Cards are played/discarded automatically
+1. Win the first round
+1. Game progresses through rounds
+
+## Troubleshooting
+
+If you encounter issues during installation or testing:
+
+- **Discord Support**: Join our community at <https://discord.gg/xzBAj4JFVC> for real-time help
+- **GitHub Issues**: Report bugs or request features by [opening an issue](https://github.com/S1M0N38/balatrobot/issues) on GitHub
+
+______________________________________________________________________
+
+*Once installation is complete, proceed to the [Developing Bots](../developing-bots/) to create your first bot!*
+
+# Protocol API
+
+This document provides the TCP API protocol reference for developers who want to interact directly with the BalatroBot game interface using raw socket connections.
+
+## Protocol
+
+The BalatroBot API establishes a TCP socket connection to communicate with the Balatro game through the BalatroBot Lua mod. The protocol uses a simple JSON request-response model for synchronous communication.
+
+- **Host:** `127.0.0.1` (localhost)
+- **Port:** `12346` (default)
+- **Message Format:** JSON
+
+### Communication Sequence
+
+The typical interaction follows a game loop where clients continuously query the game state, analyze it, and send appropriate actions:
+
+```
+sequenceDiagram
+    participant Client
+    participant BalatroBot
+
+    loop Game Loop
+        Client->>BalatroBot: {"name": "get_game_state", "arguments": {}}
+        BalatroBot->>Client: {game state JSON}
+
+        Note over Client: Analyze game state and decide action
+
+        Client->>BalatroBot: {"name": "function_name", "arguments": {...}}
+
+        alt Valid Function Call
+            BalatroBot->>Client: {updated game state}
+        else Error
+            BalatroBot->>Client: {"error": "description", ...}
+        end
+    end
+```
+
+### Message Format
+
+All communication uses JSON messages with a standardized structure. The protocol defines three main message types: function call requests, successful responses, and error responses.
+
+**Request Format:**
+
+```json
+{
+  "name": "function_name",
+  "arguments": {
+    "param1": "value1",
+    "param2": ["array", "values"]
+  }
+}
+
+```
+
+**Response Format:**
+
+```json
+{
+  "state": 7,
+  "game": { ... },
+  "hand": [ ... ],
+  "jokers": [ ... ]
+}
+
+```
+
+**Error Response Format:**
+
+```json
+{
+  "error": "Error message description",
+  "error_code": "E001",
+  "state": 7,
+  "context": {
+    "additional": "error details"
+  }
+}
+
+```
+
+## Game States
+
+The BalatroBot API operates as a finite state machine that mirrors the natural flow of playing Balatro. Each state represents a distinct phase where specific actions are available.
+
+### Overview
+
+The game progresses through these states in a typical flow: `MENU` → `BLIND_SELECT` → `SELECTING_HAND` → `ROUND_EVAL` → `SHOP` → `BLIND_SELECT` (or `GAME_OVER`).
+
+| State            | Value | Description                  | Available Functions                      |
+| ---------------- | ----- | ---------------------------- | ---------------------------------------- |
+| `MENU`           | 11    | Main menu screen             | `start_run`                              |
+| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind`                   |
+| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard`, `rearrange_hand` |
+| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`                               |
+| `SHOP`           | 5     | Shop interface               | `shop`                                   |
+| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`                             |
+
+### Validation
+
+Functions can only be called when the game is in their corresponding valid states. The `get_game_state` function is available in all states.
+
+Game State Reset
+
+The `go_to_menu` function can be used in any state to reset a run. However, run resuming is not supported by BalatroBot. So performing a `go_to_menu` is effectively equivalent to resetting the run. This can be used to restart the game to a clean state.
+
+## Game Functions
+
+The BalatroBot API provides core functions that correspond to the main game actions. Each function is state-dependent and can only be called in the appropriate game state.
+
+### Overview
+
+| Name                   | Description                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `get_game_state`       | Retrieves the current complete game state                                    |
+| `go_to_menu`           | Returns to the main menu from any game state                                 |
+| `start_run`            | Starts a new game run with specified configuration                           |
+| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it |
+| `play_hand_or_discard` | Plays selected cards or discards them                                        |
+| `rearrange_hand`       | Reorders the current hand according to the supplied index list               |
+| `cash_out`             | Proceeds from round completion to the shop phase                             |
+| `shop`                 | Performs shop actions. Currently supports proceeding to the next round       |
+
+### Parameters
+
+The following table details the parameters required for each function. Note that `get_game_state` and `go_to_menu` require no parameters:
+
+| Name                   | Parameters                                                                                                                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_run`            | `deck` (string): Deck name `stake` (number): Difficulty level 1-8 `seed` (string, optional): Seed for run generation `challenge` (string, optional): Challenge name `log_path` (string, optional): Full file path for run log (must include .jsonl extension) |
+| `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                                                                                                  |
+| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard" `cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                       |
+| `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                       |
+| `shop`                 | `action` (string): Shop action to perform ("next_round")                                                                                                                                                                                                      |
+
+### Errors
+
+All API functions validate their inputs and game state before execution. Error responses include an `error` message, standardized `error_code`, current `state` value, and optional `context` with additional details.
+
+| Code   | Category   | Error                                      |
+| ------ | ---------- | ------------------------------------------ |
+| `E001` | Protocol   | Invalid JSON in request                    |
+| `E002` | Protocol   | Message missing required 'name' field      |
+| `E003` | Protocol   | Message missing required 'arguments' field |
+| `E004` | Protocol   | Unknown function name                      |
+| `E005` | Protocol   | Arguments must be a table                  |
+| `E006` | Network    | Socket creation failed                     |
+| `E007` | Network    | Socket bind failed                         |
+| `E008` | Network    | Connection failed                          |
+| `E009` | Validation | Invalid game state for requested action    |
+| `E010` | Validation | Invalid or missing required parameter      |
+| `E011` | Validation | Parameter value out of valid range         |
+| `E012` | Validation | Required game object missing               |
+| `E013` | Game Logic | Deck not found                             |
+| `E014` | Game Logic | Invalid card index                         |
+| `E015` | Game Logic | No discards remaining                      |
+| `E016` | Game Logic | Invalid action for current context         |
+
+## Implementation
+
+For higher-level integration:
+
+- Use the [BalatroBot API](../balatrobot-api/) `BalatroClient` for managed connections
+- See [Developing Bots](../developing-bots/) for complete bot implementation examples
