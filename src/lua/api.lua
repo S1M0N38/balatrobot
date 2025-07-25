@@ -556,12 +556,6 @@ API.functions["shop"] = function(args)
       end,
     }
   elseif action == "buy_card" then
-
-    -- TODO: Implement buy card.
-    -- Get card to buy from zero-based index
-    -- Execute buy_from_shop action in G.FUNCS
-    -- Defer sending response until the shop has updated
-
     -- Validate index argument
     if args.index == nil then
       API.send_error_response(
@@ -596,7 +590,26 @@ API.functions["shop"] = function(args)
 
     -- Get card buy button from zero based index
     local card      = area.cards[card_pos]
+
+    -- Click the card
+    card:click()
+
+    -- Wait for the shop to update
+    love.timer.sleep(0.5)
+
+    -- Get the buy button
     local buy_btn   = card.children and card.children.buy_button
+
+    -- activate the buy button
+    G.FUNCS[buy_btn.config.button](buy_btn)
+
+
+    sendDebugMessage("Card: " .. tostring(card))
+    sendDebugMessage("Card Label: " .. tostring(card.label))
+    sendDebugMessage("Buy button: " .. tostring(buy_btn))
+
+    -- Wait for the shop to update
+    love.timer.sleep(0.5)
 
     if not buy_btn then
       API.send_error_response(
@@ -607,18 +620,20 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- Validate card is purchasable
-    if not buy_btn:can_buy() then
-      API.send_error_response(
-        "Card is not purchasable",
-        ERROR_CODES.INVALID_ACTION,
-        { index = args.index }
-      )
-      return
-    end
+    -- -- Validate card is purchasable
+    -- This is wrong, and would be a redundant check anyways.
+    -- Can_buy is used to create the buy button.
+    -- if not G.FUNCS.can_buy(buy_btn) then
+    --   API.send_error_response(
+    --     "Card is not purchasable",
+    --     ERROR_CODES.INVALID_ACTION,
+    --     { index = args.index }
+    --   )
+    --   return
+    -- end
 
     -- Execute buy_from_shop action in G.FUNCS
-    G.FUNCS.buy_from_shop(buy_btn)
+    -- G.FUNCS.buy_from_shop(buy_btn)
 
     -- send response once shop is updated
     ---@type PendingRequest
