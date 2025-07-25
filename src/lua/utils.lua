@@ -609,6 +609,10 @@ local EVENT_QUEUE_THRESHOLD = 3
 ---These are shared between API and LOG systems to ensure consistent timing
 ---@type table<string, function>
 utils.COMPLETION_CONDITIONS = {
+  get_game_state = function()
+    return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+  end,
+
   go_to_menu = function()
     return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
   end,
