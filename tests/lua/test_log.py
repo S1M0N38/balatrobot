@@ -146,7 +146,6 @@ class TestLog:
 
         return original_jsonl, lua_log_path, python_log_path
 
-    # @pytest.mark.skip(reason="Skipping until we can get the log file to match")
     def test_compare_lua_logs_with_original_run(
         self, replay_logs: tuple[Path, Path, Path]
     ) -> None:
