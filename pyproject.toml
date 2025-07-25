@@ -43,6 +43,7 @@ addopts = "--cov=src/balatrobot --cov-report=term-missing --cov-report=html --co
 [dependency-groups]
 dev = [
   "basedpyright>=1.29.5",
+  "deepdiff>=8.5.0",
   "mdformat-mkdocs>=4.3.0",
   "mdformat-simple-breaks>=0.0.1",
   "mkdocs-llmstxt>=0.3.0",
