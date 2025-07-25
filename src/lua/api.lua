@@ -70,6 +70,7 @@ API.pending_requests = {}
 
 ---Updates the API by processing TCP messages and pending requests
 ---@param _ number Delta time (not used)
+---@diagnostic disable-next-line: duplicate-set-field
 function API.update(_)
   -- Create server socket if it doesn't exist
   if not API.server_socket then
