@@ -729,7 +729,7 @@ API.functions["shop"] = function(args)
     end
 
 
-      -- Used to ensure dollars and shop have been updated before responding, not inheritly atomic
+    -- Used to ensure dollars and shop have been updated before responding, not inheritly atomic
     local dollars_before    = G.GAME.dollars
     local expected_dollars  = dollars_before - card.cost
     local shop_size_before  = #G.shop_jokers.cards
