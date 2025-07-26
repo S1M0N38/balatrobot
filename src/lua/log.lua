@@ -217,6 +217,26 @@ function hook_toggle_shop()
   sendDebugMessage("Hooked into G.FUNCS.toggle_shop for logging", "LOG")
 end
 
+function hook_buy_card()
+  local original_function = G.FUNCS.buy_card
+  -- e is the UI element for buy_card button on the targeted card.
+  G.FUNCS.buy_card = function(e)
+    -- object that owns the UI element, always a card in shop_jokers.cards
+    local c1 = e.config.ref_table
+    -- string representation of action, "buy_card" or "buy_and_use_card"
+    -- Vouchers are not "bought" but "used"
+    local action = e.config.id
+    for i, card in ipairs(G.shop_jokers.cards) do
+      if card.unique_id == c1.unique_id then
+        LOG.schedule_write({ name = "shop", arguments = { action = action, index = i - 1 } })
+        break
+      end
+    end
+    return original_function(e)
+  end
+  sendDebugMessage("Hooked into G.FUNCS.buy_card for logging", "LOG")
+end
+
 -- -----------------------------------------------------------------------------
 -- hand_rearrange Hook
 -- -----------------------------------------------------------------------------
