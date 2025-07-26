@@ -644,16 +644,8 @@ API.functions["shop"] = function(args)
     if args.index == nil then
       API.send_error_response(
         "Missing required field: index",
-        ERROR_CODES.INVALID_PARAMETER,
+        ERROR_CODES.MISSING_ARGUMENTS,
         { field = "index" }
-      )
-      return
-    end
-    if type(args.index) ~= "number" or args.index < 0 then
-      API.send_error_response(
-        "Index must be a non-negative number",
-        ERROR_CODES.INVALID_PARAMETER,
-        { index = args.index }
       )
       return
     end
@@ -667,7 +659,7 @@ API.functions["shop"] = function(args)
       API.send_error_response(
         "Card index out of range",
         ERROR_CODES.PARAMETER_OUT_OF_RANGE,
-        { index = args.index, max_index = #area.cards - 1 }
+        { index = args.index, valid_range = "0-" .. tostring(#area.cards - 1) }
       )
       return
     end
@@ -689,7 +681,7 @@ API.functions["shop"] = function(args)
     if not card.ability or not card.ability.set then
       API.send_error_response(
         "Card has no ability set, can't check consumable area",
-        ERROR_CODES.INVALID_ACTION,
+        ERROR_CODES.INVALID_GAME_STATE,
         { index = args.index }
       )
       return
@@ -722,7 +714,7 @@ API.functions["shop"] = function(args)
     if not card_buy_button then
       API.send_error_response(
         "Card has no buy button",
-        ERROR_CODES.INVALID_ACTION,
+        ERROR_CODES.INVALID_GAME_STATE,
         { index = args.index }
       )
       return

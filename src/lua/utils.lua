@@ -365,17 +365,23 @@ function utils.get_game_state()
     }
   end
 
-  local jokers = {}
-  if G.jokers and G.jokers.cards then
-    for i, card in pairs(G.jokers.cards) do
-      jokers[i] = {
-        label = card.label,
-        config = {
-          center = card.config.center,
-          card_limit = G.jokers.card_limit,
-          card_count = G.jokers.card_count,
-        },
-      }
+  local jokers = {
+    cards = {}
+  }
+  if G.jokers then
+
+    jokers.card_limit = G.jokers.card_limit
+    jokers.card_count = G.jokers.card_count
+    if G.jokers.cards then
+      for i, card in pairs(G.jokers.cards) do
+        jokers.cards[i] = {
+          label = card.label,
+          cost = card.cost,
+          config = {
+            center = card.config.center,
+          },
+        }
+      end
     end
   end
 
