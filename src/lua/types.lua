@@ -80,7 +80,8 @@
 ---@field state any Current game state enum value
 ---@field game? GGame Game information (null if not in game)
 ---@field hand? GHand Hand information (null if not available)
----@field jokers GJokersCards[] Array of joker cards
+---@field jokers GJokers Jokers area object (with sub-field `cards`)
+---@field consumeables GConsumeables Consumables area object (typo intentional to match API)
 
 -- Game state (G.GAME)
 ---@class GGame
@@ -206,16 +207,37 @@
 ---@field suit string Card suit
 ---@field value string Card value
 
+---@class GCardAreaConfig
+---@field card_count number Number of cards currently present in the area
+---@field card_limit number Maximum cards allowed in the area
+
+---@class GJokers
+---@field config GCardAreaConfig Config for jokers card area
+---@field cards GJokersCard[] Array of joker card objects
+
+-- Keeping typo "consumeables" for compatibility with the runtime table name
+---@class GConsumeables
+---@field config GCardAreaConfig Configuration for the consumables slot
+
 -- Joker card (G.jokers.cards[])
----@class GJokersCards
+---@class GJokersCard
 ---@field label string Display label of the joker
----@field config GJokersCardsConfig Joker configuration
+---@field cost number Purchase cost of the joker
+---@field config GJokersCardConfig Joker card configuration
 
 -- Joker card configuration (G.jokers.cards[].config)
----@class GJokersCardsConfig
+---@class GJokersCardConfig
 ---@field center table Center configuration for joker
----@field card_count number Number of cards in joker area
----@field card_limit number Maximum number of cards in joker area
+
+-- Consumable card (G.consumeables.cards[])
+---@class GConsumablesCard
+---@field label string Display label of the consumable
+---@field cost number Purchase cost of the consumable
+---@field config GConsumablesCardConfig Consumable configuration
+
+-- Consumable card configuration (G.consumeables.cards[].config)
+---@class GConsumablesCardConfig
+---@field center table Center configuration for consumable
 
 -- =============================================================================
 -- Utility Module (implemented in utils.lua)
@@ -264,3 +286,8 @@
 ---@field dt number Tells the game that every update is dt seconds long
 ---@field max_fps integer? Maximum frames per second
 ---@field vsync_enabled boolean Whether vertical sync is enabled
+
+-- =============================================================================
+-- New composite area types (match utils.lua)
+-- =============================================================================
+

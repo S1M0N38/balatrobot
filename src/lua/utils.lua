@@ -307,6 +307,15 @@ function utils.get_game_state()
     }
   end
 
+  -- Keeping typo for consistency
+  local consumeables = {}
+  if G.consumeables and G.consumeables.config then
+    consumeables.config = {
+      card_count = G.consumeables.config.card_count, -- int (default 0), -- number of consumable cards in the shop
+      card_limit = G.consumeables.config.card_limit, -- int (default 2), -- max number of consumable cards in the shop
+    }
+  end
+
   local hand = nil
   if G.hand then
     local cards = {}
@@ -370,8 +379,8 @@ function utils.get_game_state()
   }
   if G.jokers then
 
-    jokers.card_limit = G.jokers.card_limit
-    jokers.card_count = G.jokers.card_count
+    jokers.config.card_limit = G.jokers.config.card_limit
+    jokers.config.card_count = G.jokers.config.card_count
     if G.jokers.cards then
       for i, card in pairs(G.jokers.cards) do
         jokers.cards[i] = {
@@ -495,6 +504,7 @@ function utils.get_game_state()
     shop_jokers = shop_jokers, -- NOTE: This contains all cards in the shop, not only jokers.
     shop_vouchers = shop_vouchers,
     shop_booster = shop_booster,
+    consumeables = consumeables,
   }
 end
 
