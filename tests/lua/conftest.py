@@ -13,7 +13,7 @@ BUFFER_SIZE: int = 65536  # 64KB buffer for TCP messages
 
 
 @pytest.fixture
-def tcp_client(port) -> Generator[socket.socket, None, None]:
+def tcp_client(port: int) -> Generator[socket.socket, None, None]:
     """Create and clean up a TCP client socket.
 
     Yields:
