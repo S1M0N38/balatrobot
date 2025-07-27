@@ -12,28 +12,15 @@ from balatrobot.exceptions import BalatroError, ConnectionFailedError
 from balatrobot.models import G
 
 
-@pytest.fixture(scope="function", autouse=True)
-def reset_game_to_menu():
-    """Reset game to menu state before each test."""
-    try:
-        with BalatroClient() as client:
-            response = client.send_message("go_to_menu", {})
-            game_state = G.model_validate(response)
-            assert game_state.state_enum == State.MENU
-    except (ConnectionFailedError, BalatroError):
-        # Game not running or other API error, skip setup
-        pass
-
-
 class TestBalatroClient:
     """Test suite for BalatroClient with real Game API."""
 
-    def test_client_initialization_defaults(self):
+    def test_client_initialization_defaults(self, port):
         """Test client initialization with default class attributes."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         assert client.host == "127.0.0.1"
-        assert client.port == 12346
+        assert client.port == port
         assert client.timeout == 30.0
         assert client.buffer_size == 65536
         assert client._socket is None
@@ -46,9 +33,9 @@ class TestBalatroClient:
         assert BalatroClient.timeout == 30.0
         assert BalatroClient.buffer_size == 65536
 
-    def test_context_manager_with_game_running(self):
+    def test_context_manager_with_game_running(self, port):
         """Test context manager functionality with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             assert client._connected is True
             assert client._socket is not None
 
@@ -57,9 +44,9 @@ class TestBalatroClient:
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_manual_connect_disconnect_with_game_running(self):
+    def test_manual_connect_disconnect_with_game_running(self, port):
         """Test manual connection and disconnection with game running."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         # Test connection
         client.connect()
@@ -76,18 +63,18 @@ class TestBalatroClient:
         assert client._connected is False
         assert client._socket is None
 
-    def test_get_game_state_with_game_running(self):
+    def test_get_game_state_with_game_running(self, port):
         """Test getting game state with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             response = client.send_message("get_game_state", {})
             game_state = G.model_validate(response)
 
             assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
-    def test_go_to_menu_with_game_running(self):
+    def test_go_to_menu_with_game_running(self, port):
         """Test going to menu with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # Test go_to_menu from any state
             response = client.send_message("go_to_menu", {})
             game_state = G.model_validate(response)
@@ -95,9 +82,9 @@ class TestBalatroClient:
             assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
-    def test_double_connect_is_safe(self):
+    def test_double_connect_is_safe(self, port):
         """Test that calling connect twice is safe."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         client.connect()
         assert client._connected is True
@@ -108,33 +95,28 @@ class TestBalatroClient:
 
         client.disconnect()
 
-    def test_disconnect_when_not_connected(self):
+    def test_disconnect_when_not_connected(self, port):
         """Test that disconnecting when not connected is safe."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         # Should not raise any exceptions
         client.disconnect()
         assert client._connected is False
         assert client._socket is None
 
-    def test_connection_failure_wrong_port(self):
+    def test_connection_failure_wrong_port(self, port):
         """Test connection failure with wrong port."""
-        client = BalatroClient()
-        # Temporarily change port to invalid one
-        original_port = client.port
-        client.port = 54321
+        client = BalatroClient(port=54321)  # Use invalid port directly
 
         with pytest.raises(ConnectionFailedError) as exc_info:
             client.connect()
 
-        # Restore original port
-        client.port = original_port
         assert "Failed to connect to 127.0.0.1:54321" in str(exc_info.value)
         assert exc_info.value.error_code.value == "E008"
 
-    def test_send_message_when_not_connected(self):
+    def test_send_message_when_not_connected(self, port):
         """Test sending message when not connected raises error."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         with pytest.raises(ConnectionFailedError) as exc_info:
             client.send_message("get_game_state", {})
@@ -142,9 +124,9 @@ class TestBalatroClient:
         assert "Not connected to the game API" in str(exc_info.value)
         assert exc_info.value.error_code.value == "E008"
 
-    def test_socket_configuration(self):
+    def test_socket_configuration(self, port):
         """Test socket is configured correctly."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
         # Temporarily change timeout and buffer_size
         original_timeout = client.timeout
         original_buffer_size = client.buffer_size
@@ -163,9 +145,9 @@ class TestBalatroClient:
         client.timeout = original_timeout
         client.buffer_size = original_buffer_size
 
-    def test_start_run_with_game_running(self):
+    def test_start_run_with_game_running(self, port):
         """Test start_run method with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # Test with minimal parameters
             response = client.send_message(
                 "start_run", {"deck": "Red Deck", "seed": "OOOO155"}
@@ -186,9 +168,9 @@ class TestBalatroClient:
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_skip_or_select_blind_with_game_running(self):
+    def test_skip_or_select_blind_with_game_running(self, port):
         """Test skip_or_select_blind method with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # First start a run to get to blind selection state
             response = client.send_message("start_run", {"deck": "Red Deck"})
             game_state = G.model_validate(response)
@@ -204,9 +186,9 @@ class TestBalatroClient:
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_play_hand_or_discard_with_game_running(self):
+    def test_play_hand_or_discard_with_game_running(self, port):
         """Test play_hand_or_discard method with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # Test play_hand action - may fail if not in correct game state
             try:
                 response = client.send_message(
@@ -229,9 +211,9 @@ class TestBalatroClient:
                 # Expected if game is not in selecting hand state
                 pass
 
-    def test_cash_out_with_game_running(self):
+    def test_cash_out_with_game_running(self, port):
         """Test cash_out method with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             try:
                 response = client.send_message("cash_out", {})
                 game_state = G.model_validate(response)
@@ -240,9 +222,9 @@ class TestBalatroClient:
                 # Expected if game is not in correct state for cash out
                 pass
 
-    def test_shop_with_game_running(self):
+    def test_shop_with_game_running(self, port):
         """Test shop method with game running."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             try:
                 response = client.send_message("shop", {"action": "next_round"})
                 game_state = G.model_validate(response)
@@ -251,9 +233,9 @@ class TestBalatroClient:
                 # Expected if game is not in shop state
                 pass
 
-    def test_send_message_api_error_response(self):
+    def test_send_message_api_error_response(self, port):
         """Test send_message handles API error responses correctly."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         # Mock socket to return an error response
         mock_socket = Mock()
@@ -274,9 +256,9 @@ class TestBalatroClient:
         assert "Invalid game state" in str(exc_info.value)
         assert exc_info.value.error_code.value == "E009"
 
-    def test_send_message_socket_error(self):
+    def test_send_message_socket_error(self, port):
         """Test send_message handles socket errors correctly."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         # Mock socket to raise socket error
         mock_socket = Mock()
@@ -291,9 +273,9 @@ class TestBalatroClient:
         assert "Socket error during communication" in str(exc_info.value)
         assert exc_info.value.error_code.value == "E008"
 
-    def test_send_message_json_decode_error(self):
+    def test_send_message_json_decode_error(self, port):
         """Test send_message handles JSON decode errors correctly."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         # Mock socket to return invalid JSON
         mock_socket = Mock()
@@ -308,9 +290,9 @@ class TestBalatroClient:
         assert "Invalid JSON response from game" in str(exc_info.value)
         assert exc_info.value.error_code.value == "E001"
 
-    def test_send_message_successful_response(self):
+    def test_send_message_successful_response(self, port):
         """Test send_message with successful responses."""
-        client = BalatroClient()
+        client = BalatroClient(port=port)
 
         # Mock successful responses for each API method
         success_response = {
@@ -352,9 +334,9 @@ class TestBalatroClient:
 class TestSendMessageAPIFunctions:
     """Test suite for all API functions using send_message method."""
 
-    def test_send_message_get_game_state(self):
+    def test_send_message_get_game_state(self, port):
         """Test send_message with get_game_state function."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             response = client.send_message("get_game_state", {})
 
             # Response should be a dict that can be validated as G
@@ -363,9 +345,9 @@ class TestSendMessageAPIFunctions:
             assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
-    def test_send_message_go_to_menu(self):
+    def test_send_message_go_to_menu(self, port):
         """Test send_message with go_to_menu function."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             response = client.send_message("go_to_menu", {})
 
             assert isinstance(response, dict)
@@ -373,18 +355,18 @@ class TestSendMessageAPIFunctions:
             assert isinstance(game_state, G)
             assert hasattr(game_state, "state")
 
-    def test_send_message_start_run_minimal(self):
+    def test_send_message_start_run_minimal(self, port):
         """Test send_message with start_run function (minimal parameters)."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             response = client.send_message("start_run", {"deck": "Red Deck"})
 
             assert isinstance(response, dict)
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_send_message_start_run_with_all_params(self):
+    def test_send_message_start_run_with_all_params(self, port):
         """Test send_message with start_run function (all parameters)."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             response = client.send_message(
                 "start_run",
                 {
@@ -399,9 +381,9 @@ class TestSendMessageAPIFunctions:
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_send_message_skip_or_select_blind_skip(self):
+    def test_send_message_skip_or_select_blind_skip(self, port):
         """Test send_message with skip_or_select_blind function (skip action)."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # First start a run to get to blind selection state
             client.send_message("start_run", {"deck": "Red Deck"})
 
@@ -411,9 +393,9 @@ class TestSendMessageAPIFunctions:
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_send_message_skip_or_select_blind_select(self):
+    def test_send_message_skip_or_select_blind_select(self, port):
         """Test send_message with skip_or_select_blind function (select action)."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # First start a run to get to blind selection state
             client.send_message("start_run", {"deck": "Red Deck"})
 
@@ -423,9 +405,9 @@ class TestSendMessageAPIFunctions:
             game_state = G.model_validate(response)
             assert isinstance(game_state, G)
 
-    def test_send_message_play_hand_or_discard_play_hand(self):
+    def test_send_message_play_hand_or_discard_play_hand(self, port):
         """Test send_message with play_hand_or_discard function (play_hand action)."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # This may fail if not in correct game state - expected behavior
             try:
                 response = client.send_message(
@@ -439,9 +421,9 @@ class TestSendMessageAPIFunctions:
                 # Expected if game is not in selecting hand state
                 pass
 
-    def test_send_message_play_hand_or_discard_discard(self):
+    def test_send_message_play_hand_or_discard_discard(self, port):
         """Test send_message with play_hand_or_discard function (discard action)."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # This may fail if not in correct game state - expected behavior
             try:
                 response = client.send_message(
@@ -455,9 +437,9 @@ class TestSendMessageAPIFunctions:
                 # Expected if game is not in selecting hand state
                 pass
 
-    def test_send_message_cash_out(self):
+    def test_send_message_cash_out(self, port):
         """Test send_message with cash_out function."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             try:
                 response = client.send_message("cash_out", {})
 
@@ -468,9 +450,9 @@ class TestSendMessageAPIFunctions:
                 # Expected if game is not in correct state for cash out
                 pass
 
-    def test_send_message_shop_next_round(self):
+    def test_send_message_shop_next_round(self, port):
         """Test send_message with shop function."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             try:
                 response = client.send_message("shop", {"action": "next_round"})
 
@@ -481,22 +463,22 @@ class TestSendMessageAPIFunctions:
                 # Expected if game is not in shop state
                 pass
 
-    def test_send_message_invalid_function_name(self):
+    def test_send_message_invalid_function_name(self, port):
         """Test send_message with invalid function name raises error."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             with pytest.raises(BalatroError):
                 client.send_message("invalid_function", {})
 
-    def test_send_message_missing_required_arguments(self):
+    def test_send_message_missing_required_arguments(self, port):
         """Test send_message with missing required arguments raises error."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # start_run requires deck parameter
             with pytest.raises(BalatroError):
                 client.send_message("start_run", {})
 
-    def test_send_message_invalid_arguments(self):
+    def test_send_message_invalid_arguments(self, port):
         """Test send_message with invalid arguments raises error."""
-        with BalatroClient() as client:
+        with BalatroClient(port=port) as client:
             # Invalid action for skip_or_select_blind
             with pytest.raises(BalatroError):
                 client.send_message(
