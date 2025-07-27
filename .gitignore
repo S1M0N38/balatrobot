@@ -6,7 +6,6 @@ runs/*.jsonl
 src/lua_old
 balatrobot_old.lua
 scripts
-balatro.sh
 dump
 coverage.xml
 .coverage
