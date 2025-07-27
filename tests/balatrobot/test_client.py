@@ -7,7 +7,6 @@ from unittest.mock import Mock
 import pytest
 
 from balatrobot.client import BalatroClient
-from balatrobot.enums import State
 from balatrobot.exceptions import BalatroError, ConnectionFailedError
 from balatrobot.models import G
 
@@ -104,7 +103,7 @@ class TestBalatroClient:
         assert client._connected is False
         assert client._socket is None
 
-    def test_connection_failure_wrong_port(self, port):
+    def test_connection_failure_wrong_port(self):
         """Test connection failure with wrong port."""
         client = BalatroClient(port=54321)  # Use invalid port directly
 
