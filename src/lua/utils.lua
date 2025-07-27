@@ -375,7 +375,7 @@ function utils.get_game_state()
   end
 
   local jokers = {
-    cards = {}
+    cards = {},
   }
   if G.jokers then
     if G.jokers.config then

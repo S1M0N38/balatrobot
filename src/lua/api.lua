@@ -646,11 +646,7 @@ API.functions["shop"] = function(args)
   elseif action == "buy_card" then
     -- Validate index argument
     if args.index == nil then
-      API.send_error_response(
-        "Missing required field: index",
-        ERROR_CODES.MISSING_ARGUMENTS,
-        { field = "index" }
-      )
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
       return
     end
 
@@ -703,7 +699,12 @@ API.functions["shop"] = function(args)
       end
     elseif card.ability.set == "Planet" or card.ability.set == "Tarot" or card.ability.set == "Spectral" then
       -- Check for free consumable slots (typo is intentional, present in source)
-      if G.GAME.consumeables and G.GAME.consumeables.cards and G.GAME.consumeables.card_limit and #G.GAME.consumeables.cards >= G.GAME.consumeables.card_limit then
+      if
+        G.GAME.consumeables
+        and G.GAME.consumeables.cards
+        and G.GAME.consumeables.card_limit
+        and #G.GAME.consumeables.cards >= G.GAME.consumeables.card_limit
+      then
         API.send_error_response(
           "Can't purchase consumable card, consumable slots are full",
           ERROR_CODES.INVALID_ACTION,
@@ -712,23 +713,17 @@ API.functions["shop"] = function(args)
       end
     end
 
-
     -- Validate that some purchase button exists (should be a redundant check)
     local card_buy_button = card.children.buy_button and card.children.buy_button.definition
     if not card_buy_button then
-      API.send_error_response(
-        "Card has no buy button",
-        ERROR_CODES.INVALID_GAME_STATE,
-        { index = args.index }
-      )
+      API.send_error_response("Card has no buy button", ERROR_CODES.INVALID_GAME_STATE, { index = args.index })
       return
     end
 
-
     -- Used to ensure dollars and shop have been updated before responding, not inheritly atomic
-    local dollars_before    = G.GAME.dollars
-    local expected_dollars  = dollars_before - card.cost
-    local shop_size_before  = #G.shop_jokers.cards
+    local dollars_before = G.GAME.dollars
+    local expected_dollars = dollars_before - card.cost
+    local shop_size_before = #G.shop_jokers.cards
 
     -- activate the buy button using the UI element handler
     G.FUNCS.buy_from_shop(card_buy_button)
@@ -738,9 +733,9 @@ API.functions["shop"] = function(args)
     API.pending_requests["shop"] = {
       condition = function()
         return G.STATE == G.STATES.SHOP
-        and #G.shop_jokers.cards == shop_size_before - 1
-        and G.GAME.dollars == expected_dollars
-        and G.STATE_COMPLETE
+          and #G.shop_jokers.cards == shop_size_before - 1
+          and G.GAME.dollars == expected_dollars
+          and G.STATE_COMPLETE
       end,
       action = function()
         local game_state = utils.get_game_state()
