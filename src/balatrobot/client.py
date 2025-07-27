@@ -27,7 +27,6 @@ class BalatroClient:
     """
 
     host = "127.0.0.1"
-    port = 12346
     timeout = 30.0
     buffer_size = 65536
 
