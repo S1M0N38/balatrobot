@@ -81,7 +81,7 @@ function API.update(_)
     end
 
     API.server_socket:settimeout(SOCKET_TIMEOUT)
-    local port = BALATRO_BOT_CONFIG.port
+    local port = G.BALATROBOT_PORT
     local success, err = API.server_socket:bind("127.0.0.1", tonumber(port) or 12346)
     if not success then
       sendErrorMessage("Failed to bind to port " .. port .. ": " .. tostring(err), "API")
@@ -180,21 +180,14 @@ function API.send_error_response(message, error_code, context)
   API.send_response(response)
 end
 
----Initializes the API by hooking into the game's update loop and configuring settings
+---Initializes the API by setting up the update timer
 function API.init()
-  -- Hook into the game's update loop
+  -- Hook API.update into the existing love.update that's managed by settings.lua
   local original_update = love.update
-  love.update = function(_)
-    original_update(BALATRO_BOT_CONFIG.dt)
-    API.update(BALATRO_BOT_CONFIG.dt)
-  end
-
-  if not BALATRO_BOT_CONFIG.vsync_enabled then
-    love.window.setVSync(0)
-  end
-
-  if BALATRO_BOT_CONFIG.max_fps then
-    G.FPS_CAP = 60
+  ---@diagnostic disable-next-line: duplicate-set-field
+  love.update = function(dt)
+    original_update(dt)
+    API.update(dt)
   end
 
   sendInfoMessage("BalatrobotAPI initialized", "API")
