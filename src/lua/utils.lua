@@ -378,9 +378,12 @@ function utils.get_game_state()
     cards = {}
   }
   if G.jokers then
-
-    jokers.config.card_limit = G.jokers.config.card_limit
-    jokers.config.card_count = G.jokers.config.card_count
+    if G.jokers.config then
+      jokers.config = {
+        card_count = G.jokers.config.card_count,
+        card_limit = G.jokers.config.card_limit,
+      }
+    end
     if G.jokers.cards then
       for i, card in pairs(G.jokers.cards) do
         jokers.cards[i] = {
