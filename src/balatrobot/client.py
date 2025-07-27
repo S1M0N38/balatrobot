@@ -31,8 +31,13 @@ class BalatroClient:
     timeout = 30.0
     buffer_size = 65536
 
-    def __init__(self):
-        """Initialize BalatroBot client"""
+    def __init__(self, port: int = 12346):
+        """Initialize BalatroBot client
+
+        Args:
+            port: Port number to connect to (default: 12346)
+        """
+        self.port = port
         self._socket: socket.socket | None = None
         self._connected = False
 
