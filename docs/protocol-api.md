@@ -109,15 +109,15 @@ The BalatroBot API provides core functions that correspond to the main game acti
 
 ### Overview
 
-| Name                   | Description                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| `get_game_state`       | Retrieves the current complete game state                                    |
-| `go_to_menu`           | Returns to the main menu from any game state                                 |
-| `start_run`            | Starts a new game run with specified configuration                           |
-| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it |
-| `play_hand_or_discard` | Plays selected cards or discards them                                        |
-| `rearrange_hand`       | Reorders the current hand according to the supplied index list               |
-| `cash_out`             | Proceeds from round completion to the shop phase                             |
+| Name                   | Description                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| `get_game_state`       | Retrieves the current complete game state                                                   |
+| `go_to_menu`           | Returns to the main menu from any game state                                                |
+| `start_run`            | Starts a new game run with specified configuration                                          |
+| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it                |
+| `play_hand_or_discard` | Plays selected cards or discards them                                                       |
+| `rearrange_hand`       | Reorders the current hand according to the supplied index list                              |
+| `cash_out`             | Proceeds from round completion to the shop phase                                            |
 | `shop`                 | Performs shop actions: proceed to next round (`next_round`) or purchase a card (`buy_card`) |
 
 ### Parameters
