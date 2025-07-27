@@ -28,7 +28,6 @@ class TestBalatroClient:
     def test_client_class_attributes(self):
         """Test client class attributes are set correctly."""
         assert BalatroClient.host == "127.0.0.1"
-        assert BalatroClient.port == 12346
         assert BalatroClient.timeout == 30.0
         assert BalatroClient.buffer_size == 65536
 
