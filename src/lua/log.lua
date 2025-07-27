@@ -229,6 +229,7 @@ function hook_buy_card()
     for i, card in ipairs(G.shop_jokers.cards) do
       if card.unique_id == c1.unique_id then
         LOG.schedule_write({ name = "shop", arguments = { action = action, index = i - 1 } })
+        sendDebugMessage("Logged shop action: " .. action .. " for card at index " .. i - 1, "LOG")
         break
       end
     end

@@ -118,7 +118,7 @@ The BalatroBot API provides core functions that correspond to the main game acti
 | `play_hand_or_discard` | Plays selected cards or discards them                                        |
 | `rearrange_hand`       | Reorders the current hand according to the supplied index list               |
 | `cash_out`             | Proceeds from round completion to the shop phase                             |
-| `shop`                 | Performs shop actions. Currently supports proceeding to the next round       |
+| `shop`                 | Performs shop actions: proceed to next round (`next_round`) or purchase a card (`buy_card`) |
 
 ### Parameters
 
@@ -130,7 +130,7 @@ The following table details the parameters required for each function. Note that
 | `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                                                                                                              |
 | `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                                |
 | `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
-| `shop`                 | `action` (string): Shop action to perform ("next_round")                                                                                                                                                                                                                  |
+| `shop`                 | `action` (string): Shop action ("next_round" or "buy_card")<br>`index` (number, required when `action` = "buy_card"): 0-based card index to purchase                                                                                                                      |
 
 ### Errors
 
