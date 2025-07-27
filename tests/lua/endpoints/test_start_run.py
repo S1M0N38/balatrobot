@@ -44,9 +44,6 @@ class TestStartRun:
         game_state = send_and_receive_api_message(
             tcp_client, "start_run", start_run_args
         )
-
-        print("challenge gamestates")
-        print(game_state)
         assert game_state["state"] == State.BLIND_SELECT.value
         assert len(game_state["jokers"]) == 5  # jokers in The Omelette challenge
 
