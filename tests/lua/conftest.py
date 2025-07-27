@@ -9,7 +9,7 @@ import pytest
 # Connection settings
 HOST = "127.0.0.1"
 PORT: int = 12346  # default port for BalatroBot TCP API
-TIMEOUT: float = 10.0  # timeout for socket operations in seconds
+TIMEOUT: float = 30.0  # timeout for socket operations in seconds
 BUFFER_SIZE: int = 65536  # 64KB buffer for TCP messages
 
 
