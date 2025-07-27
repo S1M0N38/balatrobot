@@ -25,7 +25,7 @@ class TestStartRun:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": None,
-            "seed": "OOOO155",
+            "seed": "EXAMPLE",
         }
         game_state = send_and_receive_api_message(
             tcp_client, "start_run", start_run_args
@@ -39,7 +39,7 @@ class TestStartRun:
             "deck": "Red Deck",
             "stake": 1,
             "challenge": "The Omelette",
-            "seed": "OOOO155",
+            "seed": "EXAMPLE",
         }
         game_state = send_and_receive_api_message(
             tcp_client, "start_run", start_run_args
@@ -57,7 +57,7 @@ class TestStartRun:
                 "deck": "Red Deck",
                 "stake": stake,
                 "challenge": None,
-                "seed": "OOOO155",
+                "seed": "EXAMPLE",
             }
             game_state = send_and_receive_api_message(
                 tcp_client, "start_run", start_run_args
@@ -74,7 +74,7 @@ class TestStartRun:
         incomplete_args = {
             "stake": 1,
             "challenge": None,
-            "seed": "OOOO155",
+            "seed": "EXAMPLE",
         }
         # Should receive error response
         response = send_and_receive_api_message(
