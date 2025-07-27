@@ -701,10 +701,10 @@ API.functions["shop"] = function(args)
     elseif card.ability.set == "Planet" or card.ability.set == "Tarot" or card.ability.set == "Spectral" then
       -- Check for free consumable slots (typo is intentional, present in source)
       if
-        G.GAME.consumeables
-        and G.GAME.consumeables.cards
-        and G.GAME.consumeables.card_limit
-        and #G.GAME.consumeables.cards >= G.GAME.consumeables.card_limit
+        G.consumeables
+        and G.consumeables.cards
+        and G.consumeables.card_limit
+        and #G.consumeables.cards >= G.consumeables.card_limit
       then
         API.send_error_response(
           "Can't purchase consumable card, consumable slots are full",
