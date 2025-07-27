@@ -5,7 +5,7 @@ import socket
 from typing import Generator
 
 import pytest
-from conftest import assert_error_response, receive_api_message, send_api_message
+from .conftest import assert_error_response, receive_api_message, send_api_message
 
 from balatrobot.enums import ErrorCode
 
