@@ -1,4 +1,4 @@
-"""Shared test configuration and fixtures for BalatroBot API tests."""
+"""Lua API test-specific configuration and fixtures."""
 
 import json
 import socket
@@ -8,13 +8,12 @@ import pytest
 
 # Connection settings
 HOST = "127.0.0.1"
-PORT: int = 12346  # default port for BalatroBot TCP API
 TIMEOUT: float = 30.0  # timeout for socket operations in seconds
 BUFFER_SIZE: int = 65536  # 64KB buffer for TCP messages
 
 
 @pytest.fixture
-def tcp_client() -> Generator[socket.socket, None, None]:
+def tcp_client(port) -> Generator[socket.socket, None, None]:
     """Create and clean up a TCP client socket.
 
     Yields:
@@ -24,21 +23,7 @@ def tcp_client() -> Generator[socket.socket, None, None]:
         sock.settimeout(TIMEOUT)
         # Set socket receive buffer size
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
-        sock.connect((HOST, PORT))
-        yield sock
-
-
-@pytest.fixture
-def udp_client() -> Generator[socket.socket, None, None]:
-    """Create and clean up a TCP client socket (legacy support).
-
-    Yields:
-        Configured TCP socket for testing.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.settimeout(TIMEOUT)
-        # Set socket receive buffer size
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, BUFFER_SIZE)
+        sock.connect((HOST, port))
         yield sock
 
 
@@ -51,10 +36,7 @@ def send_api_message(sock: socket.socket, name: str, arguments: dict) -> None:
         arguments: Arguments dictionary for the function.
     """
     message = {"name": name, "arguments": arguments}
-    if sock.type == socket.SOCK_STREAM:
-        sock.send(json.dumps(message).encode() + b"\n")
-    else:
-        sock.sendto(json.dumps(message).encode(), (HOST, PORT))
+    sock.send(json.dumps(message).encode() + b"\n")
 
 
 def receive_api_message(sock: socket.socket) -> dict[str, Any]:
@@ -66,12 +48,8 @@ def receive_api_message(sock: socket.socket) -> dict[str, Any]:
     Returns:
         Received message as a dictionary.
     """
-    if sock.type == socket.SOCK_STREAM:
-        data = sock.recv(BUFFER_SIZE)
-        return json.loads(data.decode().strip())
-    else:
-        data, _ = sock.recvfrom(BUFFER_SIZE)
-        return json.loads(data.decode().strip())
+    data = sock.recv(BUFFER_SIZE)
+    return json.loads(data.decode().strip())
 
 
 def send_and_receive_api_message(
