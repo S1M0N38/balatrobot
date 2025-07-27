@@ -356,7 +356,10 @@ API.functions["skip_or_select_blind"] = function(args)
     ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
       condition = function()
-        return G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND
+        return G.GAME
+          and G.GAME.facing_blind
+          and G.STATE == G.STATES.SELECTING_HAND
+          and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
       end,
       action = function()
         local game_state = utils.get_game_state()
