@@ -696,6 +696,7 @@ API.functions["shop"] = function(args)
           ERROR_CODES.INVALID_ACTION,
           { index = args.index }
         )
+        return
       end
     elseif card.ability.set == "Planet" or card.ability.set == "Tarot" or card.ability.set == "Spectral" then
       -- Check for free consumable slots (typo is intentional, present in source)
