@@ -208,6 +208,57 @@ The project consists of:
 - **TCP Communication**: Real-time bidirectional communication
 - **Testing Suite**: Comprehensive API and integration tests
 
+### Configuration System
+
+The BalatroBot mod includes a sophisticated configuration system that optimizes Balatro for bot automation:
+
+#### Environment Variables
+
+Configure BalatroBot behavior using these environment variables:
+
+- **`BALATROBOT_HEADLESS`**: Set to `"1"` to enable headless mode (no graphics rendering)
+- **`BALATROBOT_FAST`**: Set to `"1"` to enable fast mode (10x game speed, disabled visuals)
+- **`BALATROBOT_PORT`**: TCP port for communication (default: "12346")
+
+#### Fast Mode Configuration
+
+Fast mode (`BALATROBOT_FAST=1`) applies aggressive optimizations for bot training:
+
+- **Performance**: Unlimited FPS, 10x game speed, 6x faster animations
+- **Graphics**: Disabled shadows, bloom, CRT effects, VSync, texture scaling set to nearest neighbor
+- **Audio**: Complete audio muting (volume, music, game sounds)
+- **Visual Effects**: Disabled motion blur, screen shake, rumble effects
+- **Resource Usage**: Optimized for maximum execution speed
+
+#### Normal Mode Configuration
+
+Normal mode preserves standard game experience while maintaining bot compatibility:
+
+- **Performance**: 60 FPS cap, normal game speed, standard animations
+- **Graphics**: Full visual quality with shadows, bloom, and CRT effects enabled
+- **Audio**: Standard audio levels (50% main volume, 100% music/sounds)
+- **Visual Effects**: Normal motion and screen effects enabled
+
+#### Headless Mode Configuration
+
+Headless mode (`BALATROBOT_HEADLESS=1`) disables all graphics for server environments:
+
+- **Window Management**: Minimizes and hides game window
+- **Rendering**: Completely disables Love2D graphics operations
+- **Resource Usage**: Minimal CPU/GPU usage for pure game logic execution
+- **Server Deployment**: Ideal for cloud-based bot training
+
+#### Implementation Details
+
+The configuration system is implemented in `src/lua/settings.lua` and provides:
+
+- **Environment Detection**: Reads environment variables on mod initialization
+- **Love2D Patches**: Modifies game engine behavior for performance optimization
+- **Balatro Integration**: Configures game-specific settings through global variables
+- **Fallback Handling**: Graceful degradation when graphics context is unavailable
+
+This configuration system enables BalatroBot to run efficiently in diverse environments, from local development with full graphics to high-performance server deployments with headless operation.
+
 ## Communication & Community
 
 ### Preferred Channels
