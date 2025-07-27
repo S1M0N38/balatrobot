@@ -45,7 +45,9 @@ class TestStartRun:
             tcp_client, "start_run", start_run_args
         )
         assert game_state["state"] == State.BLIND_SELECT.value
-        assert len(game_state["jokers"]) == 5  # jokers in The Omelette challenge
+        assert (
+            len(game_state["jokers"]["cards"]) == 5
+        )  # jokers in The Omelette challenge
 
     def test_start_run_different_stakes(self, tcp_client: socket.socket) -> None:
         """Test starting runs with different stake levels."""
