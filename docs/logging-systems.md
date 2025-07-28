@@ -59,8 +59,8 @@ Each log entry follows this structure:
 
 - **`timestamp_ms`**: Unix timestamp in milliseconds when the action occurred
 - **`function`**: The game function that was called
-  - `name`: Function name (e.g., "start_run", "play_hand_or_discard", "cash_out")
-  - `arguments`: Arguments passed to the function
+    - `name`: Function name (e.g., "start_run", "play_hand_or_discard", "cash_out")
+    - `arguments`: Arguments passed to the function
 - **`game_state`**: Complete game state **before** the function execution
 
 ## Python SDK Logging
