@@ -5,6 +5,7 @@ Analyze the git diff of staged files and create a commit message following conve
 **Format:** `<type>(<scope>): <description>`
 
 **Types:**
+
 - feat: new feature
 - fix: bug fix
 - docs: documentation
@@ -16,6 +17,7 @@ Analyze the git diff of staged files and create a commit message following conve
 - revert: reverts a previous commit
 
 **Scopes:**
+
 - api: Lua API and Python API communication
 - log: Logging and Replay functionality
 - bot: Python bot framework and base classes
@@ -23,6 +25,7 @@ Analyze the git diff of staged files and create a commit message following conve
 - dev: Development tools and environment
 
 **Workflow:**
+
 1. Run `git status` to see overall repository state. If there are are no staged changes, exit.
 2. Run `git diff --staged` to analyze the actual changes
 3. Run `git diff --stat --staged` for summary of changed files
@@ -34,13 +37,17 @@ Analyze the git diff of staged files and create a commit message following conve
 
 **Co-authors**
 Here is the collection of all previous co-authors of the repo as reference (names and emails):
+
 - claude: `Co-Authored-By: Claude <noreply@anthropic.com>`
+
 Here is a list of the co-authors which contributed to this commit:
+
 ```
 $ARGUMENTS
 ```
 
 **Notes**
+
 - Do not include emojis in the commit message.
 - Do not include `🤖 Generated with [Claude Code](https://claude.ai/code)` in the commit message.
 - If the list is empty, do not add any co-authors
