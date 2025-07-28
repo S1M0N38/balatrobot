@@ -21,62 +21,86 @@ basedpyright
 
 ### Testing
 
-**IMPORTANT**: Tests require Balatro to be running in the background. Always start the game before running tests.
+**IMPORTANT**: Tests require Balatro to be running in the background. Use `./balatro.sh --status` to check if the game is running.
 
 ```bash
 # Run all tests (requires Balatro to be running) - stops after first failure
-pytest -x
+pytest
 
 # Run specific test file - stops after first failure
-pytest -x tests/lua/test_api_functions.py
+pytest tests/lua/test_api_functions.py
 
 # Run tests with verbose output - stops after first failure
 pytest -vx
+
+# Run tests on specific port
+pytest --port 12347 tests/lua/endpoints/test_cash_out.py
 ```
+
+#### Parallel Testing with Multiple Balatro Instances
+
+The test suite supports running tests in parallel across multiple Balatro instances. This dramatically reduces test execution time by distributing tests across multiple game instances.
+
+**Setup for Parallel Testing:**
+
+1. **Check existing instances and start multiple Balatro instances on different ports**:
+
+    ```bash
+    # First, check if any instances are already running
+    ./balatro.sh --status
+
+    # If you need to kill all existing instances first:
+    ./balatro.sh --kill
+    ```
+
+    ```bash
+    # Start two instances with a single command
+    ./balatro.sh -p 12346 -p 12347
+
+    # With performance optimizations for faster testing
+    ./balatro.sh --fast -p 12346
+
+    # Headless mode for server environments
+    ./balatro.sh --headless -p 12346
+
+    # Fast Headless mode on 4 instances (recommended configuration)
+    ./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349
+    ```
+
+2. **Run tests in parallel**:
+
+    ```bash
+    # Two workers (faster than single instance)
+    pytest -n 4 --port 12346 --port 12347 tests/lua/
+
+    # Four workers (maximum parallelization)
+    pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349 tests/lua/
+    ```
+
+**Benefits:**
+
+- **Faster test execution**: ~4x speedup with 4 parallel workers
+- **Port isolation**: Each worker uses its dedicated Balatro instance
+
+**Notes:**
+
+- Each Balatro instance must be running on a different port before starting tests
+- Tests automatically distribute across available workers
+- Monitor logs for each instance: `tail -f logs/balatro_12346.log`
+- Logs are automatically created in the `logs/` directory with format `balatro_PORT.log`
 
 #### Test Prerequisites and Workflow
 
-1. **Always start Balatro first**:
+0. **Check existing instances first**:
 
-  ```bash
-  # Check if game is running
-  ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
+```bash
+# Check if Balatro instances are already running
+./balatro.sh --status
 
-  # Start if not running
-  ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo 'Balatro started and ready'
-  ```
-
-2. **Monitor game startup**:
-
-  ```bash
-  # Check logs for successful mod loading
-  tail -n 100 balatro.log
-
-  # Look for these success indicators:
-  # - "BalatrobotAPI initialized"
-  # - "BalatroBot loaded - version X.X.X"
-  # - "TCP socket created on port 12346"
-  ```
-
-3. **Common startup issues and fixes**:
-
-  - **Game crashes on mod load**: Review full log for Lua stack traces
-  - **Steam connection warnings**: Can be ignored - game works without Steam in development
-  - **JSON metadata errors**: Normal for development files (.vscode, .luarc.json) - can be ignored
-
-4. **Test execution**:
-
-  - **Test suite**: 102 tests covering API functions and TCP communication
-  - **Execution time**: ~210 seconds (includes game state transitions)
-  - **Coverage**: API function calls, socket communication, error handling, edge cases
-
-5. **Troubleshooting test failures**:
-
-  - **Connection timeouts**: Ensure TCP port 12346 is available
-  - **Game state errors**: Check if game is responsive and not crashed
-  - **Invalid responses**: Verify mod loaded correctly by checking logs
-  - **If test/s fail for timeout the reasons is that Balatro crash because there was an error in the Balatro mod (i.e. @balatrobot.lua and @src/lua/ ). The error should be logged in the `balatro.log` file.**
-  - **Balatro app crashes**: When the Balatro app crashes during testing, **do not run the remaining tests**. The crash usually indicates an issue with the Lua mod code that causes cryptic errors in `balatro.log`. Stop test execution and investigate the crash logs before continuing. Before running the tests again, ALWAYS kill the current Balatro instance running and start it again.
+# If instances are running on needed ports, you can proceed with testing
+# If you need to kill all running instances and start fresh:
+./balatro.sh --kill
+```
 
 ### Documentation
 
@@ -100,18 +124,13 @@ BalatroBot is a Python framework for developing automated bots to play the card 
 
 ### 2. Python Framework Layer (`src/balatrobot/`)
 
-**NOTE**: This is the old implementation that is being heavily refactored without backwards compatibility.
-It will be drastically simplified in the future. For the moment I'm just focusing on the Lua API (`src/lua/api.lua`).
-I keep the old code around for reference.
-
-- **Bot Base Class** (`base.py`): Abstract base class defining the bot interface
-- **ActionSchema**: TypedDict defining structured action format with `action` (enum) and `args` (list)
-- **Enums** (`enums.py`): Game state enums (Actions, Decks, Stakes, State)
-- **Socket Management**: Automatic reconnection, timeout handling, JSON parsing
+- **BalatroClient** (`client.py`): TCP client for communicating with game API via JSON messages
+- **Type-Safe Models** (`models.py`): Pydantic models matching Lua game state structure (G, GGame, GHand, etc.)
+- **Enums** (`enums.py`): Game state enums (Actions, Decks, Stakes, State, ErrorCode)
+- **Exception Hierarchy** (`exceptions.py`): Structured error handling with game-specific exceptions
+- **API Communication**: JSON request/response protocol with timeout handling and error recovery
 
 ## Development Standards
-
-### Python Code Style (from `.cursor/rules/`)
 
 - Use modern Python 3.13+ syntax with built-in collection types
 - Type annotations with pipe operator for unions: `str | int | None`
@@ -126,8 +145,3 @@ I keep the old code around for reference.
 - **MkDocs Documentation**: Comprehensive guides with Material theme
 - **Pytest Testing**: TCP socket testing with fixtures
 - **Development Tools**: Ruff, basedpyright, modern Python tooling
-
-### Testing Best Practices
-
-- **Always check that Balatro is running before running tests**
-- After starting Balatro, check the `balatro.log` to confirm successful startup
