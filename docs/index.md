@@ -17,8 +17,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     ---
 
-    Complete setup guide covering prerequisites, Steamodded mod installation,
-    Python environment setup.
+    Setup guide covering prerequisites, Steamodded mod installation, and Python environment setup.
 
     [:octicons-arrow-right-24: Installation](installation.md)
 
@@ -26,8 +25,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     ---
 
-    Learn to develop bots, complete code examples,
-    class structure, game state handling.
+    Learn to develop bots with complete code examples, class structure, and game state handling.
 
     [:octicons-arrow-right-24: Developing Bots](developing-bots.md)
 
@@ -35,8 +33,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     ---
 
-    Technical reference for TCP socket communication, message formats,
-    game states, action types.
+    Technical reference for TCP socket communication, message formats, game states, and action types.
 
     [:octicons-arrow-right-24: Protocol API](protocol-api.md)
 
@@ -44,7 +41,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     ---
 
-    Documentation in [llms.txt](https://llmstxt.org/) formats. Just paste the following link (or it's content) into the LLM chat.
+    Documentation in [llms.txt](https://llmstxt.org/) format. Just paste the following link (or its content) into the LLM chat.
 
     [:octicons-arrow-right-24: llms-full.txt](llms-full.txt)
 

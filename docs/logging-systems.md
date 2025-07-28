@@ -4,7 +4,7 @@ BalatroBot implements three distinct logging systems to support different aspect
 
 1. [**JSONL Run Logging**](#jsonl-run-logging) - Records complete game runs for replay and analysis
 2. [**Python SDK Logging**](#python-sdk-logging) - Future logging capabilities for the Python framework
-3. [**Mod Logging**](#mod-logging) - Traditional streamodded logging for mod development and debugging
+3. [**Mod Logging**](#mod-logging) - Traditional Steamodded logging for mod development and debugging
 
 ## JSONL Run Logging
 

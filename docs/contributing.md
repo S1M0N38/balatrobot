@@ -36,7 +36,7 @@ Before contributing, ensure you have:
     uv sync --all-extras
     ```
 
-3. **Stars Balatro with Mods**
+3. **Start Balatro with Mods**
 
     ```bash
     ./balatro.sh -p 12346
@@ -93,7 +93,7 @@ Before contributing, ensure you have:
     - **Important**: Enable "Allow edits from maintainers" when creating your PR
     - Link to related issues
     - Provide clear description of changes
-    - Include test for new functionality
+    - Include tests for new functionality
 
 ### Commit Messages
 
@@ -247,9 +247,9 @@ pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349 tests/lua/
 **Troubleshooting Test Failures**:
 
 - **Connection timeouts**: Ensure TCP port 12346 is available
-- **Game state errors**: Verify game is responsive and hasn't crashed
-- **Invalid responses**: Check mod loaded correctly in `balatro.log`
-- **Balatro crashes**: Stop testing immediately, investigate crash logs, restart game before retrying
+- **Game state errors**: Verify the game is responsive and hasn't crashed
+- **Invalid responses**: Check the mod loaded correctly in `balatro.log`
+- **Balatro crashes**: Stop testing immediately, investigate crash logs, restart the game before retrying
 
 ### Documentation
 
@@ -275,17 +275,7 @@ mkdocs build
 
 - **Focus Area**: Primary development is on `src/lua/api.lua`
 - **Communication**: TCP protocol on port 12346
-- **Protocol**: Bot sends "HELLO" → Game responds with JSON state → Bot sends actions
 - **Debugging**: Use DebugPlus mod for enhanced debugging capabilities
-
-### Architecture Context
-
-The project consists of:
-
-- **Lua API** (`src/lua/api.lua`): Game-side mod handling socket communication
-- **Python Framework** (`src/balatrobot/`): Bot development framework (being refactored)
-- **TCP Communication**: Real-time bidirectional communication
-- **Testing Suite**: Comprehensive API and integration tests
 
 ### Configuration System
 

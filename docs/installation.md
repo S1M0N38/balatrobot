@@ -8,9 +8,9 @@ Before installing BalatroBot, ensure you have:
 
 - **[balatro](https://store.steampowered.com/app/2379780/Balatro/)**: Steam version (>= 1.0.1)
 - **[git](https://git-scm.com/downloads)**: for cloning the repository
-- **[uv](https://docs.astral.sh/uv/)**: for managing Python installations, environments and dependencies
+- **[uv](https://docs.astral.sh/uv/)**: for managing Python installations, environments, and dependencies
 - **[lovely](https://github.com/ethangreen-dev/lovely-injector)**: for injecting Lua code into Balatro (>= 0.8.0)
-- **[steamodded](https://github.com/Steamodded/smods)**: for loading and injecting mods (>=1.0.0)
+- **[steamodded](https://github.com/Steamodded/smods)**: for loading and injecting mods (>= 1.0.0)
 
 ## Step 1: Install BalatroBot
 
@@ -134,10 +134,10 @@ BalatroBot is installed like any other Steamodded mod.
         rm -rf balatrobot
         ```
 
-## Step 2: Setup Python Environment
+## Step 2: Set Up Python Environment
 
-Uv takes care of managing Python installations, virtual environments creation and dependencies installation.
-To setup the Python environment for running BalatroBot bots simply run:
+Uv takes care of managing Python installations, virtual environment creation, and dependency installation.
+To set up the Python environment for running BalatroBot bots, simply run:
 
 === "Windows"
 
@@ -247,8 +247,8 @@ The bot is working correctly if:
 
 1. Game starts automatically
 2. Cards are played/discarded automatically
-3. Win the first round
-4. Game progresses through rounds
+3. Win the first blind
+4. Game progresses through blinds
 
 ## Troubleshooting
 

@@ -1,11 +1,11 @@
 # Developing Bots
 
-BalatroBot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a TCP socket connection actions to perform and receiving back the game state.
+BalatroBot allows you to create automated players (bots) that can play Balatro by implementing decision-making logic in Python. Your bot communicates with the game through a TCP socket connection, sending actions to perform and receiving back the game state.
 
 ## Bot Architecture
 
 A bot is a finite state machine that implements a sequence of actions to play the game.
-The bot can be in one state at a time and have access to a set of functions that can move the bot to other states.
+The bot can be in one state at a time and has access to a set of functions that can move the bot to other states.
 
 | **State**        | **Description**                              | **Functions**                            |
 | ---------------- | -------------------------------------------- | ---------------------------------------- |
@@ -16,7 +16,7 @@ The bot can be in one state at a time and have access to a set of functions that
 | `SHOP`           | Buy items and move to the next round         | `shop`                                   |
 | `GAME_OVER`      | Game has ended                               | –                                        |
 
-Developing a bot boils down to provide the action name and its parameters for each of the
+Developing a bot boils down to providing the action name and its parameters for each state.
 
 ### State Diagram
 
@@ -25,9 +25,9 @@ The following diagram illustrates the possible states of the game and how the fu
 - Start (◉) and End (⦾) states
 - States are written in uppercase (e.g., `MENU`, `BLIND_SELECT`, ...)
 - Functions are written in lowercase (e.g., `start_run`, `skip_or_select_blind`, ...)
-- Functions parameters are written in italics (e.g., `action = play_hand`). Not all parameters are reported in the diagram.
+- Function parameters are written in italics (e.g., `action = play_hand`). Not all parameters are reported in the diagram.
 - Comments are reported in parentheses (e.g., `(win round)`, `(lose round)`).
-- Abstract groups are written with Capital letters (e.g., `Run`, `Round`, ...)
+- Abstract groups are written with capital letters (e.g., `Run`, `Round`, ...)
 
 <div style="text-align: center">
 
