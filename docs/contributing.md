@@ -2,13 +2,11 @@
 
 Welcome to BalatroBot! We're excited that you're interested in contributing to this Python framework and Lua mod for creating automated bots to play Balatro.
 
-BalatroBot uses a unique dual-architecture approach with a Python framework that communicates with a Lua mod running inside Balatro via TCP sockets. This allows for real-time bot automation and game state analysis.
+BalatroBot uses a dual-architecture approach with a Python framework that communicates with a Lua mod running inside Balatro via TCP sockets. This allows for real-time bot automation and game state analysis.
 
 ## Project Status & Priorities
 
 We track all development work using the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7). This is the best place to see current priorities, ongoing work, and opportunities for contribution.
-
-**Current Focus**: We're heavily refactoring the Python framework while focusing development efforts on the Lua API (`src/lua/api.lua`). The existing Python code serves as reference but will be drastically simplified in future versions.
 
 ## Getting Started
 
@@ -20,10 +18,8 @@ Before contributing, ensure you have:
 - **SMODS (Steamodded)**: Version 1.0.0-beta-0711a or newer
 - **Python**: 3.13+ (managed via uv)
 - **uv**: Python package manager ([Installation Guide](https://docs.astral.sh/uv/))
-
-### Recommended Tools
-
-- **[DebugPlus](https://github.com/WilsontheWolf/DebugPlus)**: Essential for Lua API development and debugging
+- **OS**: macOS, Linux. Windows is not currently supported
+- **[DebugPlus](https://github.com/WilsontheWolf/DebugPlus) (optional)**: useful for Lua API development and debugging
 
 ### Development Environment Setup
 
@@ -40,30 +36,20 @@ Before contributing, ensure you have:
     uv sync --all-extras
     ```
 
-3. **Set Up Balatro with Mods**
-
-    **macOS** (currently supported):
+3. **Stars Balatro with Mods**
 
     ```bash
-    ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo 'Balatro started and ready'
+    ./balatro.sh -p 12346
     ```
 
-    - **Linux**: We need a robust cross-platform script! Feel free to [open an issue](https://github.com/S1M0N38/balatrobot/issues/new) and contribute a Linux-compatible version.
-
-    - **Windows**: Development on Windows is not currently supported.
-
-!!! Tip
-
-    Right now I'm using this [`balatro.sh`](https://gist.github.com/S1M0N38/4653c532bf048474100df3a270822bb4) script to start balatro with mods.
-
-4. **Verify Game Setup**
+4. **Verify Balatro is Running**
 
     ```bash
     # Check if Balatro is running
-    ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
+    ./balatro.sh --status
 
     # Monitor startup logs
-    tail -n 100 balatro.log
+    tail -n 100 logs/balatro_12346.log
     ```
 
     Look for these success indicators:
@@ -71,7 +57,6 @@ Before contributing, ensure you have:
     - "BalatrobotAPI initialized"
     - "BalatroBot loaded - version X.X.X"
     - "TCP socket created on port 12346"
-
 
 ## How to Contribute
 
@@ -95,8 +80,6 @@ Before contributing, ensure you have:
 
     ```bash
     git checkout -b feature/your-feature-name
-    # or
-    git checkout -b fix/issue-description
     ```
 
 3. **Make Changes**
@@ -110,7 +93,7 @@ Before contributing, ensure you have:
     - **Important**: Enable "Allow edits from maintainers" when creating your PR
     - Link to related issues
     - Provide clear description of changes
-    - Include testing instructions
+    - Include test for new functionality
 
 ### Commit Messages
 
@@ -143,27 +126,123 @@ basedpyright
 ### Testing Requirements
 
 !!! warning
-    All tests require Balatro to be running in the background.
+
+    All tests require Balatro to be running in the background. Use `./balatro.sh --status` to check if the game is running.
+
+#### Single Instance Testing
 
 ```bash
-# Start Balatro first
-./balatro.sh > balatro.log 2>&1 & sleep 10
+# Start Balatro with default port (12346)
+./balatro.sh -p 12346
 
-# Run all tests (stops on first failure)
-pytest -x
+# Run all tests
+pytest
 
 # Run specific test file
-pytest -x tests/lua/test_api_functions.py
+pytest tests/lua/test_api_functions.py
 
-# Run with verbose output
+# Run with verbose output and stop on first failure
 pytest -vx
+
+# Run tests on specific port
+pytest --port 12347 tests/lua/endpoints/test_cash_out.py
 ```
 
-**Test Suite Overview**:
+#### Parallel Testing with Multiple Balatro Instances
 
-- 102 tests covering API functions and TCP communication
-- ~210 seconds execution time
-- Tests game state transitions, socket communication, error handling
+The test suite supports running tests in parallel across multiple Balatro instances. This dramatically reduces test execution time by distributing tests across multiple game instances.
+
+**Setup for Parallel Testing:**
+
+1. **Check existing instances and start multiple Balatro instances on different ports**:
+
+    ```bash
+    # First, check if any instances are already running
+    ./balatro.sh --status
+
+    # If you need to kill all existing instances first:
+    ./balatro.sh --kill
+    ```
+
+    ```bash
+    # Start two instances with a single command
+    ./balatro.sh -p 12346 -p 12347
+
+    # With performance optimizations for faster testing
+    ./balatro.sh --fast -p 12346
+
+    # Headless mode for server environments
+    ./balatro.sh --headless -p 12346
+
+    # Fast Headless mode on 4 instances (recommended configuration)
+    ./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349
+    ```
+
+2. **Run tests in parallel**:
+
+    ```bash
+    # Two workers (faster than single instance)
+    pytest -n 2 --port 12346 --port 12347
+
+    # Four workers (recommended configuration)
+    pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349
+    ```
+
+**Benefits:**
+
+- **Faster test execution**: ~4x speedup with 4 parallel workers
+- **Port isolation**: Each worker uses its dedicated Balatro instance
+
+**Notes:**
+
+- Each Balatro instance must be running on a different port before starting tests
+- Tests automatically distribute across available workers
+- Monitor logs for each instance: `tail -f logs/balatro_12346.log`
+- Logs are automatically created in the `logs/` directory with format `balatro_PORT.log`
+
+**balatro.sh Command Options:**
+
+```bash
+# Usage examples
+./balatro.sh -p 12347                   # Start single instance on port 12347
+./balatro.sh -p 12346 -p 12347          # Start two instances on ports 12346 and 12347
+./balatro.sh --headless --fast -p 12346 # Start with headless and fast mode
+./balatro.sh --kill                     # Kill all running Balatro instances
+./balatro.sh --status                   # Show running instances
+```
+
+**balatro.sh Modes:**
+
+- **`--headless`**: Enable headless mode (sets `BALATROBOT_HEADLESS=1`)
+
+    - Minimizes and hides game window
+    - Completely disables Love2D graphics operations
+    - Minimal CPU/GPU usage for pure game logic execution
+    - Ideal for server environments and cloud-based bot training
+
+- **`--fast`**: Enable fast mode (sets `BALATROBOT_FAST=1`)
+
+    - Unlimited FPS, 10x game speed, 6x faster animations
+    - Disabled shadows, bloom, CRT effects, VSync
+    - Complete audio muting
+    - Optimized for maximum execution speed during bot training
+
+**Test Prerequisites and Workflow:**
+
+```bash
+# 1. Check if Balatro instances are already running
+./balatro.sh --status
+
+# 2. If instances are running on needed ports, you can proceed with testing
+# If you need to kill all running instances and start fresh:
+./balatro.sh --kill
+
+# 3. Start the required instances
+./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349
+
+# 4. Run parallel tests
+pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349 tests/lua/
+```
 
 **Troubleshooting Test Failures**:
 
@@ -266,14 +345,4 @@ This configuration system enables BalatroBot to run efficiently in diverse envir
 - **GitHub Issues**: Primary communication for bugs, features, and project coordination
 - **Discord**: Join us at the [Balatro Discord](https://discord.com/channels/1116389027176787968/1391371948629426316) for real-time discussions
 
-
----
-
-## Questions?
-
-- Check the [GitHub Project](https://github.com/users/S1M0N38/projects/7) for current priorities
-- [Open an issue](https://github.com/S1M0N38/balatrobot/issues/new) for bugs or questions
-- Join the [Discord discussion](https://discord.com/channels/1116389027176787968/1391371948629426316)
-
 Happy contributing!
-

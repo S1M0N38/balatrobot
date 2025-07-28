@@ -44,9 +44,7 @@ BalatroBot is a Python framework designed to help developers create automated bo
 
     ---
 
-    Documentation in [llms.txt](https://llmstxt.org/) formats, easily digestible by LLMs.
-
-    [:octicons-arrow-right-24: llms.txt](llms.txt)
+    Documentation in [llms.txt](https://llmstxt.org/) formats. Just paste the following link (or it's content) into the LLM chat.
 
     [:octicons-arrow-right-24: llms-full.txt](llms-full.txt)
 
