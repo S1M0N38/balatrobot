@@ -27,7 +27,7 @@
           },
           {
             "type": "command",
-            "command": "mdformat --number docs/index.md docs/installation.md docs/developing-bots.md docs/protocol-api.md docs/contributing.md README.md"
+            "command": "mdformat ."
           }
         ]
       }

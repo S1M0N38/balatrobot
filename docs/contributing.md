@@ -117,7 +117,7 @@ ruff check --select I --fix .
 ruff format .
 
 # Markdown formatting (docs and specific files)
-mdformat --number docs/index.md docs/installation.md docs/developing-bots.md docs/protocol-api.md docs/contributing.md README.md
+mdformat .
 
 # Type checking
 basedpyright

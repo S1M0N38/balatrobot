@@ -13,7 +13,7 @@ ruff check --select I --fix .
 ruff format .
 
 # Run markdown formatter
-mdformat --number docs/index.md docs/installation.md docs/developing-bots.md docs/protocol-api.md docs/contributing.md README.md
+mdformat .
 
 # Run type checker
 basedpyright
