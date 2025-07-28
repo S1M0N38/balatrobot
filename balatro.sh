@@ -8,6 +8,7 @@ HEADLESS=false
 FAST=false
 FORCE_KILL=true
 KILL_ONLY=false
+STATUS_ONLY=false
 
 # Platform detection
 case "$OSTYPE" in
@@ -29,14 +30,16 @@ show_usage() {
 	cat <<EOF
 Usage: $0 -p PORT [OPTIONS]
        $0 --kill
+       $0 --status
 
-Required (unless --kill):
+Required (unless --kill or --status):
   -p, --port PORT  Specify port for Balatro instance (can be used multiple times)
 
 Options:
   --headless       Enable headless mode (sets BALATROBOT_HEADLESS=1)
   --fast           Enable fast mode (sets BALATROBOT_FAST=1)
   --kill           Kill all running Balatro instances and exit
+  --status         Show information about running Balatro instances
   -h, --help       Show this help message
 
 Examples:
@@ -44,6 +47,7 @@ Examples:
   $0 -p 12346 -p 12347          # Start two instances on ports 12346 and 12347
   $0 --headless --fast -p 12346 # Start with headless and fast mode
   $0 --kill                     # Kill all running Balatro instances
+  $0 --status                   # Show running instances
 
 EOF
 }
@@ -76,6 +80,10 @@ parse_arguments() {
 			KILL_ONLY=true
 			shift
 			;;
+		--status)
+			STATUS_ONLY=true
+			shift
+			;;
 		-h | --help)
 			show_usage
 			exit 0
@@ -93,6 +101,13 @@ parse_arguments() {
 		# In kill mode, no ports are required
 		if [[ ${#PORTS[@]} -gt 0 ]]; then
 			echo "Error: --kill cannot be used with port specifications" >&2
+			show_usage
+			exit 1
+		fi
+	elif [[ "$STATUS_ONLY" == "true" ]]; then
+		# In status mode, no ports are required
+		if [[ ${#PORTS[@]} -gt 0 ]]; then
+			echo "Error: --status cannot be used with port specifications" >&2
 			show_usage
 			exit 1
 		fi
@@ -285,6 +300,58 @@ print_instance_info() {
 	done
 }
 
+# Show status of running Balatro instances
+show_status() {
+	# Build platform-specific grep pattern
+	local grep_pattern=""
+	for i in "${!PROCESS_PATTERNS[@]}"; do
+		if [[ $i -eq 0 ]]; then
+			grep_pattern="${PROCESS_PATTERNS[$i]}"
+		else
+			grep_pattern="$grep_pattern|${PROCESS_PATTERNS[$i]}"
+		fi
+	done
+
+	# Find running Balatro processes
+	local running_processes=()
+	while IFS= read -r line; do
+		running_processes+=("$line")
+	done < <(ps aux | grep -E "($grep_pattern)" | grep -v grep | awk '{print $2}')
+
+	if [[ ${#running_processes[@]} -eq 0 ]]; then
+		echo "No Balatro instances are currently running"
+		return 0
+	fi
+
+	# For each running process, find its listening port
+	for pid in "${running_processes[@]}"; do
+		local port=""
+		local log_file=""
+
+		# Use lsof to find listening ports for this PID
+		if command -v lsof >/dev/null 2>&1; then
+			# Look for TCP listening ports (any port >=1024, matching script validation)
+			local ports_output
+			ports_output=$(lsof -Pan -p "$pid" -i TCP 2>/dev/null | grep LISTEN | awk '{print $9}' | cut -d: -f2)
+
+			# Find the first valid port for this Balatro instance
+			while IFS= read -r found_port; do
+				if [[ "$found_port" =~ ^[0-9]+$ ]] && [[ "$found_port" -ge 1024 ]] && [[ "$found_port" -le 65535 ]]; then
+					port="$found_port"
+					log_file="logs/balatro_${port}.log"
+					break
+				fi
+			done <<<"$ports_output"
+		fi
+
+		# Only display processes that have a listening port (actual Balatro instances)
+		if [[ -n "$port" ]]; then
+			echo "• Port $port, PID $pid, Log: $log_file"
+		fi
+		# Skip processes without listening ports - they're not actual Balatro instances
+	done
+}
+
 # Cleanup function for signal handling
 cleanup() {
 	echo ""
@@ -314,6 +381,12 @@ main() {
 		echo "Killing all running Balatro instances..."
 		kill_existing_processes
 		echo "All Balatro instances have been terminated."
+		exit 0
+	fi
+
+	# Handle status-only mode
+	if [[ "$STATUS_ONLY" == "true" ]]; then
+		show_status
 		exit 0
 	fi
 
