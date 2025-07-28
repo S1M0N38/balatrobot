@@ -149,20 +149,18 @@ get_platform_config() {
 		PROCESS_PATTERNS=("Balatro\.app" "balatro\.sh")
 		;;
 	linux)
-		# TODO: Implement Linux paths
-		# Common Linux Steam paths to check:
-		# - ~/.steam/steam/steamapps/common/Balatro
-		# - ~/.local/share/Steam/steamapps/common/Balatro
-		# - Custom detection logic
-		echo "Error: Linux support is not yet implemented" >&2
-		echo "TODO: Add Linux Steam path detection and configuration" >&2
-		exit 1
-		# STEAM_PATH="TODO: Implement Linux Steam path detection"
-		# LIBRARY_ENV_VAR="LD_PRELOAD"
-		# LIBRARY_FILE="liblovely.so"
-		# BALATRO_EXECUTABLE="Balatro"
-		# TODO: Verify actual Linux process names for process killing
-		# PROCESS_PATTERNS=("Balatro" "balatro\.sh")
+		# Linux configuration using Proton (Steam Play)
+		PREFIX="$HOME/.steam/steam/steamapps/compatdata/2379780"
+		PROTON_DIR="$HOME/.steam/steam/steamapps/common/Proton 9.0 (Beta)"
+		EXE="$HOME/.steam/debian-installation/steamapps/common/Balatro/Balatro.exe"
+
+		STEAM_PATH="$PROTON_DIR"
+		LIBRARY_ENV_VAR=""    # Not used on Linux when running via Proton
+		LIBRARY_FILE=""
+		BALATRO_EXECUTABLE="proton"
+		# Patterns of processes that should be terminated when cleaning up existing Balatro instances.
+		# Do NOT include "balatro\.sh" – it would match this launcher script and terminate it.
+		PROCESS_PATTERNS=("Balatro\.exe" "proton")
 		;;
 	*)
 		echo "Error: Unsupported platform configuration" >&2
@@ -232,11 +230,30 @@ start_balatro_instance() {
 	fi
 
 	# Set up platform-specific Balatro configuration
-	export ${LIBRARY_ENV_VAR}="${STEAM_PATH}/${LIBRARY_FILE}"
+	# Platform-specific launch
+	if [[ "$PLATFORM" == "linux" ]]; then
+		PREFIX="$HOME/.steam/steam/steamapps/compatdata/2379780"
+		PROTON_DIR="$STEAM_PATH"
+		EXE="$HOME/.steam/debian-installation/steamapps/common/Balatro/Balatro.exe"
 
-	# Start the process
-	"${STEAM_PATH}/${BALATRO_EXECUTABLE}" >"$log_file" 2>&1 &
-	local pid=$!
+		# Steam / Proton context
+		export STEAM_COMPAT_CLIENT_INSTALL_PATH="$HOME/.steam/steam"
+		export STEAM_COMPAT_DATA_PATH="$PREFIX"
+		export SteamAppId=2379780
+		export SteamGameId=2379780
+		export WINEPREFIX="$PREFIX/pfx"
+
+		# load Lovely/SteamModded
+		export WINEDLLOVERRIDES="version=n,b"
+
+		# Run via Proton
+		(cd "$WINEPREFIX" && "$PROTON_DIR/proton" run "$EXE") >"$log_file" 2>&1 &
+		local pid=$!
+	else
+		export ${LIBRARY_ENV_VAR}="${STEAM_PATH}/${LIBRARY_FILE}"
+		"${STEAM_PATH}/${BALATRO_EXECUTABLE}" >"$log_file" 2>&1 &
+		local pid=$!
+	fi
 
 	# Verify process started
 	sleep 2
