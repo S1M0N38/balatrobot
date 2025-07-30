@@ -705,8 +705,15 @@ API.functions["shop"] = function(args)
     local times_rerolled_before = 0
     if G.GAME.round_scores and G.GAME.round_scores.times_rerolled then
       times_rerolled_before = G.GAME.round_scores.times_rerolled.amt or 0
+    end
 
-      sendDebugMessage("times_rerolled_before: " .. tostring(times_rerolled_before))
+    if dollars_before < reroll_cost then
+      API.send_error_response(
+        "Not enough dollars to reroll",
+        ERROR_CODES.INVALID_ACTION,
+        { dollars = dollars_before, reroll_cost = reroll_cost }
+      )
+      return
     end
 
     -- Perform the reroll (nil element because the function doesn't require it)
