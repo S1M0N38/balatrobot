@@ -715,7 +715,7 @@ API.functions["shop"] = function(args)
     ---@type PendingRequest
     API.pending_requests["shop"] = {
       condition = function()
-        return utils.COMPLETION_CONDITIONS.cash_out()
+        return utils.COMPLETION_CONDITIONS.shop_idle()
           and G.GAME.round_scores
           and G.GAME.round_scores.times_rerolled
           and G.GAME.round_scores.times_rerolled.amt == times_rerolled_before + 1
