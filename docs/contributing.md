@@ -21,6 +21,8 @@ Before contributing, ensure you have:
 - **Python**: 3.13+ (managed via uv)
 - **uv**: Python package manager ([Installation Guide](https://docs.astral.sh/uv/))
 
+- **Proton 9.0 (Beta)**: Required on Linux (installed automatically by Steam) to run Balatro through the launcher script
+
 ### Recommended Tools
 
 - **[DebugPlus](https://github.com/WilsontheWolf/DebugPlus)**: Essential for Lua API development and debugging
@@ -29,49 +31,61 @@ Before contributing, ensure you have:
 
 1. **Fork and Clone**
 
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/balatrobot.git
-    cd balatrobot
-    ```
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/balatrobot.git
+   cd balatrobot
+   ```
 
 2. **Install Dependencies**
 
-    ```bash
-    uv sync --all-extras
-    ```
+   ```bash
+   uv sync --all-extras
+   ```
 
 3. **Set Up Balatro with Mods**
 
-    **macOS** (currently supported):
+   **macOS** (currently supported):
 
-    ```bash
-    ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo 'Balatro started and ready'
-    ```
+   ```bash
+   ./balatro.sh > balatro.log 2>&1 & sleep 10 && echo 'Balatro started and ready'
+   ```
 
-    - **Linux**: We need a robust cross-platform script! Feel free to [open an issue](https://github.com/S1M0N38/balatrobot/issues/new) and contribute a Linux-compatible version.
+   **Linux** (Steam Play / Proton):
 
-    - **Windows**: Development on Windows is not currently supported.
+   ```bash
+   # Start one instance on the default port (12346)
+   ./balatro.sh -p 12346 &
 
-!!! Tip
+   # Or spin up multiple headless, fast instances on different ports
+   ./balatro.sh --headless --fast -p 12346 -p 12347 &
+   ```
 
-    Right now I'm using this [`balatro.sh`](https://gist.github.com/S1M0N38/4653c532bf048474100df3a270822bb4) script to start balatro with mods.
+   What the script does on Linux:
+
+   - Detects Proton at `~/.steam/steam/steamapps/common/Proton 9.0 (Beta)`
+   - Sets all required Steam / Proton environment variables
+   - Injects the SteamModded “Lovely” loader automatically
+   - Launches Balatro via `proton run`, writing logs to `logs/balatro_<port>.log`
+
+   - **Windows**: Development on Windows is not currently supported.
+
+The cross-platform `balatro.sh` launcher script now lives in the repository root. Run `./balatro.sh --help` for all options.
 
 4. **Verify Game Setup**
 
-    ```bash
-    # Check if Balatro is running
-    ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
+   ```bash
+   # Check if Balatro is running
+   ps aux | grep -E "(Balatro\.app|balatro\.sh)" | grep -v grep
 
-    # Monitor startup logs
-    tail -n 100 balatro.log
-    ```
+   # Monitor startup logs
+   tail -n 100 balatro.log
+   ```
 
-    Look for these success indicators:
+   Look for these success indicators:
 
-    - "BalatrobotAPI initialized"
-    - "BalatroBot loaded - version X.X.X"
-    - "TCP socket created on port 12346"
-
+   - "BalatrobotAPI initialized"
+   - "BalatroBot loaded - version X.X.X"
+   - "TCP socket created on port 12346"
 
 ## How to Contribute
 
@@ -87,30 +101,30 @@ Before contributing, ensure you have:
 
 1. **Check Issues First** (Highly Encouraged)
 
-    - Browse the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7)
-    - Comment on issues you'd like to work on
-    - Create new issues for bugs or feature requests
+   - Browse the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7)
+   - Comment on issues you'd like to work on
+   - Create new issues for bugs or feature requests
 
 2. **Fork & Branch**
 
-    ```bash
-    git checkout -b feature/your-feature-name
-    # or
-    git checkout -b fix/issue-description
-    ```
+   ```bash
+   git checkout -b feature/your-feature-name
+   # or
+   git checkout -b fix/issue-description
+   ```
 
 3. **Make Changes**
 
-    - Follow our code style guidelines (see below)
-    - Add tests for new functionality
-    - Update documentation as needed
+   - Follow our code style guidelines (see below)
+   - Add tests for new functionality
+   - Update documentation as needed
 
 4. **Create Pull Request**
 
-    - **Important**: Enable "Allow edits from maintainers" when creating your PR
-    - Link to related issues
-    - Provide clear description of changes
-    - Include testing instructions
+   - **Important**: Enable "Allow edits from maintainers" when creating your PR
+   - Link to related issues
+   - Provide clear description of changes
+   - Include testing instructions
 
 ### Commit Messages
 
@@ -143,7 +157,7 @@ basedpyright
 ### Testing Requirements
 
 !!! warning
-    All tests require Balatro to be running in the background.
+All tests require Balatro to be running in the background.
 
 ```bash
 # Start Balatro first
@@ -266,7 +280,6 @@ This configuration system enables BalatroBot to run efficiently in diverse envir
 - **GitHub Issues**: Primary communication for bugs, features, and project coordination
 - **Discord**: Join us at the [Balatro Discord](https://discord.com/channels/1116389027176787968/1391371948629426316) for real-time discussions
 
-
 ---
 
 ## Questions?
@@ -276,4 +289,3 @@ This configuration system enables BalatroBot to run efficiently in diverse envir
 - Join the [Discord discussion](https://discord.com/channels/1116389027176787968/1391371948629426316)
 
 Happy contributing!
-
