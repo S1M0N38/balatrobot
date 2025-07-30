@@ -695,6 +695,95 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
+  elseif action == "redeem_voucher" then
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
+      return
+    end
+
+    -- Determine the voucher area (base game exposes vouchers separately from jokers)
+    local area = nil
+    if G.shop_vouchers and G.shop_vouchers.cards then
+      area = G.shop_vouchers
+    elseif G.shop_jokers and G.shop_jokers.cards then
+      -- Fallback – some mods expose vouchers inside the joker area
+      area = G.shop_jokers
+    end
+
+    if not area then
+      API.send_error_response(
+        "Voucher area not found in shop",
+        ERROR_CODES.INVALID_GAME_STATE,
+        {}
+      )
+      return
+    end
+
+    -- Get voucher index (1-based) and validate range
+    local card_pos = args.index + 1
+    if not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Voucher index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, valid_range = "0-" .. tostring(#area.cards - 1) }
+      )
+      return
+    end
+
+    local card = area.cards[card_pos]
+
+    -- Ensure the selected card is a voucher
+    if not card.ability or card.ability.set ~= "Voucher" then
+      API.send_error_response(
+        "Selected card is not a voucher",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Prevent double redemption: no use button implies already redeemed
+    if not (card.children and card.children.use_button) then
+      API.send_error_response(
+        "Voucher already redeemed",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
+    -- Check affordability
+    local dollars_before = G.GAME.dollars
+    local cost = card.cost or 0
+    if dollars_before < cost then
+      API.send_error_response(
+        "Not enough dollars to redeem voucher",
+        ERROR_CODES.INVALID_ACTION,
+        { dollars = dollars_before, cost = cost }
+      )
+      return
+    end
+    local expected_dollars = dollars_before - cost
+
+    -- Activate the voucher's use button to redeem
+    local use_button = card.children.use_button.definition or card.children.use_button
+    G.FUNCS.use_card(use_button)
+
+    -- Wait until the shop is idle and dollars are updated (redeem is non-atomic)
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS.shop_idle()
+          and G.GAME.dollars == expected_dollars
+          and (not area.cards[card_pos] or not area.cards[card_pos].children or not area.cards[card_pos].children.use_button)
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+
   elseif action == "reroll" then
     -- Capture the state before rerolling for response validation
     local dollars_before = G.GAME.dollars
