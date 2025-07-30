@@ -143,6 +143,7 @@ The `shop` function supports multiple in-shop actions. Use the `action` field in
 | `reroll`     | Spend dollars to refresh the shop offer (cost shown in-game). | —                                                        |
 
 !!! note "Future actions"
+
 Additional shop actions `buy_and_use_card`, `open_pack`, and `redeem_voucher` will be added soon.
 
 ### Errors
