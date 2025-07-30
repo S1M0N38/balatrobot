@@ -264,7 +264,7 @@ class TestShop:
         after_state = send_and_receive_api_message(
             tcp_client, "shop", {"action": "reroll"}
         )
-        
+
         # verify state
         assert after_state["state"] == State.SHOP.value
         assert after_state["game"]["dollars"] == dollars_before - reroll_cost
