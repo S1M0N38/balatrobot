@@ -109,16 +109,16 @@ The BalatroBot API provides core functions that correspond to the main game acti
 
 ### Overview
 
-| Name                   | Description                                                                                 |
-| ---------------------- | ------------------------------------------------------------------------------------------- |
-| `get_game_state`       | Retrieves the current complete game state                                                   |
-| `go_to_menu`           | Returns to the main menu from any game state                                                |
-| `start_run`            | Starts a new game run with specified configuration                                          |
-| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it                |
-| `play_hand_or_discard` | Plays selected cards or discards them                                                       |
-| `rearrange_hand`       | Reorders the current hand according to the supplied index list                              |
-| `cash_out`             | Proceeds from round completion to the shop phase                                            |
-| `shop`                 | Performs shop actions: proceed to next round (`next_round`) or purchase a card (`buy_card`) |
+| Name                   | Description                                                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `get_game_state`       | Retrieves the current complete game state                                                                            |
+| `go_to_menu`           | Returns to the main menu from any game state                                                                         |
+| `start_run`            | Starts a new game run with specified configuration                                                                   |
+| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it                                         |
+| `play_hand_or_discard` | Plays selected cards or discards them                                                                                |
+| `rearrange_hand`       | Reorders the current hand according to the supplied index list                                                       |
+| `cash_out`             | Proceeds from round completion to the shop phase                                                                     |
+| `shop`                 | Performs shop actions: proceed to next round (`next_round`), purchase a card (`buy_card`), or reroll shop (`reroll`) |
 
 ### Parameters
 
@@ -130,7 +130,20 @@ The following table details the parameters required for each function. Note that
 | `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                                                                                                              |
 | `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                                |
 | `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
-| `shop`                 | `action` (string): Shop action ("next_round" or "buy_card")<br>`index` (number, required when `action` = "buy_card"): 0-based card index to purchase                                                                                                                      |
+| `shop`                 | `action` (string): Shop action ("next_round", "buy_card", or "reroll")<br>`index` (number, required when `action` = "buy_card"): 0-based card index to purchase                                                                                                           |
+
+### Shop Actions
+
+The `shop` function supports multiple in-shop actions. Use the `action` field inside the `arguments` object to specify which of these to execute.
+
+| Action       | Description                                                   | Additional Parameters                                    |
+| ------------ | ------------------------------------------------------------- | -------------------------------------------------------- |
+| `next_round` | Leave the shop and proceed to the next blind selection.       | —                                                        |
+| `buy_card`   | Purchase the card at the supplied `index` in `shop_jokers`.   | `index` _(number)_ – 0-based position of the card to buy |
+| `reroll`     | Spend dollars to refresh the shop offer (cost shown in-game). | —                                                        |
+
+!!! note "Future actions"
+Additional shop actions such as `buy_and_use_card`, `open_pack`, and `redeem_voucher` will be added in a future release.
 
 ### Errors
 

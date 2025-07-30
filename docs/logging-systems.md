@@ -16,7 +16,7 @@ The system hooks into these game functions:
 - `skip_or_select_blind`: blind selection actions
 - `play_hand_or_discard`: card play actions
 - `cash_out`: end blind and collect rewards
-- `shop`: shop interactions
+- `shop`: shop interactions (`next_round`, `buy_card`, `reroll`)
 - `go_to_menu`: return to main menu
 
 The JSONL files are automatically created when:
@@ -59,8 +59,8 @@ Each log entry follows this structure:
 
 - **`timestamp_ms`**: Unix timestamp in milliseconds when the action occurred
 - **`function`**: The game function that was called
-    - `name`: Function name (e.g., "start_run", "play_hand_or_discard", "cash_out")
-    - `arguments`: Arguments passed to the function
+  - `name`: Function name (e.g., "start_run", "play_hand_or_discard", "cash_out")
+  - `arguments`: Arguments passed to the function
 - **`game_state`**: Complete game state **before** the function execution
 
 ## Python SDK Logging
