@@ -686,7 +686,7 @@ API.functions["shop"] = function(args)
     API.pending_requests["shop"] = {
       condition = function()
         -- Purchase action is non-atomic, so we need to check dollars
-        return utils.COMPLETION_CONDITIONS.cash_out()
+        return utils.COMPLETION_CONDITIONS.shop()
           and #G.shop_jokers.cards == shop_size_before - 1
           and G.GAME.dollars == expected_dollars
       end,
