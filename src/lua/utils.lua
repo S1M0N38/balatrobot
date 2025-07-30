@@ -680,6 +680,12 @@ utils.COMPLETION_CONDITIONS = {
     return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
   end,
 
+  -- Actions that keep the player in the shop (e.g. buy_card, reroll, buy_and_use_card).
+  -- Semantically identical to cash_out but named for clarity.
+  shop_idle = function()
+    return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+
   shop = function()
     return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
   end,
