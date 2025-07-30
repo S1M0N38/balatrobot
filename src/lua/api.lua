@@ -696,12 +696,43 @@ API.functions["shop"] = function(args)
       end,
     }
 
+  elseif action == "reroll" then
+    -- Capture the state before rerolling
+    local dollars_before = G.GAME.dollars
+    local reroll_cost = G.GAME.current_round and G.GAME.current_round.reroll_cost or 0
+    local expected_dollars = dollars_before - reroll_cost
+
+    local times_rerolled_before = 0
+    if G.GAME.round_scores and G.GAME.round_scores.times_rerolled then
+      times_rerolled_before = G.GAME.round_scores.times_rerolled.amt or 0
+
+      sendDebugMessage("times_rerolled_before: " .. tostring(times_rerolled_before))
+    end
+
+    -- Perform the reroll (nil element because the function doesn't require it)
+    G.FUNCS.reroll_shop(nil)
+
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS.cash_out()
+          and G.GAME.round_scores
+          and G.GAME.round_scores.times_rerolled
+          and G.GAME.round_scores.times_rerolled.amt == times_rerolled_before + 1
+          and G.GAME.dollars == expected_dollars
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+
   -- TODO: add other shop actions [buy_and_use | reroll | open_pack | redeem_voucher]
   else
     API.send_error_response(
       "Invalid action for shop",
       ERROR_CODES.INVALID_ACTION,
-      { action = action, valid_actions = { "next_round" } }
+      { action = action, valid_actions = { "next_round", "buy_card", "reroll" } }
     )
     return
   end
