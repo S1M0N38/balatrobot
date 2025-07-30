@@ -647,7 +647,7 @@ utils.COMPLETION_CONDITIONS = {
   skip_or_select_blind = function()
     -- Check if we're selecting a blind (facing_blind is set)
     if G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND then
-      return true
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
     end
     -- Check if we skipped a blind (any blind is marked as "Skipped")
     if G.prev_small_state == "Skipped" or G.prev_large_state == "Skipped" or G.prev_boss_state == "Skipped" then

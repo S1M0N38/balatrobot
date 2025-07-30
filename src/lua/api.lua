@@ -202,9 +202,7 @@ end
 API.functions["get_game_state"] = function(_)
   ---@type PendingRequest
   API.pending_requests["get_game_state"] = {
-    condition = function()
-      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-    end,
+    condition = utils.COMPLETION_CONDITIONS.get_game_state,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -225,9 +223,7 @@ API.functions["go_to_menu"] = function(_)
 
   G.FUNCS.go_to_menu({})
   API.pending_requests["go_to_menu"] = {
-    condition = function()
-      return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
-    end,
+    condition = utils.COMPLETION_CONDITIONS.go_to_menu,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -287,11 +283,7 @@ API.functions["start_run"] = function(args)
   -- Defer sending response until the run has started
   ---@type PendingRequest
   API.pending_requests["start_run"] = {
-    condition = function()
-      return G.STATE == G.STATES.BLIND_SELECT
-        and G.GAME.blind_on_deck
-        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-    end,
+    condition = utils.COMPLETION_CONDITIONS.start_run,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -348,12 +340,7 @@ API.functions["skip_or_select_blind"] = function(args)
     G.FUNCS.select_blind(button)
     ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
-      condition = function()
-        return G.GAME
-          and G.GAME.facing_blind
-          and G.STATE == G.STATES.SELECTING_HAND
-          and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-      end,
+      condition = utils.COMPLETION_CONDITIONS.skip_or_select_blind,
       action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
@@ -366,14 +353,7 @@ API.functions["skip_or_select_blind"] = function(args)
     G.FUNCS.skip_blind(button)
     ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
-      condition = function()
-        local prev_state = {
-          ["Small"] = G.prev_small_state,
-          ["Big"] = G.prev_large_state,
-          ["Boss"] = G.prev_boss_state,
-        }
-        return prev_state[current_blind] == "Skipped" and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-      end,
+      condition = utils.COMPLETION_CONDITIONS.skip_or_select_blind,
       action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
@@ -474,21 +454,7 @@ API.functions["play_hand_or_discard"] = function(args)
   -- Defer sending response until the run has started
   ---@type PendingRequest
   API.pending_requests["play_hand_or_discard"] = {
-    condition = function()
-      if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
-        -- round still going
-        if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
-          return true
-        -- round won and entering cash out state (ROUND_EVAL state)
-        elseif G.STATE == G.STATES.ROUND_EVAL then
-          return true
-        -- game over state
-        elseif G.STATE == G.STATES.GAME_OVER then
-          return true
-        end
-      end
-      return false
-    end,
+    condition = utils.COMPLETION_CONDITIONS.play_hand_or_discard,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -562,11 +528,7 @@ API.functions["rearrange_hand"] = function(args)
 
   ---@type PendingRequest
   API.pending_requests["rearrange_hand"] = {
-    condition = function()
-      return G.STATE == G.STATES.SELECTING_HAND
-        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-        and G.STATE_COMPLETE
-    end,
+    condition = utils.COMPLETION_CONDITIONS.rearrange_hand,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -591,9 +553,7 @@ API.functions["cash_out"] = function(_)
   G.FUNCS.cash_out({ config = {} })
   ---@type PendingRequest
   API.pending_requests["cash_out"] = {
-    condition = function()
-      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-    end,
+    condition = utils.COMPLETION_CONDITIONS.cash_out,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -629,11 +589,7 @@ API.functions["shop"] = function(args)
     G.FUNCS.toggle_shop({})
     ---@type PendingRequest
     API.pending_requests["shop"] = {
-      condition = function()
-        return G.STATE == G.STATES.BLIND_SELECT
-          and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-          and G.STATE_COMPLETE
-      end,
+      condition = utils.COMPLETION_CONDITIONS.shop,
       action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
@@ -729,10 +685,10 @@ API.functions["shop"] = function(args)
     ---@type PendingRequest
     API.pending_requests["shop"] = {
       condition = function()
-        return G.STATE == G.STATES.SHOP
+          -- Purchase action is non-atomic, so we need to check dollars
+        return utils.COMPLETION_CONDITIONS.cash_out()
           and #G.shop_jokers.cards == shop_size_before - 1
           and G.GAME.dollars == expected_dollars
-          and G.STATE_COMPLETE
       end,
       action = function()
         local game_state = utils.get_game_state()
