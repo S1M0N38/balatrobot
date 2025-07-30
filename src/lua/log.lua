@@ -238,6 +238,21 @@ function hook_buy_card()
 end
 
 -- -----------------------------------------------------------------------------
+-- reroll_shop Hook
+-- -----------------------------------------------------------------------------
+
+---Hooks into G.FUNCS.reroll_shop
+function hook_reroll_shop()
+  local original_function = G.FUNCS.reroll_shop
+  G.FUNCS.reroll_shop = function(e)
+    local function_call = { name = "shop", arguments = { action = "reroll" } }
+    LOG.schedule_write(function_call)
+    return original_function(e)
+  end
+  sendDebugMessage("Hooked into G.FUNCS.reroll_shop for logging", "LOG")
+end
+
+-- -----------------------------------------------------------------------------
 -- hand_rearrange Hook
 -- -----------------------------------------------------------------------------
 
@@ -369,6 +384,8 @@ function LOG.init()
   hook_discard_cards_from_highlighted()
   hook_cash_out()
   hook_toggle_shop()
+  hook_buy_card()
+  hook_reroll_shop()
   hook_hand_rearrange()
 
   sendInfoMessage("Logger initialized", "LOG")

@@ -697,7 +697,7 @@ API.functions["shop"] = function(args)
     }
 
   elseif action == "reroll" then
-    -- Capture the state before rerolling
+    -- Capture the state before rerolling for response validation
     local dollars_before = G.GAME.dollars
     local reroll_cost = G.GAME.current_round and G.GAME.current_round.reroll_cost or 0
     local expected_dollars = dollars_before - reroll_cost
@@ -716,7 +716,7 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- Perform the reroll (nil element because the function doesn't require it)
+    -- no UI element required for reroll
     G.FUNCS.reroll_shop(nil)
 
     ---@type PendingRequest
@@ -734,7 +734,7 @@ API.functions["shop"] = function(args)
       end,
     }
 
-  -- TODO: add other shop actions [buy_and_use | reroll | open_pack | redeem_voucher]
+  -- TODO: add other shop actions [buy_and_use | open_pack | redeem_voucher]
   else
     API.send_error_response(
       "Invalid action for shop",
