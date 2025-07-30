@@ -695,7 +695,6 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-
   elseif action == "reroll" then
     -- Capture the state before rerolling for response validation
     local dollars_before = G.GAME.dollars
