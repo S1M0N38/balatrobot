@@ -245,6 +245,57 @@ class TestShop:
         assert purchase_response["jokers"]["cards"][0]["cost"] == 6
 
     # ------------------------------------------------------------------
+    # reroll shop
+    # ------------------------------------------------------------------
+
+    def test_shop_reroll_success(self, tcp_client: socket.socket) -> None:
+        """Successful reroll keeps us in shop and updates cards / dollars."""
+
+        # Capture shop state before reroll
+        before_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert before_state["state"] == State.SHOP.value
+        before_keys = [
+            c["config"]["center_key"] for c in before_state["shop_jokers"]["cards"]
+        ]
+        dollars_before = before_state["game"]["dollars"]
+        reroll_cost = before_state["game"]["current_round"]["reroll_cost"]
+
+        # Perform the reroll
+        after_state = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "reroll"}
+        )
+        
+        # verify state
+        assert after_state["state"] == State.SHOP.value
+        assert after_state["game"]["dollars"] == dollars_before - reroll_cost
+        after_keys = [
+            c["config"]["center_key"] for c in after_state["shop_jokers"]["cards"]
+        ]
+        assert before_keys != after_keys
+
+    def test_shop_reroll_insufficient_dollars(self, tcp_client: socket.socket) -> None:
+        """Repeated rerolls eventually raise INVALID_ACTION when too expensive."""
+
+        # Perform rerolls until an error is returned or a reasonable max tries reached
+        max_attempts = 10
+        for _ in range(max_attempts):
+            response = send_and_receive_api_message(
+                tcp_client, "shop", {"action": "reroll"}
+            )
+
+            # Break when error encountered and validate
+            if "error" in response:
+                assert_error_response(
+                    response,
+                    "Not enough dollars to reroll",
+                    ["dollars", "reroll_cost"],
+                    ErrorCode.INVALID_ACTION.value,
+                )
+                break
+        else:
+            pytest.fail("Rerolls did not exhaust dollars within expected attempts")
+
+    # ------------------------------------------------------------------
     # buy_card validation / error scenarios
     # ------------------------------------------------------------------
 

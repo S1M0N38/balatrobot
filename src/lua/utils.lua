@@ -110,6 +110,10 @@ function utils.get_game_state()
         -- "free_rerolls": int, (default 0) -- Number  of free rerolls in the shop?
         hands_left = G.GAME.current_round.hands_left, -- Number of hands left for this round
         hands_played = G.GAME.current_round.hands_played, -- Number of hands played in this round
+
+        -- Reroll information (used in shop state)
+        reroll_cost = G.GAME.current_round.reroll_cost, -- Current cost for a shop reroll
+        free_rerolls = G.GAME.current_round.free_rerolls, -- Free rerolls remaining this round
         -- "idol_card": { -- what's a idol card?? maybe some random used by some joker/effect? idk
         --   "rank": "Ace" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "Jack" | "Queen" | "King",
         --   "suit": "Spades" | "Hearts" | "Diamonds" | "Clubs",
