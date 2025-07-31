@@ -129,7 +129,7 @@ make install-dev    # Install with development dependencies
 ```bash
 make lint           # Run ruff linter (check only)
 make lint-fix       # Run ruff linter with auto-fixes
-make format         # Run ruff formatter
+make format         # Run ruff formatter and stylua
 make format-md      # Run markdown formatter
 make typecheck      # Run type checker
 make quality        # Run all code quality checks

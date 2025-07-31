@@ -13,6 +13,7 @@ PYTHON := python3
 UV := uv
 PYTEST := pytest
 RUFF := ruff
+STYLUA := stylua
 TYPECHECK := basedpyright
 MKDOCS := mkdocs
 MDFORMAT := mdformat
@@ -51,6 +52,8 @@ format: ## Run ruff formatter
 	@echo "$(YELLOW)Running ruff formatter...$(RESET)"
 	$(RUFF) check --select I --fix .
 	$(RUFF) format .
+	@echo "$(YELLOW)Running stylua formatter...$(RESET)"
+	$(STYLUA) src/lua
 
 format-md: ## Run markdown formatter
 	@echo "$(YELLOW)Running markdown formatter...$(RESET)"

@@ -27,7 +27,7 @@ make install-dev
 ```bash
 make lint              # Check code with ruff linter
 make lint-fix          # Auto-fix linting issues
-make format            # Format code with ruff
+make format            # Format code with ruff and stylua
 make format-md         # Format markdown files
 make typecheck         # Run type checker
 make quality           # Run all quality checks
