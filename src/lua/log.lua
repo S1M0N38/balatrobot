@@ -253,32 +253,48 @@ function hook_reroll_shop()
 end
 
 -- -----------------------------------------------------------------------------
--- hand_rearrange Hook
+-- hand_rearrange Hook (also handles joker rearrange)
 -- -----------------------------------------------------------------------------
 
----Hooks into CardArea:align_cards for hand reordering detection
+---Hooks into CardArea:align_cards for hand and joker reordering detection
 function hook_hand_rearrange()
   local original_function = CardArea.align_cards
-  local previous_order = {}
+  local previous_orders = {
+    hand = {},
+    joker = {},
+  }
+  -- local previous_hand_order = {}
+  -- local previous_joker_order = {}
   CardArea.align_cards = function(self, ...)
-    -- Only monitor hand cards
-    ---@diagnostic disable-next-line: undefined-field
-    if self.config and self.config.type == "hand" and self.cards then
+    -- Monitor both hand and joker cards
+    if
+      ---@diagnostic disable-next-line: undefined-field
+      self.config
+      ---@diagnostic disable-next-line: undefined-field
+      and (self.config.type == "hand" or self.config.type == "joker")
+      ---@diagnostic disable-next-line: undefined-field
+      and self.cards
+      ---@diagnostic disable-next-line: undefined-field
+      and #self.cards > 0
+    then
       -- Call the original function with all arguments
       local result = original_function(self, ...)
 
       ---@diagnostic disable-next-line: undefined-field
       if self.config.card_count ~= #self.cards then
-        -- We're drawing cards from the deck
+        -- We're adding/removing cards
         return result
       end
 
-      -- Capture current card order after alignment
       local current_order = {}
+      -- Capture current card order after alignment
       ---@diagnostic disable-next-line: undefined-field
       for i, card in ipairs(self.cards) do
         current_order[i] = card.sort_id
       end
+
+      ---@diagnostic disable-next-line: undefined-field
+      previous_order = previous_orders[self.config.type]
 
       if utils.sets_equal(previous_order, current_order) then
         local order_changed = false
@@ -303,10 +319,26 @@ function hook_hand_rearrange()
             cards[pos] = lookup[card_id]
           end
 
-          local function_call = {
-            name = "rearrange_hand",
-            arguments = { cards = cards },
-          }
+          local function_call
+
+          if self.config.type == "hand" then ---@diagnostic disable-line: undefined-field
+            function_call = {
+              name = "rearrange_hand",
+              arguments = { cards = cards },
+            }
+          elseif self.config.type == "joker" then ---@diagnostic disable-line: undefined-field
+            sendInfoMessage("Logging joker rearrangement", "LOG")
+            function_call = {
+              name = "rearrange_jokers",
+              arguments = { jokers = cards },
+            }
+          else
+            function_call = {
+              name = "unknown_rearrange",
+              arguments = {},
+            }
+            sendErrorMessage("Unknown card type for rearrange", "LOG")
+          end
 
           -- NOTE: We cannot schedule a log write at this point because we do not have
           -- access to the game state before the function call. The game state is only
@@ -335,14 +367,16 @@ function hook_hand_rearrange()
         end
       end
 
-      previous_order = current_order
+      ---@diagnostic disable-next-line: undefined-field
+      previous_orders[self.config.type] = current_order
+
       return result
     else
-      -- For non-hand card areas, just call the original function
+      -- For non-hand/joker card areas, just call the original function
       return original_function(self, ...)
     end
   end
-  sendInfoMessage("Hooked into CardArea:align_cards for hand rearrange logging", "LOG")
+  sendInfoMessage("Hooked into CardArea:align_cards for card rearrange logging", "LOG")
 end
 
 -- TODO: add hooks for other shop functions
