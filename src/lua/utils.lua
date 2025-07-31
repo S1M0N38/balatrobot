@@ -378,27 +378,31 @@ function utils.get_game_state()
     }
   end
 
-  local jokers = {
-    cards = {},
-  }
+  local jokers = nil
   if G.jokers then
-    if G.jokers.config then
-      jokers.config = {
-        card_count = G.jokers.config.card_count,
-        card_limit = G.jokers.config.card_limit,
-      }
-    end
+    local cards = {}
     if G.jokers.cards then
       for i, card in pairs(G.jokers.cards) do
-        jokers.cards[i] = {
+        cards[i] = {
           label = card.label,
           cost = card.cost,
+          sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
           config = {
-            center = card.config.center,
+            center_key = card.config.center_key,
           },
+          debuf = card.debuff,
+          facing = card.facing,
+          highlighted = card.highlighted,
         }
       end
     end
+    jokers = {
+      cards = cards,
+      config = {
+        card_count = G.jokers.config.card_count,
+        card_limit = G.jokers.config.card_limit,
+      },
+    }
   end
 
   local shop_jokers = nil
@@ -678,6 +682,10 @@ utils.COMPLETION_CONDITIONS = {
 
   rearrange_hand = function()
     return G.STATE == G.STATES.SELECTING_HAND and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+  end,
+
+  rearrange_jokers = function()
+    return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
   end,
 
   cash_out = function()
