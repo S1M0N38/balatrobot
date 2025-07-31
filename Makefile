@@ -1,0 +1,131 @@
+.DEFAULT_GOAL := help
+.PHONY: help install install-dev lint lint-fix format format-md typecheck quality test test-parallel test-teardown test-verbose coverage docs-serve docs-build docs-clean build clean all dev
+
+# Colors for output
+YELLOW := \033[33m
+GREEN := \033[32m
+BLUE := \033[34m
+RED := \033[31m
+RESET := \033[0m
+
+# Project variables
+PYTHON := python3
+UV := uv
+PYTEST := pytest
+RUFF := ruff
+TYPECHECK := basedpyright
+MKDOCS := mkdocs
+MDFORMAT := mdformat
+BALATRO_SCRIPT := ./balatro.sh
+
+# Test ports for parallel testing
+TEST_PORTS := 12346 12347 12348 12349
+
+help: ## Show this help message
+	@echo "$(BLUE)BalatroBot Development Makefile$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)Available targets:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(GREEN)%-18s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+# Installation targets
+install: ## Install package dependencies
+	@echo "$(YELLOW)Installing dependencies...$(RESET)"
+	$(UV) sync
+
+install-dev: ## Install package with development dependencies
+	@echo "$(YELLOW)Installing development dependencies...$(RESET)"
+	$(UV) sync --all-extras
+
+# Code quality targets
+lint: ## Run ruff linter (check only)
+	@echo "$(YELLOW)Running ruff linter...$(RESET)"
+	$(RUFF) check --select I .
+	$(RUFF) check .
+
+lint-fix: ## Run ruff linter with auto-fixes
+	@echo "$(YELLOW)Running ruff linter with fixes...$(RESET)"
+	$(RUFF) check --select I --fix .
+	$(RUFF) check --fix .
+
+format: ## Run ruff formatter
+	@echo "$(YELLOW)Running ruff formatter...$(RESET)"
+	$(RUFF) check --select I --fix .
+	$(RUFF) format .
+
+format-md: ## Run markdown formatter
+	@echo "$(YELLOW)Running markdown formatter...$(RESET)"
+	$(MDFORMAT) .
+
+typecheck: ## Run type checker
+	@echo "$(YELLOW)Running type checker...$(RESET)"
+	$(TYPECHECK)
+
+quality: lint format typecheck ## Run all code quality checks
+	@echo "$(GREEN) All quality checks completed$(RESET)"
+
+# Testing targets
+test: ## Run tests with single Balatro instance (auto-starts if needed)
+	@echo "$(YELLOW)Running tests...$(RESET)"
+	@if ! $(BALATRO_SCRIPT) --status | grep -q "12346"; then \
+		echo "Starting Balatro on port 12346..."; \
+		$(BALATRO_SCRIPT) --headless --fast -p 12346; \
+	fi
+	$(PYTEST)
+
+test-parallel: ## Run tests in parallel on 4 instances (auto-starts if needed)
+	@echo "$(YELLOW)Running parallel tests...$(RESET)"
+	@running_count=$$($(BALATRO_SCRIPT) --status | grep -E "($(word 1,$(TEST_PORTS))|$(word 2,$(TEST_PORTS))|$(word 3,$(TEST_PORTS))|$(word 4,$(TEST_PORTS)))" | wc -l); \
+	if [ "$$running_count" -ne 4 ]; then \
+		echo "Starting Balatro instances on ports: $(TEST_PORTS)"; \
+		$(BALATRO_SCRIPT) --headless --fast -p $(word 1,$(TEST_PORTS)) -p $(word 2,$(TEST_PORTS)) -p $(word 3,$(TEST_PORTS)) -p $(word 4,$(TEST_PORTS)); \
+	fi
+	$(PYTEST) -n 4 --port $(word 1,$(TEST_PORTS)) --port $(word 2,$(TEST_PORTS)) --port $(word 3,$(TEST_PORTS)) --port $(word 4,$(TEST_PORTS)) tests/lua/
+
+test-teardown: ## Kill all Balatro instances
+	@echo "$(YELLOW)Killing all Balatro instances...$(RESET)"
+	$(BALATRO_SCRIPT) --kill
+	@echo "$(GREEN) All instances stopped$(RESET)"
+
+test-verbose: ## Run tests with verbose output
+	@echo "$(YELLOW)Running tests with verbose output...$(RESET)"
+	$(PYTEST) -vx
+
+coverage: ## Generate test coverage reports
+	@echo "$(YELLOW)Generating coverage reports...$(RESET)"
+	$(PYTEST) --cov=src/balatrobot --cov-report=term-missing --cov-report=html --cov-report=xml
+	@echo "$(GREEN) Coverage reports generated$(RESET)"
+	@echo "HTML report: htmlcov/index.html"
+
+# Documentation targets
+docs-serve: ## Serve documentation locally
+	@echo "$(YELLOW)Starting documentation server...$(RESET)"
+	$(MKDOCS) serve
+
+docs-build: ## Build documentation
+	@echo "$(YELLOW)Building documentation...$(RESET)"
+	$(MKDOCS) build
+
+docs-clean: ## Clean built documentation
+	@echo "$(YELLOW)Cleaning documentation build...$(RESET)"
+	rm -rf site/
+
+# Build targets
+build: ## Build package for distribution
+	@echo "$(YELLOW)Building package...$(RESET)"
+	$(PYTHON) -m build
+
+clean: ## Clean build artifacts and caches
+	@echo "$(YELLOW)Cleaning build artifacts...$(RESET)"
+	rm -rf build/ dist/ *.egg-info/
+	rm -rf .pytest_cache/ .coverage htmlcov/ coverage.xml
+	rm -rf .ruff_cache/
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+	@echo "$(GREEN) Cleanup completed$(RESET)"
+
+# Convenience targets
+dev: format lint typecheck ## Quick development check (no tests)
+	@echo "$(GREEN) Development checks completed$(RESET)"
+
+all: format lint typecheck test ## Complete quality check with tests
+	@echo "$(GREEN) All checks completed successfully$(RESET)"
