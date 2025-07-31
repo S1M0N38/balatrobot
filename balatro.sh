@@ -28,14 +28,14 @@ esac
 # Usage function
 show_usage() {
 	cat <<EOF
-Usage: $0 -p PORT [OPTIONS]
+Usage: $0 [OPTIONS]
+       $0 -p PORT [OPTIONS]
        $0 --kill
        $0 --status
 
-Required (unless --kill or --status):
-  -p, --port PORT  Specify port for Balatro instance (can be used multiple times)
-
 Options:
+  -p, --port PORT  Specify port for Balatro instance (can be used multiple times)
+                   Default: 12346 if no port specified
   --headless       Enable headless mode (sets BALATROBOT_HEADLESS=1)
   --fast           Enable fast mode (sets BALATROBOT_FAST=1)
   --kill           Kill all running Balatro instances and exit
@@ -43,9 +43,10 @@ Options:
   -h, --help       Show this help message
 
 Examples:
+  $0                            # Start single instance on default port 12346
   $0 -p 12347                   # Start single instance on port 12347
   $0 -p 12346 -p 12347          # Start two instances on ports 12346 and 12347
-  $0 --headless --fast -p 12346 # Start with headless and fast mode
+  $0 --headless --fast          # Start with headless and fast mode on default port
   $0 --kill                     # Kill all running Balatro instances
   $0 --status                   # Show running instances
 
@@ -112,11 +113,9 @@ parse_arguments() {
 			exit 1
 		fi
 	else
-		# In normal mode, at least one port must be specified
+		# In normal mode, use default port 12346 if no port is specified
 		if [[ ${#PORTS[@]} -eq 0 ]]; then
-			echo "Error: At least one port must be specified with -p/--port" >&2
-			show_usage
-			exit 1
+			PORTS=(12346)
 		fi
 	fi
 
@@ -170,7 +169,7 @@ get_platform_config() {
 		EXE="$HOME/.steam/debian-installation/steamapps/common/Balatro/Balatro.exe"
 
 		STEAM_PATH="$PROTON_DIR"
-		LIBRARY_ENV_VAR=""    # Not used on Linux when running via Proton
+		LIBRARY_ENV_VAR="" # Not used on Linux when running via Proton
 		LIBRARY_FILE=""
 		BALATRO_EXECUTABLE="proton"
 		# Patterns of processes that should be terminated when cleaning up existing Balatro instances.
