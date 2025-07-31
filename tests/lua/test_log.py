@@ -50,6 +50,10 @@ def normalize_step(step: dict[str, Any]) -> dict[str, Any]:
                 for card in game_state["hand"]["cards"]:
                     card.pop("highlighted", None)
                     card.pop("sort_id", None)
+            if "jokers" in game_state and "cards" in game_state["jokers"]:
+                for card in game_state["jokers"]["cards"]:
+                    card.pop("highlighted", None)
+                    card.pop("sort_id", None)
 
     # we don't care about the game_state_before when starting a run
     if step.get("function", {}).get("name") == "start_run":
