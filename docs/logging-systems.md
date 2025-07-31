@@ -16,7 +16,7 @@ The system hooks into these game functions:
 - `skip_or_select_blind`: blind selection actions
 - `play_hand_or_discard`: card play actions
 - `cash_out`: end blind and collect rewards
-- `shop`: shop interactions
+- `shop`: shop interactions (`next_round`, `buy_card`, `reroll`)
 - `go_to_menu`: return to main menu
 
 The JSONL files are automatically created when:
