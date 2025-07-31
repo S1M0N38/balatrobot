@@ -56,10 +56,11 @@ function LOG.schedule_write(function_call)
     timestamp_ms_after = nil,
     game_state_after = nil,
   }
+
   local pending_key = function_call.name .. "_" .. tostring(socket.gettime())
   LOG.pending_logs[pending_key] = {
     log_entry = log_entry,
-    condition = utils.COMPLETION_CONDITIONS[function_call.name],
+    condition = utils.COMPLETION_CONDITIONS[function_call.name][function_call.arguments.action or ""],
   }
 end
 
@@ -244,10 +245,10 @@ end
 ---Hooks into G.FUNCS.reroll_shop
 function hook_reroll_shop()
   local original_function = G.FUNCS.reroll_shop
-  G.FUNCS.reroll_shop = function(e)
+  G.FUNCS.reroll_shop = function(...)
     local function_call = { name = "shop", arguments = { action = "reroll" } }
     LOG.schedule_write(function_call)
-    return original_function(e)
+    return original_function(...)
   end
   sendDebugMessage("Hooked into G.FUNCS.reroll_shop for logging", "LOG")
 end
