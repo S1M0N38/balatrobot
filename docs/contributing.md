@@ -33,7 +33,7 @@ Before contributing, ensure you have:
 2. **Install Dependencies**
 
     ```bash
-    uv sync --all-extras
+    make install-dev
     ```
 
 3. **Start Balatro with Mods**
@@ -108,157 +108,88 @@ test(api): add shop booster validation tests
 
 ## Development & Testing
 
-### Code Quality Tools
+### Makefile Commands
+
+BalatroBot includes a comprehensive Makefile that provides a convenient interface for all development tasks. Use `make help` to see all available commands:
 
 ```bash
-# Python linting and formatting
-ruff check .
-ruff check --select I --fix .
-ruff format .
+# Show all available commands with descriptions
+make help
+```
 
-# Markdown formatting (docs and specific files)
-mdformat .
+#### Installation & Setup
 
-# Type checking
-basedpyright
+```bash
+make install        # Install package dependencies
+make install-dev    # Install with development dependencies
+```
+
+#### Code Quality & Formatting
+
+```bash
+make lint           # Run ruff linter (check only)
+make lint-fix       # Run ruff linter with auto-fixes
+make format         # Run ruff formatter and stylua
+make format-md      # Run markdown formatter
+make typecheck      # Run type checker
+make quality        # Run all code quality checks
+make dev            # Quick development check (format + lint + typecheck, no tests)
 ```
 
 ### Testing Requirements
 
-!!! warning
-
-    All tests require Balatro to be running in the background. Use `./balatro.sh --status` to check if the game is running.
-
-#### Single Instance Testing
+#### Testing with Makefile
 
 ```bash
-# Start Balatro with default port (12346)
-./balatro.sh -p 12346
+make test           # Run tests with single instance (auto-starts if needed)
+make test-parallel  # Run tests on 4 instances (auto-starts if needed)
+make test-teardown  # Kill all Balatro instances
 
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/lua/test_api_functions.py
-
-# Run with verbose output and stop on first failure
-pytest -vx
-
-# Run tests on specific port
-pytest --port 12347 tests/lua/endpoints/test_cash_out.py
+# Complete workflow including tests
+make all            # Run format + lint + typecheck + test
 ```
 
-#### Parallel Testing with Multiple Balatro Instances
+The testing system automatically handles Balatro instance management:
 
-The test suite supports running tests in parallel across multiple Balatro instances. This dramatically reduces test execution time by distributing tests across multiple game instances.
+- **`make test`**: Runs tests with a single instance, auto-starting if needed
+- **`make test-parallel`**: Runs tests on 4 instances for ~4x speedup, auto-starting if needed
+- **`make test-teardown`**: Cleans up all instances when done
 
-**Setup for Parallel Testing:**
+Both test commands keep instances running after completion for faster subsequent runs.
 
-1. **Check existing instances and start multiple Balatro instances on different ports**:
-
-    ```bash
-    # First, check if any instances are already running
-    ./balatro.sh --status
-
-    # If you need to kill all existing instances first:
-    ./balatro.sh --kill
-    ```
-
-    ```bash
-    # Start two instances with a single command
-    ./balatro.sh -p 12346 -p 12347
-
-    # With performance optimizations for faster testing
-    ./balatro.sh --fast -p 12346
-
-    # Headless mode for server environments
-    ./balatro.sh --headless -p 12346
-
-    # Fast Headless mode on 4 instances (recommended configuration)
-    ./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349
-    ```
-
-2. **Run tests in parallel**:
-
-    ```bash
-    # Two workers (faster than single instance)
-    pytest -n 2 --port 12346 --port 12347
-
-    # Four workers (recommended configuration)
-    pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349
-    ```
-
-**Benefits:**
-
-- **Faster test execution**: ~4x speedup with 4 parallel workers
-- **Port isolation**: Each worker uses its dedicated Balatro instance
-
-**Notes:**
-
-- Each Balatro instance must be running on a different port before starting tests
-- Tests automatically distribute across available workers
-- Monitor logs for each instance: `tail -f logs/balatro_12346.log`
-- Logs are automatically created in the `logs/` directory with format `balatro_PORT.log`
-
-**balatro.sh Command Options:**
+**Manual Setup for Advanced Testing:**
 
 ```bash
-# Usage examples
-./balatro.sh -p 12347                   # Start single instance on port 12347
-./balatro.sh -p 12346 -p 12347          # Start two instances on ports 12346 and 12347
-./balatro.sh --headless --fast -p 12346 # Start with headless and fast mode
-./balatro.sh --kill                     # Kill all running Balatro instances
+# Check/manage Balatro instances
 ./balatro.sh --status                   # Show running instances
-```
+./balatro.sh --kill                     # Kill all instances
 
-**balatro.sh Modes:**
+# Start instances manually
+./balatro.sh -p 12346 -p 12347          # Two instances
+./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349  # Full setup
 
-- **`--headless`**: Enable headless mode (sets `BALATROBOT_HEADLESS=1`)
-
-    - Minimizes and hides game window
-    - Completely disables Love2D graphics operations
-    - Minimal CPU/GPU usage for pure game logic execution
-    - Ideal for server environments and cloud-based bot training
-
-- **`--fast`**: Enable fast mode (sets `BALATROBOT_FAST=1`)
-
-    - Unlimited FPS, 10x game speed, 6x faster animations
-    - Disabled shadows, bloom, CRT effects, VSync
-    - Complete audio muting
-    - Optimized for maximum execution speed during bot training
-
-**Test Prerequisites and Workflow:**
-
-```bash
-# 1. Check if Balatro instances are already running
-./balatro.sh --status
-
-# 2. If instances are running on needed ports, you can proceed with testing
-# If you need to kill all running instances and start fresh:
-./balatro.sh --kill
-
-# 3. Start the required instances
-./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349
-
-# 4. Run parallel tests
+# Manual parallel testing
 pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349 tests/lua/
 ```
 
-**Troubleshooting Test Failures**:
+**Performance Modes:**
 
-- **Connection timeouts**: Ensure TCP port 12346 is available
-- **Game state errors**: Verify the game is responsive and hasn't crashed
-- **Invalid responses**: Check the mod loaded correctly in `balatro.log`
-- **Balatro crashes**: Stop testing immediately, investigate crash logs, restart the game before retrying
+- **`--headless`**: No graphics, ideal for servers
+- **`--fast`**: 10x speed, disabled effects, optimal for testing
 
 ### Documentation
 
 ```bash
-# Serve documentation locally
-mkdocs serve
+make docs-serve     # Serve documentation locally
+make docs-build     # Build documentation
+make docs-clean     # Clean built documentation
+```
 
-# Build documentation
-mkdocs build
+### Build & Maintenance
+
+```bash
+make build          # Build package for distribution
+make clean          # Clean build artifacts and caches
 ```
 
 ## Technical Guidelines
@@ -277,56 +208,13 @@ mkdocs build
 - **Communication**: TCP protocol on port 12346
 - **Debugging**: Use DebugPlus mod for enhanced debugging capabilities
 
-### Configuration System
+### Environment Variables
 
-The BalatroBot mod includes a sophisticated configuration system that optimizes Balatro for bot automation:
+Configure BalatroBot behavior with these environment variables:
 
-#### Environment Variables
-
-Configure BalatroBot behavior using these environment variables:
-
-- **`BALATROBOT_HEADLESS`**: Set to `"1"` to enable headless mode (no graphics rendering)
-- **`BALATROBOT_FAST`**: Set to `"1"` to enable fast mode (10x game speed, disabled visuals)
-- **`BALATROBOT_PORT`**: TCP port for communication (default: "12346")
-
-#### Fast Mode Configuration
-
-Fast mode (`BALATROBOT_FAST=1`) applies aggressive optimizations for bot training:
-
-- **Performance**: Unlimited FPS, 10x game speed, 6x faster animations
-- **Graphics**: Disabled shadows, bloom, CRT effects, VSync, texture scaling set to nearest neighbor
-- **Audio**: Complete audio muting (volume, music, game sounds)
-- **Visual Effects**: Disabled motion blur, screen shake, rumble effects
-- **Resource Usage**: Optimized for maximum execution speed
-
-#### Normal Mode Configuration
-
-Normal mode preserves standard game experience while maintaining bot compatibility:
-
-- **Performance**: 60 FPS cap, normal game speed, standard animations
-- **Graphics**: Full visual quality with shadows, bloom, and CRT effects enabled
-- **Audio**: Standard audio levels (50% main volume, 100% music/sounds)
-- **Visual Effects**: Normal motion and screen effects enabled
-
-#### Headless Mode Configuration
-
-Headless mode (`BALATROBOT_HEADLESS=1`) disables all graphics for server environments:
-
-- **Window Management**: Minimizes and hides game window
-- **Rendering**: Completely disables Love2D graphics operations
-- **Resource Usage**: Minimal CPU/GPU usage for pure game logic execution
-- **Server Deployment**: Ideal for cloud-based bot training
-
-#### Implementation Details
-
-The configuration system is implemented in `src/lua/settings.lua` and provides:
-
-- **Environment Detection**: Reads environment variables on mod initialization
-- **Love2D Patches**: Modifies game engine behavior for performance optimization
-- **Balatro Integration**: Configures game-specific settings through global variables
-- **Fallback Handling**: Graceful degradation when graphics context is unavailable
-
-This configuration system enables BalatroBot to run efficiently in diverse environments, from local development with full graphics to high-performance server deployments with headless operation.
+- **`BALATROBOT_HEADLESS=1`**: Disable graphics for server environments
+- **`BALATROBOT_FAST=1`**: Enable 10x speed with disabled effects for testing
+- **`BALATROBOT_PORT`**: TCP communication port (default: "12346")
 
 ## Communication & Community
 

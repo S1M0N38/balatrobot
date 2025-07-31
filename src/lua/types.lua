@@ -52,6 +52,9 @@
 ---@field action "rearrange" The action to perform
 ---@field cards number[] Array of card indices for every card in hand (0-based)
 
+---@class RearrangeJokersArgs
+---@field jokers number[] Array of joker indices for every joker (0-based)
+
 ---@class ShopActionArgs
 ---@field action "next_round" | "buy_card" | "reroll" | "redeem_voucher" The action to perform
 ---@field index? number The index of the card to act on (buy, buy_and_use, redeem, open) (0-based)
@@ -72,7 +75,7 @@
 ---@field last_client_port? number Port of the last client that sent a message
 
 -- =============================================================================
--- Game Entity Types (used in utils.lua for state extraction)
+-- Game Entity Types
 -- =============================================================================
 
 -- Root game state response (G object)
@@ -81,14 +84,17 @@
 ---@field game? GGame Game information (null if not in game)
 ---@field hand? GHand Hand information (null if not available)
 ---@field jokers GJokers Jokers area object (with sub-field `cards`)
----@field consumeables GConsumeables Consumables area object (typo intentional to match API)
+---@field consumeables GConsumeables Consumables area object (typo intentional)
+---@field shop_jokers? GShopJokers Shop jokers area
+---@field shop_vouchers? GShopVouchers Shop vouchers area
+---@field shop_booster? GShopBooster Shop booster packs area
 
 -- Game state (G.GAME)
 ---@class GGame
 ---@field bankrupt_at number Money threshold for bankruptcy
 ---@field base_reroll_cost number Base cost for rerolling shop
 ---@field blind_on_deck string Current blind type ("Small", "Big", "Boss")
----@field bosses_used table<string, number> Bosses used in run (bl_<boss_name> = 1|0)
+---@field bosses_used GGameBossesUsed Bosses used in run (bl_<boss_name> = 1|0)
 ---@field chips number Current chip count
 ---@field current_round GGameCurrentRound Current round information
 ---@field discount_percent number Shop discount percentage
@@ -141,7 +147,7 @@
 ---@field hands_played number Number of hands played
 ---@field reroll_cost number Current dollar cost to reroll the shop offer
 ---@field free_rerolls number Free rerolls remaining this round
----@field voucher table Vouchers for this round
+---@field voucher GGameCurrentRoundVoucher Vouchers for this round
 
 -- Selected deck info (G.GAME.selected_back)
 ---@class GGameSelectedBack
@@ -182,6 +188,7 @@
 -- Hand card (G.hand.cards[])
 ---@class GHandCards
 ---@field label string Display label of the card
+---@field sort_id number Unique identifier for this card instance
 ---@field base GHandCardsBase Base card properties
 ---@field config GHandCardsConfig Card configuration
 ---@field debuff boolean Whether card is debuffed
@@ -217,19 +224,24 @@
 ---@field config GCardAreaConfig Config for jokers card area
 ---@field cards GJokersCard[] Array of joker card objects
 
--- Keeping typo "consumeables" for compatibility with the runtime table name
+-- Keeping typo "consumeables" for compatibility
 ---@class GConsumeables
 ---@field config GCardAreaConfig Configuration for the consumables slot
+---@field cards? GConsumablesCard[] Array of consumable card objects
 
 -- Joker card (G.jokers.cards[])
 ---@class GJokersCard
 ---@field label string Display label of the joker
 ---@field cost number Purchase cost of the joker
+---@field sort_id number Unique identifier for this card instance
 ---@field config GJokersCardConfig Joker card configuration
+---@field debuff boolean Whether joker is debuffed
+---@field facing string Card facing direction ("front", "back")
+---@field highlighted boolean Whether joker is highlighted
 
 -- Joker card configuration (G.jokers.cards[].config)
 ---@class GJokersCardConfig
----@field center table Center configuration for joker
+---@field center_key string Key identifier for the joker center
 
 -- Consumable card (G.consumeables.cards[])
 ---@class GConsumablesCard
@@ -239,10 +251,10 @@
 
 -- Consumable card configuration (G.consumeables.cards[].config)
 ---@class GConsumablesCardConfig
----@field center table Center configuration for consumable
+---@field center_key string Key identifier for the consumable center
 
 -- =============================================================================
--- Utility Module (implemented in utils.lua)
+-- Utility Module
 -- =============================================================================
 
 ---Utility functions for game state extraction and data processing
@@ -290,5 +302,51 @@
 ---@field vsync_enabled boolean Whether vertical sync is enabled
 
 -- =============================================================================
--- New composite area types (match utils.lua)
+-- Shop Area Types
 -- =============================================================================
+
+-- Shop jokers area
+---@class GShopJokers
+---@field config GCardAreaConfig Configuration for the shop jokers area
+---@field cards? GShopCard[] Array of shop card objects
+
+-- Shop vouchers area
+---@class GShopVouchers
+---@field config GCardAreaConfig Configuration for the shop vouchers area
+---@field cards? GShopCard[] Array of shop voucher objects
+
+-- Shop booster area
+---@class GShopBooster
+---@field config GCardAreaConfig Configuration for the shop booster area
+---@field cards? GShopCard[] Array of shop booster objects
+
+-- Shop card
+---@class GShopCard
+---@field label string Display label of the shop card
+---@field cost number Purchase cost of the card
+---@field sell_cost number Sell cost of the card
+---@field debuff boolean Whether card is debuffed
+---@field facing string Card facing direction ("front", "back")
+---@field highlighted boolean Whether card is highlighted
+---@field ability GShopCardAbility Card ability information
+---@field config GShopCardConfig Shop card configuration
+
+-- Shop card ability (G.shop_*.cards[].ability)
+---@class GShopCardAbility
+---@field set string The set of the card: "Joker", "Planet", "Voucher", "Booster", or "Consumable"
+
+-- Shop card configuration (G.shop_*.cards[].config)
+---@class GShopCardConfig
+---@field center_key string Key identifier for the card center
+
+-- =============================================================================
+-- Additional Game State Types
+-- =============================================================================
+
+-- Round voucher (G.GAME.current_round.voucher)
+---@class GGameCurrentRoundVoucher
+-- This is intentionally empty as the voucher table structure varies
+
+-- Bosses used (G.GAME.bosses_used)
+---@class GGameBossesUsed
+-- Dynamic table with boss name keys mapping to 1|0
