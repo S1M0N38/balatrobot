@@ -3,12 +3,6 @@ local json = require("json")
 
 -- Constants
 local SOCKET_TIMEOUT = 0
--- The threshold for determining when game state transitions are complete.
--- This value represents the maximum number of events allowed in the game's event queue
--- to consider the game idle and waiting for user action. When the queue has fewer than
--- 3 events, the game is considered stable enough to process API responses. This is a
--- heuristic based on empirical testing to ensure smooth gameplay without delays.
-local EVENT_QUEUE_THRESHOLD = 3
 
 -- Error codes for standardized error handling
 local ERROR_CODES = {
@@ -529,6 +523,82 @@ API.functions["rearrange_hand"] = function(args)
   ---@type PendingRequest
   API.pending_requests["rearrange_hand"] = {
     condition = utils.COMPLETION_CONDITIONS.rearrange_hand,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
+end
+
+---Rearranges the jokers based on the given card indices
+---Call G.FUNCS.rearrange_jokers(new_jokers)
+---@param args RearrangeJokersArgs The card indices to rearrange the jokers with
+API.functions["rearrange_jokers"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "jokers" })
+
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  -- Validate that jokers exist
+  if not G.jokers or not G.jokers.cards or #G.jokers.cards == 0 then
+    API.send_error_response(
+      "No jokers available to rearrange",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { jokers_available = false }
+    )
+    return
+  end
+
+  -- Validate number of jokers is equal to the number of jokers in the joker area
+  if #args.jokers ~= #G.jokers.cards then
+    API.send_error_response(
+      "Invalid number of jokers to rearrange",
+      ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+      { jokers_count = #args.jokers, valid_range = tostring(#G.jokers.cards) }
+    )
+    return
+  end
+
+  -- Convert incoming indices from 0-based to 1-based
+  for i, joker_index in ipairs(args.jokers) do
+    args.jokers[i] = joker_index + 1
+  end
+
+  -- Create a new joker array to swap card indices
+  local new_jokers = {}
+  for _, old_index in ipairs(args.jokers) do
+    local card = G.jokers.cards[old_index]
+    if not card then
+      API.send_error_response(
+        "Joker index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = old_index, max_index = #G.jokers.cards }
+      )
+      return
+    end
+    table.insert(new_jokers, card)
+  end
+
+  G.jokers.cards = new_jokers
+
+  -- Update each joker's order field so future sort('order') calls work correctly
+  for i, card in ipairs(G.jokers.cards) do
+    if card.ability then
+      card.ability.order = i
+    end
+    if card.config and card.config.center then
+      card.config.center.order = i
+    end
+  end
+
+  ---@type PendingRequest
+  API.pending_requests["rearrange_jokers"] = {
+    condition = utils.COMPLETION_CONDITIONS.rearrange_jokers,
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
