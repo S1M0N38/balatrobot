@@ -72,6 +72,7 @@ test: ## Run tests with single Balatro instance (auto-starts if needed)
 	@if ! $(BALATRO_SCRIPT) --status | grep -q "12346"; then \
 		echo "Starting Balatro on port 12346..."; \
 		$(BALATRO_SCRIPT) --headless --fast -p 12346; \
+		sleep 1; \
 	fi
 	$(PYTEST)
 
@@ -81,6 +82,7 @@ test-parallel: ## Run tests in parallel on 4 instances (auto-starts if needed)
 	if [ "$$running_count" -ne 4 ]; then \
 		echo "Starting Balatro instances on ports: $(TEST_PORTS)"; \
 		$(BALATRO_SCRIPT) --headless --fast -p $(word 1,$(TEST_PORTS)) -p $(word 2,$(TEST_PORTS)) -p $(word 3,$(TEST_PORTS)) -p $(word 4,$(TEST_PORTS)); \
+		sleep 1; \
 	fi
 	$(PYTEST) -n 4 --port $(word 1,$(TEST_PORTS)) --port $(word 2,$(TEST_PORTS)) --port $(word 3,$(TEST_PORTS)) --port $(word 4,$(TEST_PORTS)) tests/lua/
 
