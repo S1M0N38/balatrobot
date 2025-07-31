@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install install-dev lint lint-fix format format-md typecheck quality test test-parallel test-teardown test-verbose coverage docs-serve docs-build docs-clean build clean all dev
+.PHONY: help install install-dev lint lint-fix format format-md typecheck quality test test-parallel test-teardown docs-serve docs-build docs-clean build clean all dev
 
 # Colors for output
 YELLOW := \033[33m
@@ -85,16 +85,6 @@ test-teardown: ## Kill all Balatro instances
 	@echo "$(YELLOW)Killing all Balatro instances...$(RESET)"
 	$(BALATRO_SCRIPT) --kill
 	@echo "$(GREEN) All instances stopped$(RESET)"
-
-test-verbose: ## Run tests with verbose output
-	@echo "$(YELLOW)Running tests with verbose output...$(RESET)"
-	$(PYTEST) -vx
-
-coverage: ## Generate test coverage reports
-	@echo "$(YELLOW)Generating coverage reports...$(RESET)"
-	$(PYTEST) --cov=src/balatrobot --cov-report=term-missing --cov-report=html --cov-report=xml
-	@echo "$(GREEN) Coverage reports generated$(RESET)"
-	@echo "HTML report: htmlcov/index.html"
 
 # Documentation targets
 docs-serve: ## Serve documentation locally

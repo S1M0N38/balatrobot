@@ -39,8 +39,6 @@ make quality           # Run all quality checks
 make test              # Run tests with single instance (auto-starts if needed)
 make test-parallel     # Run tests on 4 instances (auto-starts if needed)
 make test-teardown     # Kill all Balatro instances
-make test-verbose      # Run tests with verbose output
-make coverage          # Generate coverage reports
 ```
 
 **Testing Features:**
