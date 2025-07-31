@@ -636,71 +636,107 @@ local EVENT_QUEUE_THRESHOLD = 3
 
 ---Completion conditions for different game actions to determine when action execution is complete
 ---These are shared between API and LOG systems to ensure consistent timing
----@type table<string, function>
+---@type table<string, table>
 utils.COMPLETION_CONDITIONS = {
-  get_game_state = function()
-    return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-  end,
-
-  go_to_menu = function()
-    return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
-  end,
-
-  start_run = function()
-    return G.STATE == G.STATES.BLIND_SELECT
-      and G.GAME.blind_on_deck
-      and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-  end,
-
-  skip_or_select_blind = function()
-    -- Check if we're selecting a blind (facing_blind is set)
-    if G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND then
+  get_game_state = {
+    [""] = function()
       return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-    end
-    -- Check if we skipped a blind (any blind is marked as "Skipped")
-    if G.prev_small_state == "Skipped" or G.prev_large_state == "Skipped" or G.prev_boss_state == "Skipped" then
-      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-    end
-    return false
-  end,
+    end,
+  },
 
-  play_hand_or_discard = function()
-    if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
-      -- round still going
-      if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
-        return true
-      -- round won and entering cash out state (ROUND_EVAL state)
-      elseif G.STATE == G.STATES.ROUND_EVAL then
-        return true
-      -- game over state
-      elseif G.STATE == G.STATES.GAME_OVER then
-        return true
+  go_to_menu = {
+    [""] = function()
+      return G.STATE == G.STATES.MENU and G.MAIN_MENU_UI
+    end,
+  },
+
+  start_run = {
+    [""] = function()
+      return G.STATE == G.STATES.BLIND_SELECT
+        and G.GAME.blind_on_deck
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+    end,
+  },
+
+  skip_or_select_blind = {
+    ["select"] = function()
+      if G.GAME and G.GAME.facing_blind and G.STATE == G.STATES.SELECTING_HAND then
+        return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
       end
-    end
-    return false
-  end,
+    end,
+    ["skip"] = function()
+      if G.prev_small_state == "Skipped" or G.prev_large_state == "Skipped" or G.prev_boss_state == "Skipped" then
+        return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+      end
+      return false
+    end,
+  },
 
-  rearrange_hand = function()
-    return G.STATE == G.STATES.SELECTING_HAND and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-  end,
+  play_hand_or_discard = {
+    -- TODO: refine condition for be specific about the action
+    ["play_hand"] = function()
+      if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
+        -- round still going
+        if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
+          return true
+        -- round won and entering cash out state (ROUND_EVAL state)
+        elseif G.STATE == G.STATES.ROUND_EVAL then
+          return true
+        -- game over state
+        elseif G.STATE == G.STATES.GAME_OVER then
+          return true
+        end
+      end
+      return false
+    end,
+    ["discard"] = function()
+      if #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE then
+        -- round still going
+        if G.buttons and G.STATE == G.STATES.SELECTING_HAND then
+          return true
+        -- round won and entering cash out state (ROUND_EVAL state)
+        elseif G.STATE == G.STATES.ROUND_EVAL then
+          return true
+        -- game over state
+        elseif G.STATE == G.STATES.GAME_OVER then
+          return true
+        end
+      end
+      return false
+    end,
+  },
 
-  rearrange_jokers = function()
-    return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-  end,
+  rearrange_hand = {
+    [""] = function()
+      return G.STATE == G.STATES.SELECTING_HAND
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
+    end,
+  },
 
-  cash_out = function()
-    return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-  end,
+  rearrange_jokers = {
+    [""] = function()
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+  },
 
-  -- Actions that keep the player in the shop (e.g. buy_card, reroll, buy_and_use_card).
-  -- Semantically identical to cash_out but named for clarity.
-  shop_idle = function()
-    return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-  end,
+  cash_out = {
+    [""] = function()
+      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+  },
 
-  shop = function()
-    return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-  end,
+  shop = {
+    buy_card = function()
+      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+    next_round = function()
+      return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+    reroll = function()
+      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+  },
 }
 
 return utils
