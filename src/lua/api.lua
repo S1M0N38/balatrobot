@@ -196,7 +196,7 @@ end
 API.functions["get_game_state"] = function(_)
   ---@type PendingRequest
   API.pending_requests["get_game_state"] = {
-    condition = utils.COMPLETION_CONDITIONS.get_game_state,
+    condition = utils.COMPLETION_CONDITIONS["get_game_state"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -217,7 +217,7 @@ API.functions["go_to_menu"] = function(_)
 
   G.FUNCS.go_to_menu({})
   API.pending_requests["go_to_menu"] = {
-    condition = utils.COMPLETION_CONDITIONS.go_to_menu,
+    condition = utils.COMPLETION_CONDITIONS["go_to_menu"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -277,7 +277,7 @@ API.functions["start_run"] = function(args)
   -- Defer sending response until the run has started
   ---@type PendingRequest
   API.pending_requests["start_run"] = {
-    condition = utils.COMPLETION_CONDITIONS.start_run,
+    condition = utils.COMPLETION_CONDITIONS["start_run"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -334,7 +334,7 @@ API.functions["skip_or_select_blind"] = function(args)
     G.FUNCS.select_blind(button)
     ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
-      condition = utils.COMPLETION_CONDITIONS.skip_or_select_blind,
+      condition = utils.COMPLETION_CONDITIONS["skip_or_select_blind"]["select"],
       action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
@@ -347,7 +347,7 @@ API.functions["skip_or_select_blind"] = function(args)
     G.FUNCS.skip_blind(button)
     ---@type PendingRequest
     API.pending_requests["skip_or_select_blind"] = {
-      condition = utils.COMPLETION_CONDITIONS.skip_or_select_blind,
+      condition = utils.COMPLETION_CONDITIONS["skip_or_select_blind"]["skip"],
       action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
@@ -448,7 +448,7 @@ API.functions["play_hand_or_discard"] = function(args)
   -- Defer sending response until the run has started
   ---@type PendingRequest
   API.pending_requests["play_hand_or_discard"] = {
-    condition = utils.COMPLETION_CONDITIONS.play_hand_or_discard,
+    condition = utils.COMPLETION_CONDITIONS["play_hand_or_discard"][args.action],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -522,7 +522,7 @@ API.functions["rearrange_hand"] = function(args)
 
   ---@type PendingRequest
   API.pending_requests["rearrange_hand"] = {
-    condition = utils.COMPLETION_CONDITIONS.rearrange_hand,
+    condition = utils.COMPLETION_CONDITIONS["rearrange_hand"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -598,7 +598,7 @@ API.functions["rearrange_jokers"] = function(args)
 
   ---@type PendingRequest
   API.pending_requests["rearrange_jokers"] = {
-    condition = utils.COMPLETION_CONDITIONS.rearrange_jokers,
+    condition = utils.COMPLETION_CONDITIONS["rearrange_jokers"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -623,7 +623,7 @@ API.functions["cash_out"] = function(_)
   G.FUNCS.cash_out({ config = {} })
   ---@type PendingRequest
   API.pending_requests["cash_out"] = {
-    condition = utils.COMPLETION_CONDITIONS.cash_out,
+    condition = utils.COMPLETION_CONDITIONS["cash_out"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)
@@ -659,7 +659,7 @@ API.functions["shop"] = function(args)
     G.FUNCS.toggle_shop({})
     ---@type PendingRequest
     API.pending_requests["shop"] = {
-      condition = utils.COMPLETION_CONDITIONS.shop,
+      condition = utils.COMPLETION_CONDITIONS["shop"]["next_round"],
       action = function()
         local game_state = utils.get_game_state()
         API.send_response(game_state)
@@ -756,7 +756,8 @@ API.functions["shop"] = function(args)
     API.pending_requests["shop"] = {
       condition = function()
         -- Purchase action is non-atomic, so we need to check dollars
-        return utils.COMPLETION_CONDITIONS.shop_idle()
+        -- TODO: try to use the condition directly
+        return utils.COMPLETION_CONDITIONS["shop"]["buy_card"]()
           and #G.shop_jokers.cards == shop_size_before - 1
           and G.GAME.dollars == expected_dollars
       end,
@@ -791,7 +792,7 @@ API.functions["shop"] = function(args)
     ---@type PendingRequest
     API.pending_requests["shop"] = {
       condition = function()
-        return utils.COMPLETION_CONDITIONS.shop_idle()
+        return utils.COMPLETION_CONDITIONS["shop"]["reroll"]()
           and G.GAME.round_scores
           and G.GAME.round_scores.times_rerolled
           and G.GAME.round_scores.times_rerolled.amt == times_rerolled_before + 1
