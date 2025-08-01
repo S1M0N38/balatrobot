@@ -66,7 +66,7 @@ local function configure_balatro_speed()
 
     -- Performance settings
     G.FPS_CAP = 60
-    G.SETTINGS.GAMESPEED = 1
+    G.SETTINGS.GAMESPEED = 4 -- Who plays at 1x speed?
     G.ANIMATION_FPS = 10
     G.VIBRATION = 0
 
