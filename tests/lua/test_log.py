@@ -87,7 +87,7 @@ def assert_steps_equal(
 class TestLog:
     """Tests for the log module."""
 
-    @pytest.fixture(scope="session", params=get_jsonl_files())
+    @pytest.fixture(scope="session", params=get_jsonl_files(), ids=lambda p: p.name)
     def replay_logs(self, request, tmp_path_factory) -> tuple[Path, Path, Path]:
         """Fixture that replays a run and generates two JSONL log files.
 
