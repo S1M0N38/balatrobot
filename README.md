@@ -2,10 +2,10 @@
   <h1>BalatroBot</h1>
   <p align="center">
     <a href="https://github.com/S1M0N38/balatrobot/releases">
-      <img alt="GitHub release" src="https://img.shields.io/github/v/release/S1M0N38/balatrobot?style=for-the-badge&label=Release"/>
+      <img alt="GitHub release" src="https://img.shields.io/github/v/release/S1M0N38/balatrobot?include_prereleases&sort=semver&style=for-the-badge&logo=github"/>
     </a>
     <a href="https://discord.gg/TPn6FYgGPv">
-      <img alt="Discord" src="https://img.shields.io/badge/post-reddit?style=for-the-badge&label=Discord&color=5865F2"/>
+      <img alt="Discord" src="https://img.shields.io/badge/discord-server?style=for-the-badge&logo=discord&logoColor=%23FFFFFF&color=%235865F2"/>
     </a>
   </p>
   <div><img src="https://github.com/user-attachments/assets/514f85ab-485d-48f5-80fc-721eafad5192" alt="balatrobot" width="256" height="256"></div>
