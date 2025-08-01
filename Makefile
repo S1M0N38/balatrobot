@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install install-dev lint lint-fix format format-md typecheck quality test test-parallel test-teardown docs-serve docs-build docs-clean build clean all dev
+.PHONY: help install install-dev lint lint-fix format format-md typecheck quality test test-parallel test-migrate test-teardown docs-serve docs-build docs-clean build clean all dev
 
 # Colors for output
 YELLOW := \033[33m
@@ -85,6 +85,35 @@ test-parallel: ## Run tests in parallel on 4 instances (auto-starts if needed)
 		sleep 1; \
 	fi
 	$(PYTEST) -n 4 --port $(word 1,$(TEST_PORTS)) --port $(word 2,$(TEST_PORTS)) --port $(word 3,$(TEST_PORTS)) --port $(word 4,$(TEST_PORTS)) tests/lua/
+
+test-migrate: ## Run replay.py on all JSONL files in tests/runs/ using 4 parallel instances
+	@echo "$(YELLOW)Running replay migration on tests/runs/ files...$(RESET)"
+	@running_count=$$($(BALATRO_SCRIPT) --status | grep -E "($(word 1,$(TEST_PORTS))|$(word 2,$(TEST_PORTS))|$(word 3,$(TEST_PORTS))|$(word 4,$(TEST_PORTS)))" | wc -l); \
+	if [ "$$running_count" -ne 4 ]; then \
+		echo "Starting Balatro instances on ports: $(TEST_PORTS)"; \
+		$(BALATRO_SCRIPT) --headless --fast -p $(word 1,$(TEST_PORTS)) -p $(word 2,$(TEST_PORTS)) -p $(word 3,$(TEST_PORTS)) -p $(word 4,$(TEST_PORTS)); \
+		sleep 1; \
+	fi
+	@jsonl_files=$$(find tests/runs -name "*.jsonl" -not -name "*.skip" | sort); \
+	if [ -z "$$jsonl_files" ]; then \
+		echo "$(RED)No .jsonl files found in tests/runs/$(RESET)"; \
+		exit 1; \
+	fi; \
+	file_count=$$(echo "$$jsonl_files" | wc -l); \
+	echo "Found $$file_count .jsonl files to process"; \
+	ports=($(TEST_PORTS)); \
+	port_idx=0; \
+	for file in $$jsonl_files; do \
+		port=$${ports[$$port_idx]}; \
+		echo "Processing $$file on port $$port..."; \
+		$(PYTHON) bots/replay.py --input "$$file" --port $$port & \
+		port_idx=$$((port_idx + 1)); \
+		if [ $$port_idx -eq 4 ]; then \
+			port_idx=0; \
+		fi; \
+	done; \
+	wait; \
+	echo "$(GREEN)✓ All replay migrations completed$(RESET)"
 
 test-teardown: ## Kill all Balatro instances
 	@echo "$(YELLOW)Killing all Balatro instances...$(RESET)"
