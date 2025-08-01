@@ -755,11 +755,7 @@ API.functions["shop"] = function(args)
     ---@type PendingRequest
     API.pending_requests["shop"] = {
       condition = function()
-        -- Purchase action is non-atomic, so we need to check dollars
-        -- TODO: try to use the condition directly
         return utils.COMPLETION_CONDITIONS["shop"]["buy_card"]()
-          and #G.shop_jokers.cards == shop_size_before - 1
-          and G.GAME.dollars == expected_dollars
       end,
       action = function()
         local game_state = utils.get_game_state()
@@ -793,10 +789,6 @@ API.functions["shop"] = function(args)
     API.pending_requests["shop"] = {
       condition = function()
         return utils.COMPLETION_CONDITIONS["shop"]["reroll"]()
-          and G.GAME.round_scores
-          and G.GAME.round_scores.times_rerolled
-          and G.GAME.round_scores.times_rerolled.amt == times_rerolled_before + 1
-          and G.GAME.dollars == expected_dollars
       end,
       action = function()
         local game_state = utils.get_game_state()

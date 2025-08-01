@@ -1,6 +1,7 @@
 ---Utility functions for game state extraction and data processing
 utils = {}
 local json = require("json")
+local socket = require("socket")
 
 -- ==========================================================================
 -- Game State Extraction
@@ -634,6 +635,9 @@ end
 -- heuristic based on empirical testing to ensure smooth gameplay without delays.
 local EVENT_QUEUE_THRESHOLD = 3
 
+-- Timestamp storage for delayed conditions
+local condition_timestamps = {}
+
 ---Completion conditions for different game actions to determine when action execution is complete
 ---These are shared between API and LOG systems to ensure consistent timing
 ---@type table<string, table>
@@ -728,13 +732,47 @@ utils.COMPLETION_CONDITIONS = {
 
   shop = {
     buy_card = function()
-      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+      local base_condition = G.STATE == G.STATES.SHOP
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduve the threshold
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.shop_buy_card = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.shop_buy_card then
+        condition_timestamps.shop_buy_card = socket.gettime()
+      end
+
+      -- Check if 0.1 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.shop_buy_card
+      return elapsed > 0.1
     end,
     next_round = function()
       return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
     end,
     reroll = function()
-      return G.STATE == G.STATES.SHOP and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+      local base_condition = G.STATE == G.STATES.SHOP
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduve the threshold
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.shop_reroll = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.shop_reroll then
+        condition_timestamps.shop_reroll = socket.gettime()
+      end
+
+      -- Check if 0.3 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.shop_reroll
+      return elapsed > 0.30
     end,
   },
 }
