@@ -773,14 +773,7 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- Determine the voucher area (base game exposes vouchers separately from jokers)
-    local area = nil
-    if G.shop_vouchers and G.shop_vouchers.cards then
-      area = G.shop_vouchers
-    elseif G.shop_jokers and G.shop_jokers.cards then
-      -- Fallback – some mods expose vouchers inside the joker area
-      area = G.shop_jokers
-    end
+    local area = G.shop_vouchers
 
     if not area then
       API.send_error_response(
@@ -804,42 +797,34 @@ API.functions["shop"] = function(args)
 
     local card = area.cards[card_pos]
 
-    -- Ensure the selected card is a voucher
-    if not card.ability or card.ability.set ~= "Voucher" then
-      API.send_error_response(
-        "Selected card is not a voucher",
-        ERROR_CODES.INVALID_ACTION,
-        { index = args.index }
-      )
-      return
-    end
+    sendDebugMessage("Redeeming voucher", "API")
+    sendDebugMessage(tostring(card), "API")
 
     -- Prevent double redemption: no use button implies already redeemed
-    if not (card.children and card.children.use_button) then
-      API.send_error_response(
-        "Voucher already redeemed",
-        ERROR_CODES.INVALID_ACTION,
-        { index = args.index }
-      )
-      return
-    end
+    -- if not (card.children and card.children.use_button) then
+    --   API.send_error_response(
+    --     "Voucher already redeemed",
+    --     ERROR_CODES.INVALID_ACTION,
+    --     { index = args.index }
+    --   )
+    --   return
+    -- end
 
     -- Check affordability
     local dollars_before = G.GAME.dollars
-    local cost = card.cost or 0
-    if dollars_before < cost then
+    if dollars_before < card.cost then
       API.send_error_response(
         "Not enough dollars to redeem voucher",
         ERROR_CODES.INVALID_ACTION,
-        { dollars = dollars_before, cost = cost }
+        { dollars = dollars_before, cost = card.cost }
       )
       return
     end
-    local expected_dollars = dollars_before - cost
+    local expected_dollars = dollars_before - card.cost
 
-    -- Activate the voucher's use button to redeem
-    local use_button = card.children.use_button.definition or card.children.use_button
-    G.FUNCS.use_card(use_button)
+    -- Activate the voucher's purchase button to redeem
+    local redeem_button = card.children.buy_button and card.children.buy_button.definition
+    G.FUNCS.use_card(redeem_button)
 
     -- Wait until the shop is idle and dollars are updated (redeem is non-atomic)
     ---@type PendingRequest
