@@ -743,11 +743,6 @@ API.functions["shop"] = function(args)
       return
     end
 
-    -- Used to ensure dollars and shop have been updated before responding, not inheritly atomic
-    local dollars_before = G.GAME.dollars
-    local expected_dollars = dollars_before - card.cost
-    local shop_size_before = #G.shop_jokers.cards
-
     -- activate the buy button using the UI element handler
     G.FUNCS.buy_from_shop(card_buy_button)
 
@@ -766,12 +761,6 @@ API.functions["shop"] = function(args)
     -- Capture the state before rerolling for response validation
     local dollars_before = G.GAME.dollars
     local reroll_cost = G.GAME.current_round and G.GAME.current_round.reroll_cost or 0
-    local expected_dollars = dollars_before - reroll_cost
-
-    local times_rerolled_before = 0
-    if G.GAME.round_scores and G.GAME.round_scores.times_rerolled then
-      times_rerolled_before = G.GAME.round_scores.times_rerolled.amt or 0
-    end
 
     if dollars_before < reroll_cost then
       API.send_error_response(
