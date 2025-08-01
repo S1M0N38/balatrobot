@@ -1,6 +1,14 @@
 <div align="center">
   <h1>BalatroBot</h1>
-  <img src="https://github.com/user-attachments/assets/514f85ab-485d-48f5-80fc-721eafad5192" alt="balatrobot" width="256" height="256">
+  <p align="center">
+    <a href="https://github.com/S1M0N38/balatrobot/releases">
+      <img alt="GitHub release" src="https://img.shields.io/github/v/release/S1M0N38/balatrobot?style=for-the-badge&label=Release"/>
+    </a>
+    <a href="https://discord.gg/TPn6FYgGPv">
+      <img alt="Discord" src="https://img.shields.io/badge/post-reddit?style=for-the-badge&label=Discord&color=5865F2"/>
+    </a>
+  </p>
+  <div><img src="https://github.com/user-attachments/assets/514f85ab-485d-48f5-80fc-721eafad5192" alt="balatrobot" width="256" height="256"></div>
   <p><em>A framework for Balatro bot development</em></p>
 </div>
 
