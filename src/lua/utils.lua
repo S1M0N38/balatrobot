@@ -312,12 +312,30 @@ function utils.get_game_state()
     }
   end
 
-  -- Keeping typo for consistency
-  local consumeables = {}
-  if G.consumeables and G.consumeables.config then
-    consumeables.config = {
-      card_count = G.consumeables.config.card_count, -- int (default 0), -- number of consumable cards in the shop
-      card_limit = G.consumeables.config.card_limit, -- int (default 2), -- max number of consumable cards in the shop
+  local consumeables = nil
+  if G.consumeables then
+    local cards = {}
+    if G.consumeables.cards then
+      for i, card in pairs(G.consumeables.cards) do
+        cards[i] = {
+          label = card.label,
+          cost = card.cost,
+          sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
+          config = {
+            center_key = card.config.center_key,
+          },
+          debuf = card.debuff,
+          facing = card.facing,
+          highlighted = card.highlighted,
+        }
+      end
+    end
+    consumeables = {
+      cards = cards,
+      config = {
+        card_count = G.consumeables.config.card_count,
+        card_limit = G.consumeables.config.card_limit,
+      },
     }
   end
 
@@ -517,6 +535,7 @@ function utils.get_game_state()
     shop_vouchers = shop_vouchers,
     shop_booster = shop_booster,
     consumeables = consumeables,
+    -- NOTE: yes it's consumeables, not consumables. Following the naming convention of the game.
   }
 end
 
@@ -719,6 +738,12 @@ utils.COMPLETION_CONDITIONS = {
   },
 
   rearrange_jokers = {
+    [""] = function()
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+  },
+
+  rearrange_consumeables = {
     [""] = function()
       return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
     end,

@@ -55,6 +55,9 @@
 ---@class RearrangeJokersArgs
 ---@field jokers number[] Array of joker indices for every joker (0-based)
 
+---@class RearrangeConsumeablesArgs
+---@field consumeables number[] Array of consumeable indices for every consumeable (0-based)
+
 ---@class ShopActionArgs
 ---@field action "next_round" | "buy_card" | "reroll" The action to perform
 ---@field index? number The index of the card to act on (buy, buy_and_use, redeem, open) (0-based)

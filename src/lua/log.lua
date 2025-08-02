@@ -251,7 +251,7 @@ function hook_reroll_shop()
 end
 
 -- -----------------------------------------------------------------------------
--- hand_rearrange Hook (also handles joker rearrange)
+-- hand_rearrange Hook (also handles joker and consumenables rearrange)
 -- -----------------------------------------------------------------------------
 
 ---Hooks into CardArea:align_cards for hand and joker reordering detection
@@ -260,16 +260,18 @@ function hook_hand_rearrange()
   local previous_orders = {
     hand = {},
     joker = {},
+    consumeables = {},
   }
   -- local previous_hand_order = {}
   -- local previous_joker_order = {}
   CardArea.align_cards = function(self, ...)
-    -- Monitor both hand and joker cards
+    -- Monitor hand, joker, and consumable card areas
     if
       ---@diagnostic disable-next-line: undefined-field
       self.config
       ---@diagnostic disable-next-line: undefined-field
       and (self.config.type == "hand" or self.config.type == "joker")
+      -- consumeables are type "joker"
       ---@diagnostic disable-next-line: undefined-field
       and self.cards
       ---@diagnostic disable-next-line: undefined-field
@@ -325,17 +327,37 @@ function hook_hand_rearrange()
               arguments = { cards = cards },
             }
           elseif self.config.type == "joker" then ---@diagnostic disable-line: undefined-field
-            sendInfoMessage("Logging joker rearrangement", "LOG")
-            function_call = {
-              name = "rearrange_jokers",
-              arguments = { jokers = cards },
-            }
-          else
-            function_call = {
-              name = "unknown_rearrange",
-              arguments = {},
-            }
-            sendErrorMessage("Unknown card type for rearrange", "LOG")
+            -- Need to distinguish between actual jokers and consumables
+            -- Check if any cards in this area are consumables
+            local are_jokers = false
+            local are_consumables = false
+
+            ---@diagnostic disable-next-line: undefined-field
+            for _, card in ipairs(self.cards) do
+              if card.ability and card.ability.set == "Joker" then
+                are_jokers = true
+              elseif card.ability and card.ability.consumeable then
+                are_consumables = true
+              end
+            end
+
+            if are_consumables and not are_jokers then
+              function_call = {
+                name = "rearrange_consumeables",
+                arguments = { consumeables = cards },
+              }
+            elseif are_jokers and not are_consumables then
+              function_call = {
+                name = "rearrange_jokers",
+                arguments = { jokers = cards },
+              }
+            else
+              function_call = {
+                name = "unknown_rearrange",
+                arguments = {},
+              }
+              sendErrorMessage("Unknown card type for rearrange: " .. tostring(self.config.type), "LOG") ---@diagnostic disable-line: undefined-field
+            end
           end
 
           -- NOTE: We cannot schedule a log write at this point because we do not have

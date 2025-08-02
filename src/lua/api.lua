@@ -606,6 +606,82 @@ API.functions["rearrange_jokers"] = function(args)
   }
 end
 
+---Rearranges the consumeables based on the given card indices
+---Call G.FUNCS.rearrange_consumeables(new_consumeables)
+---@param args RearrangeConsumeablesArgs The card indices to rearrange the consumeables with
+API.functions["rearrange_consumeables"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "consumeables" })
+
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  -- Validate that consumeables exist
+  if not G.consumeables or not G.consumeables.cards or #G.consumeables.cards == 0 then
+    API.send_error_response(
+      "No consumeables available to rearrange",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { consumeables_available = false }
+    )
+    return
+  end
+
+  -- Validate number of consumeables is equal to the number of consumeables in the consumeables area
+  if #args.consumeables ~= #G.consumeables.cards then
+    API.send_error_response(
+      "Invalid number of consumeables to rearrange",
+      ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+      { consumeables_count = #args.consumeables, valid_range = tostring(#G.consumeables.cards) }
+    )
+    return
+  end
+
+  -- Convert incoming indices from 0-based to 1-based
+  for i, joker_index in ipairs(args.consumeables) do
+    args.consumeables[i] = joker_index + 1
+  end
+
+  -- Create a new consumeables array to swap card indices
+  local new_consumables = {}
+  for _, old_index in ipairs(args.consumeables) do
+    local card = G.consumeables.cards[old_index]
+    if not card then
+      API.send_error_response(
+        "Consumable index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = old_index, max_index = #G.consumeables.cards }
+      )
+      return
+    end
+    table.insert(new_consumables, card)
+  end
+
+  G.consumeables.cards = new_consumables
+
+  -- Update each consumeable's order field so future sort('order') calls work correctly
+  for i, card in ipairs(G.consumeables.cards) do
+    if card.ability then
+      card.ability.order = i
+    end
+    if card.config and card.config.center then
+      card.config.center.order = i
+    end
+  end
+
+  ---@type PendingRequest
+  API.pending_requests["rearrange_consumeables"] = {
+    condition = utils.COMPLETION_CONDITIONS["rearrange_consumeables"][""],
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
+end
+
 ---Cashes out from the current round to enter the shop
 ---Call G.FUNCS.cash_out() to cash out from the current round to enter the shop.
 ---@param _ table Arguments (not used)
