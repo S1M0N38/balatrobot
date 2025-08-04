@@ -65,6 +65,9 @@
 -- TODO: add the other actions "reroll" | "buy" | "buy_and_use" | "redeem" | "open"
 --@field item number? The item to buy/buy_and_use/redeem/open (0-based)
 
+---@class SellJokerArgs
+---@field index number The index of the joker to sell (0-based)
+
 -- =============================================================================
 -- Main API Module (defined in api.lua)
 -- =============================================================================
