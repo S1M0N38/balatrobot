@@ -872,4 +872,85 @@ API.functions["shop"] = function(args)
   end
 end
 
+---Sells a joker at the specified index
+---Call G.FUNCS.sell_card() to sell the joker at the given index
+---@param args SellJokerArgs The sell joker action arguments
+API.functions["sell_joker"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "index" })
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  -- Validate that jokers exist
+  if not G.jokers or not G.jokers.cards or #G.jokers.cards == 0 then
+    API.send_error_response(
+      "No jokers available to sell",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { jokers_available = false }
+    )
+    return
+  end
+
+  -- Validate that index is a number
+  if type(args.index) ~= "number" then
+    API.send_error_response(
+      "Invalid parameter type",
+      ERROR_CODES.INVALID_PARAMETER,
+      { parameter = "index", expected_type = "number" }
+    )
+    return
+  end
+
+  -- Convert from 0-based to 1-based indexing
+  local joker_index = args.index + 1
+
+  -- Validate joker index is in range
+  if joker_index < 1 or joker_index > #G.jokers.cards then
+    API.send_error_response(
+      "Joker index out of range",
+      ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+      { index = args.index, jokers_count = #G.jokers.cards }
+    )
+    return
+  end
+
+  -- Get the joker card
+  local joker_card = G.jokers.cards[joker_index]
+  if not joker_card then
+    API.send_error_response("Joker not found at index", ERROR_CODES.MISSING_GAME_OBJECT, { index = args.index })
+    return
+  end
+
+  -- Check if the joker can be sold
+  if not joker_card:can_sell_card() then
+    API.send_error_response("Joker cannot be sold at this time", ERROR_CODES.INVALID_ACTION, { index = args.index })
+    return
+  end
+
+  -- Create a mock UI element to call G.FUNCS.sell_card
+  local mock_element = {
+    config = {
+      ref_table = joker_card,
+    },
+  }
+
+  -- Call G.FUNCS.sell_card to sell the joker
+  G.FUNCS.sell_card(mock_element)
+
+  ---@type PendingRequest
+  API.pending_requests["sell_joker"] = {
+    condition = function()
+      return utils.COMPLETION_CONDITIONS["sell_joker"][""]()
+    end,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
+end
+
 return API
