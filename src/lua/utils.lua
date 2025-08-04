@@ -409,7 +409,7 @@ function utils.get_game_state()
           config = {
             center_key = card.config.center_key,
           },
-          debuf = card.debuff,
+          debuff = card.debuff,
           facing = card.facing,
           highlighted = card.highlighted,
         }
