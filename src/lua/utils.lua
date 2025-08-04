@@ -799,6 +799,27 @@ utils.COMPLETION_CONDITIONS = {
       return elapsed > 0.30
     end,
   },
+  sell_joker = {
+    [""] = function()
+      local base_condition = #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduce the threshold
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.sell_joker = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.sell_joker then
+        condition_timestamps.sell_joker = socket.gettime()
+      end
+
+      -- Check if 0.2 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.sell_joker
+      return elapsed > 0.30
+    end,
+  },
 }
 
 return utils
