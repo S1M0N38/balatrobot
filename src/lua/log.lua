@@ -399,6 +399,31 @@ function hook_hand_rearrange()
   sendInfoMessage("Hooked into CardArea:align_cards for card rearrange logging", "LOG")
 end
 
+-- -----------------------------------------------------------------------------
+-- sell_joker Hook
+-- -----------------------------------------------------------------------------
+
+---Hooks into G.FUNCS.sell_card to detect sell_joker actions
+function hook_sell_card()
+  local original_function = G.FUNCS.sell_card
+  G.FUNCS.sell_card = function(e)
+    -- Check if the card being sold is a joker from G.jokers
+    local card = e.config.ref_table
+    if card and card.area == G.jokers then
+      -- Find the joker index in G.jokers.cards
+      for i, joker in ipairs(G.jokers.cards) do
+        if joker == card then
+          local function_call = { name = "sell_joker", arguments = { index = i - 1 } } -- 0-based index
+          LOG.schedule_write(function_call)
+          break
+        end
+      end
+    end
+    return original_function(e)
+  end
+  sendDebugMessage("Hooked into G.FUNCS.sell_card for sell_joker logging", "LOG")
+end
+
 -- TODO: add hooks for other shop functions
 
 -- =============================================================================
@@ -441,6 +466,7 @@ function LOG.init()
   hook_buy_card()
   hook_reroll_shop()
   hook_hand_rearrange()
+  hook_sell_card()
 
   sendInfoMessage("Logger initialized", "LOG")
 end
