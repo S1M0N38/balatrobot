@@ -953,4 +953,89 @@ API.functions["sell_joker"] = function(args)
   }
 end
 
+---Sells a consumable at the specified index
+---Call G.FUNCS.sell_card() to sell the consumable at the given index
+---@param args SellConsumableArgs The sell consumable action arguments
+API.functions["sell_consumable"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "index" })
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  -- Validate that consumables exist
+  if not G.consumeables or not G.consumeables.cards or #G.consumeables.cards == 0 then
+    API.send_error_response(
+      "No consumables available to sell",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { consumables_available = false }
+    )
+    return
+  end
+
+  -- Validate that index is a number
+  if type(args.index) ~= "number" then
+    API.send_error_response(
+      "Invalid parameter type",
+      ERROR_CODES.INVALID_PARAMETER,
+      { parameter = "index", expected_type = "number" }
+    )
+    return
+  end
+
+  -- Convert from 0-based to 1-based indexing
+  local consumable_index = args.index + 1
+
+  -- Validate consumable index is in range
+  if consumable_index < 1 or consumable_index > #G.consumeables.cards then
+    API.send_error_response(
+      "Consumable index out of range",
+      ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+      { index = args.index, consumables_count = #G.consumeables.cards }
+    )
+    return
+  end
+
+  -- Get the consumable card
+  local consumable_card = G.consumeables.cards[consumable_index]
+  if not consumable_card then
+    API.send_error_response("Consumable not found at index", ERROR_CODES.MISSING_GAME_OBJECT, { index = args.index })
+    return
+  end
+
+  -- Check if the consumable can be sold
+  if not consumable_card:can_sell_card() then
+    API.send_error_response(
+      "Consumable cannot be sold at this time",
+      ERROR_CODES.INVALID_ACTION,
+      { index = args.index }
+    )
+    return
+  end
+
+  -- Create a mock UI element to call G.FUNCS.sell_card
+  local mock_element = {
+    config = {
+      ref_table = consumable_card,
+    },
+  }
+
+  -- Call G.FUNCS.sell_card to sell the consumable
+  G.FUNCS.sell_card(mock_element)
+
+  ---@type PendingRequest
+  API.pending_requests["sell_consumable"] = {
+    condition = function()
+      return utils.COMPLETION_CONDITIONS["sell_consumable"][""]()
+    end,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
+end
+
 return API
