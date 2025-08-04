@@ -68,6 +68,9 @@
 ---@class SellJokerArgs
 ---@field index number The index of the joker to sell (0-based)
 
+---@class SellConsumableArgs
+---@field index number The index of the consumable to sell (0-based)
+
 -- =============================================================================
 -- Main API Module (defined in api.lua)
 -- =============================================================================
