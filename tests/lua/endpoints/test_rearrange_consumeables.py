@@ -3,7 +3,7 @@ from typing import Generator
 
 import pytest
 
-from balatrobot.enums import ErrorCode, State
+from balatrobot.enums import ErrorCode
 
 from ..conftest import assert_error_response, send_and_receive_api_message
 
@@ -16,85 +16,21 @@ class TestRearrangeConsumeables:
         self, tcp_client: socket.socket
     ) -> Generator[dict, None, None]:
         """Start a run, reach shop phase, buy consumables, then enter selecting hand phase."""
-        # Start a run with specific seed
-        send_and_receive_api_message(
+        game_state = send_and_receive_api_message(
             tcp_client,
             "start_run",
-            {"deck": "Red Deck", "seed": "OOOO155", "stake": 1},
+            {
+                "deck": "Red Deck",
+                "seed": "OOOO155",
+                "stake": 1,
+                "challenge": "Bram Poker",  # it starts with two consumable
+            },
         )
 
-        # Select blind to enter selecting hand state
-        send_and_receive_api_message(
-            tcp_client, "skip_or_select_blind", {"action": "select"}
-        )
-
-        # Play hand to progress
-        send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "play_hand", "cards": [0, 1, 2, 3]},
-        )
-
-        # Cash out to enter shop
-        send_and_receive_api_message(tcp_client, "cash_out", {})
-
-        # Buy first consumable card (usually index 1 is a planet/tarot card)
-        game_state = send_and_receive_api_message(
-            tcp_client, "shop", {"index": 1, "action": "buy_card"}
-        )
-
-        # Go to next round to enter selecting hand state with consumables
-        send_and_receive_api_message(tcp_client, "shop", {"action": "next_round"})
-
-        game_state = send_and_receive_api_message(
-            tcp_client, "skip_or_select_blind", {"action": "select"}
-        )
-
-        # add the other setup from the comment above
-
-        game_state = send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "discard", "cards": [0, 1, 2, 3, 4]},
-        )
-        game_state = send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "discard", "cards": [4, 5, 6, 7]},
-        )
-        game_state = send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "play_hand", "cards": [2, 3, 4, 5, 6]},
-        )
-        game_state = send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "discard", "cards": [1, 2, 3, 6]},
-        )
-        game_state = send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "play_hand", "cards": [0, 3, 4, 5, 6]},
-        )
-
-        send_and_receive_api_message(tcp_client, "cash_out", {})
-
-        game_state = send_and_receive_api_message(
-            tcp_client, "shop", {"action": "reroll"}
-        )
-        game_state = send_and_receive_api_message(
-            tcp_client, "shop", {"action": "reroll"}
-        )
-
-        game_state = send_and_receive_api_message(
-            tcp_client, "shop", {"index": 1, "action": "buy_card"}
-        )
-
-        assert game_state["state"] == State.SHOP.value
         assert len(game_state["consumeables"]["cards"]) == 2
 
         yield game_state
+
         send_and_receive_api_message(tcp_client, "go_to_menu", {})
 
     # ------------------------------------------------------------------
@@ -269,7 +205,7 @@ class TestRearrangeConsumeables:
         send_and_receive_api_message(tcp_client, "go_to_menu", {})
 
     def test_rearrange_consumeables_missing_required_field(
-        self, tcp_client: socket.socket, setup_and_teardown: dict
+        self, tcp_client: socket.socket
     ) -> None:
         """Calling rearrange_consumeables without the consumeables field should error."""
         response = send_and_receive_api_message(
