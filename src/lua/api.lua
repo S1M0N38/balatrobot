@@ -606,12 +606,12 @@ API.functions["rearrange_jokers"] = function(args)
   }
 end
 
----Rearranges the consumeables based on the given card indices
----Call G.FUNCS.rearrange_consumeables(new_consumeables)
----@param args RearrangeConsumeablesArgs The card indices to rearrange the consumeables with
-API.functions["rearrange_consumeables"] = function(args)
+---Rearranges the consumables based on the given card indices
+---Call G.FUNCS.rearrange_consumables(new_consumables)
+---@param args RearrangeConsumablesArgs The card indices to rearrange the consumables with
+API.functions["rearrange_consumables"] = function(args)
   -- Validate required parameters
-  local success, error_message, error_code, context = validate_request(args, { "consumeables" })
+  local success, error_message, error_code, context = validate_request(args, { "consumables" })
 
   if not success then
     ---@cast error_message string
@@ -620,34 +620,34 @@ API.functions["rearrange_consumeables"] = function(args)
     return
   end
 
-  -- Validate that consumeables exist
+  -- Validate that consumables exist
   if not G.consumeables or not G.consumeables.cards or #G.consumeables.cards == 0 then
     API.send_error_response(
-      "No consumeables available to rearrange",
+      "No consumables available to rearrange",
       ERROR_CODES.MISSING_GAME_OBJECT,
-      { consumeables_available = false }
+      { consumables_available = false }
     )
     return
   end
 
-  -- Validate number of consumeables is equal to the number of consumeables in the consumeables area
-  if #args.consumeables ~= #G.consumeables.cards then
+  -- Validate number of consumables is equal to the number of consumables in the consumables area
+  if #args.consumables ~= #G.consumeables.cards then
     API.send_error_response(
-      "Invalid number of consumeables to rearrange",
+      "Invalid number of consumables to rearrange",
       ERROR_CODES.PARAMETER_OUT_OF_RANGE,
-      { consumeables_count = #args.consumeables, valid_range = tostring(#G.consumeables.cards) }
+      { consumables_count = #args.consumables, valid_range = tostring(#G.consumeables.cards) }
     )
     return
   end
 
   -- Convert incoming indices from 0-based to 1-based
-  for i, joker_index in ipairs(args.consumeables) do
-    args.consumeables[i] = joker_index + 1
+  for i, consumable_index in ipairs(args.consumables) do
+    args.consumables[i] = consumable_index + 1
   end
 
-  -- Create a new consumeables array to swap card indices
+  -- Create a new consumables array to swap card indices
   local new_consumables = {}
-  for _, old_index in ipairs(args.consumeables) do
+  for _, old_index in ipairs(args.consumables) do
     local card = G.consumeables.cards[old_index]
     if not card then
       API.send_error_response(
@@ -662,7 +662,7 @@ API.functions["rearrange_consumeables"] = function(args)
 
   G.consumeables.cards = new_consumables
 
-  -- Update each consumeable's order field so future sort('order') calls work correctly
+  -- Update each consumable's order field so future sort('order') calls work correctly
   for i, card in ipairs(G.consumeables.cards) do
     if card.ability then
       card.ability.order = i
@@ -673,8 +673,8 @@ API.functions["rearrange_consumeables"] = function(args)
   end
 
   ---@type PendingRequest
-  API.pending_requests["rearrange_consumeables"] = {
-    condition = utils.COMPLETION_CONDITIONS["rearrange_consumeables"][""],
+  API.pending_requests["rearrange_consumables"] = {
+    condition = utils.COMPLETION_CONDITIONS["rearrange_consumables"][""],
     action = function()
       local game_state = utils.get_game_state()
       API.send_response(game_state)

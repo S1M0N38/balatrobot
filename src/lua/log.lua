@@ -260,7 +260,7 @@ function hook_hand_rearrange()
   local previous_orders = {
     hand = {},
     joker = {},
-    consumeables = {},
+    consumables = {},
   }
   -- local previous_hand_order = {}
   -- local previous_joker_order = {}
@@ -271,7 +271,7 @@ function hook_hand_rearrange()
       self.config
       ---@diagnostic disable-next-line: undefined-field
       and (self.config.type == "hand" or self.config.type == "joker")
-      -- consumeables are type "joker"
+      -- consumables are type "joker"
       ---@diagnostic disable-next-line: undefined-field
       and self.cards
       ---@diagnostic disable-next-line: undefined-field
@@ -343,8 +343,8 @@ function hook_hand_rearrange()
 
             if are_consumables and not are_jokers then
               function_call = {
-                name = "rearrange_consumeables",
-                arguments = { consumeables = cards },
+                name = "rearrange_consumables",
+                arguments = { consumables = cards },
               }
             elseif are_jokers and not are_consumables then
               function_call = {

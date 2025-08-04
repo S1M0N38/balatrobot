@@ -54,8 +54,8 @@ def normalize_step(step: dict[str, Any]) -> dict[str, Any]:
                 for card in game_state["jokers"]["cards"]:
                     card.pop("highlighted", None)
                     card.pop("sort_id", None)
-            if "consumeables" in game_state and "cards" in game_state["consumeables"]:
-                for card in game_state["consumeables"]["cards"]:
+            if "consumables" in game_state and "cards" in game_state["consumables"]:
+                for card in game_state["consumables"]["cards"]:
                     card.pop("highlighted", None)
                     card.pop("sort_id", None)
 
