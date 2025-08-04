@@ -3,7 +3,7 @@ from typing import Generator
 
 import pytest
 
-from balatrobot.enums import ErrorCode, State
+from balatrobot.enums import ErrorCode
 
 from ..conftest import assert_error_response, send_and_receive_api_message
 
