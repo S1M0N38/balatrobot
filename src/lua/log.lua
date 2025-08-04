@@ -403,25 +403,37 @@ end
 -- sell_joker Hook
 -- -----------------------------------------------------------------------------
 
----Hooks into G.FUNCS.sell_card to detect sell_joker actions
+---Hooks into G.FUNCS.sell_card to detect sell_joker and sell_consumable actions
 function hook_sell_card()
   local original_function = G.FUNCS.sell_card
   G.FUNCS.sell_card = function(e)
-    -- Check if the card being sold is a joker from G.jokers
     local card = e.config.ref_table
-    if card and card.area == G.jokers then
-      -- Find the joker index in G.jokers.cards
-      for i, joker in ipairs(G.jokers.cards) do
-        if joker == card then
-          local function_call = { name = "sell_joker", arguments = { index = i - 1 } } -- 0-based index
-          LOG.schedule_write(function_call)
-          break
+    if card then
+      -- Check if the card being sold is a joker from G.jokers
+      if card.area == G.jokers then
+        -- Find the joker index in G.jokers.cards
+        for i, joker in ipairs(G.jokers.cards) do
+          if joker == card then
+            local function_call = { name = "sell_joker", arguments = { index = i - 1 } } -- 0-based index
+            LOG.schedule_write(function_call)
+            break
+          end
+        end
+      -- Check if the card being sold is a consumable from G.consumeables
+      elseif card.area == G.consumeables then
+        -- Find the consumable index in G.consumeables.cards
+        for i, consumable in ipairs(G.consumeables.cards) do
+          if consumable == card then
+            local function_call = { name = "sell_consumable", arguments = { index = i - 1 } } -- 0-based index
+            LOG.schedule_write(function_call)
+            break
+          end
         end
       end
     end
     return original_function(e)
   end
-  sendDebugMessage("Hooked into G.FUNCS.sell_card for sell_joker logging", "LOG")
+  sendDebugMessage("Hooked into G.FUNCS.sell_card for sell_joker and sell_consumable logging", "LOG")
 end
 
 -- TODO: add hooks for other shop functions
