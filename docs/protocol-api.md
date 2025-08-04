@@ -83,14 +83,14 @@ The BalatroBot API operates as a finite state machine that mirrors the natural f
 
 The game progresses through these states in a typical flow: `MENU` → `BLIND_SELECT` → `SELECTING_HAND` → `ROUND_EVAL` → `SHOP` → `BLIND_SELECT` (or `GAME_OVER`).
 
-| State            | Value | Description                  | Available Functions                      |
-| ---------------- | ----- | ---------------------------- | ---------------------------------------- |
-| `MENU`           | 11    | Main menu screen             | `start_run`                              |
-| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind`                   |
-| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard`, `rearrange_hand` |
-| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`                               |
-| `SHOP`           | 5     | Shop interface               | `shop`                                   |
-| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`                             |
+| State            | Value | Description                  | Available Functions                                    |
+| ---------------- | ----- | ---------------------------- | ------------------------------------------------------ |
+| `MENU`           | 11    | Main menu screen             | `start_run`                                            |
+| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind`, `sell_joker`                   |
+| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard`, `rearrange_hand`, `sell_joker` |
+| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`, `sell_joker`                               |
+| `SHOP`           | 5     | Shop interface               | `shop`, `sell_joker`                                   |
+| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`                                           |
 
 ### Validation
 
@@ -120,6 +120,7 @@ The BalatroBot API provides core functions that correspond to the main game acti
 | `rearrange_consumables` | Reorders the consumables according to the supplied index list                                                        |
 | `cash_out`              | Proceeds from round completion to the shop phase                                                                     |
 | `shop`                  | Performs shop actions: proceed to next round (`next_round`), purchase a card (`buy_card`), or reroll shop (`reroll`) |
+| `sell_joker`            | Sells a joker from the player's collection for money                                                                 |
 
 ### Parameters
 
@@ -133,6 +134,7 @@ The following table details the parameters required for each function. Note that
 | `rearrange_hand`        | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
 | `rearrange_consumables` | `consumables` (array): Consumable indices (0-indexed, exactly number of consumables in consumable area)                                                                                                                                                                   |
 | `shop`                  | `action` (string): Shop action ("next_round", "buy_card", or "reroll")<br>`index` (number, required when `action` = "buy_card"): 0-based card index to purchase                                                                                                           |
+| `sell_joker`            | `index` (number): 0-based index of the joker to sell from the player's joker collection                                                                                                                                                                                   |
 
 ### Shop Actions
 
