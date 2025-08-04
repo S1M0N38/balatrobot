@@ -109,28 +109,30 @@ The BalatroBot API provides core functions that correspond to the main game acti
 
 ### Overview
 
-| Name                   | Description                                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `get_game_state`       | Retrieves the current complete game state                                                                            |
-| `go_to_menu`           | Returns to the main menu from any game state                                                                         |
-| `start_run`            | Starts a new game run with specified configuration                                                                   |
-| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it                                         |
-| `play_hand_or_discard` | Plays selected cards or discards them                                                                                |
-| `rearrange_hand`       | Reorders the current hand according to the supplied index list                                                       |
-| `cash_out`             | Proceeds from round completion to the shop phase                                                                     |
-| `shop`                 | Performs shop actions: proceed to next round (`next_round`), purchase a card (`buy_card`), or reroll shop (`reroll`) |
+| Name                    | Description                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `get_game_state`        | Retrieves the current complete game state                                                                            |
+| `go_to_menu`            | Returns to the main menu from any game state                                                                         |
+| `start_run`             | Starts a new game run with specified configuration                                                                   |
+| `skip_or_select_blind`  | Handles blind selection - either select the current blind to play or skip it                                         |
+| `play_hand_or_discard`  | Plays selected cards or discards them                                                                                |
+| `rearrange_hand`        | Reorders the current hand according to the supplied index list                                                       |
+| `rearrange_consumables` | Reorders the consumables according to the supplied index list                                                        |
+| `cash_out`              | Proceeds from round completion to the shop phase                                                                     |
+| `shop`                  | Performs shop actions: proceed to next round (`next_round`), purchase a card (`buy_card`), or reroll shop (`reroll`) |
 
 ### Parameters
 
 The following table details the parameters required for each function. Note that `get_game_state` and `go_to_menu` require no parameters:
 
-| Name                   | Parameters                                                                                                                                                                                                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start_run`            | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name<br>`log_path` (string, optional): Full file path for run log (must include .jsonl extension) |
-| `skip_or_select_blind` | `action` (string): Either "select" or "skip"                                                                                                                                                                                                                              |
-| `play_hand_or_discard` | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                                |
-| `rearrange_hand`       | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
-| `shop`                 | `action` (string): Shop action ("next_round", "buy_card", or "reroll")<br>`index` (number, required when `action` = "buy_card"): 0-based card index to purchase                                                                                                           |
+| Name                    | Parameters                                                                                                                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start_run`             | `deck` (string): Deck name<br>`stake` (number): Difficulty level 1-8<br>`seed` (string, optional): Seed for run generation<br>`challenge` (string, optional): Challenge name<br>`log_path` (string, optional): Full file path for run log (must include .jsonl extension) |
+| `skip_or_select_blind`  | `action` (string): Either "select" or "skip"                                                                                                                                                                                                                              |
+| `play_hand_or_discard`  | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                                |
+| `rearrange_hand`        | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
+| `rearrange_consumables` | `consumables` (array): Consumable indices (0-indexed, exactly number of consumables in consumable area)                                                                                                                                                                   |
+| `shop`                  | `action` (string): Shop action ("next_round", "buy_card", or "reroll")<br>`index` (number, required when `action` = "buy_card"): 0-based card index to purchase                                                                                                           |
 
 ### Shop Actions
 
