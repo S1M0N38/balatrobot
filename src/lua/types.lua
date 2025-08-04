@@ -55,8 +55,8 @@
 ---@class RearrangeJokersArgs
 ---@field jokers number[] Array of joker indices for every joker (0-based)
 
----@class RearrangeConsumeablesArgs
----@field consumeables number[] Array of consumeable indices for every consumeable (0-based)
+---@class RearrangeConsumablesArgs
+---@field consumables number[] Array of consumable indices for every consumable (0-based)
 
 ---@class ShopActionArgs
 ---@field action "next_round" | "buy_card" | "reroll" The action to perform
@@ -87,7 +87,7 @@
 ---@field game? GGame Game information (null if not in game)
 ---@field hand? GHand Hand information (null if not available)
 ---@field jokers GJokers Jokers area object (with sub-field `cards`)
----@field consumeables GConsumeables Consumables area object (typo intentional)
+---@field consumables GConsumables Consumables area object
 ---@field shop_jokers? GShopJokers Shop jokers area
 ---@field shop_vouchers? GShopVouchers Shop vouchers area
 ---@field shop_booster? GShopBooster Shop booster packs area
@@ -227,8 +227,7 @@
 ---@field config GCardAreaConfig Config for jokers card area
 ---@field cards GJokersCard[] Array of joker card objects
 
--- Keeping typo "consumeables" for compatibility
----@class GConsumeables
+---@class GConsumables
 ---@field config GCardAreaConfig Configuration for the consumables slot
 ---@field cards? GConsumablesCard[] Array of consumable card objects
 
@@ -246,13 +245,13 @@
 ---@class GJokersCardConfig
 ---@field center_key string Key identifier for the joker center
 
--- Consumable card (G.consumeables.cards[])
+-- Consumable card (G.consumables.cards[])
 ---@class GConsumablesCard
 ---@field label string Display label of the consumable
 ---@field cost number Purchase cost of the consumable
 ---@field config GConsumablesCardConfig Consumable configuration
 
--- Consumable card configuration (G.consumeables.cards[].config)
+-- Consumable card configuration (G.consumables.cards[].config)
 ---@class GConsumablesCardConfig
 ---@field center_key string Key identifier for the consumable center
 

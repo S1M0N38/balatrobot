@@ -312,7 +312,7 @@ function utils.get_game_state()
     }
   end
 
-  local consumeables = nil
+  local consumables = nil
   if G.consumeables then
     local cards = {}
     if G.consumeables.cards then
@@ -330,7 +330,7 @@ function utils.get_game_state()
         }
       end
     end
-    consumeables = {
+    consumables = {
       cards = cards,
       config = {
         card_count = G.consumeables.config.card_count,
@@ -534,8 +534,7 @@ function utils.get_game_state()
     shop_jokers = shop_jokers, -- NOTE: This contains all cards in the shop, not only jokers.
     shop_vouchers = shop_vouchers,
     shop_booster = shop_booster,
-    consumeables = consumeables,
-    -- NOTE: yes it's consumeables, not consumables. Following the naming convention of the game.
+    consumables = consumables,
   }
 end
 
@@ -743,7 +742,7 @@ utils.COMPLETION_CONDITIONS = {
     end,
   },
 
-  rearrange_consumeables = {
+  rearrange_consumables = {
     [""] = function()
       return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
     end,
