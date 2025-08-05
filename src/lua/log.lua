@@ -242,7 +242,7 @@ function hook_redeem_voucher()
   G.FUNCS.use_card = function(e)
     local card = e.config.ref_table
 
-    if card.ability.set == 'Voucher' then
+    if card.ability.set == "Voucher" then
       for i, card in ipairs(G.shop_vouchers.cards) do
         if card.sort_id == card.sort_id then
           local function_call = { name = "shop", arguments = { action = "redeem_voucher", index = i - 1 } }
