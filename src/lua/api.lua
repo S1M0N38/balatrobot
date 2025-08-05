@@ -860,7 +860,6 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-
   elseif action == "redeem_voucher" then
     -- Validate index argument
     if args.index == nil then
@@ -871,11 +870,7 @@ API.functions["shop"] = function(args)
     local area = G.shop_vouchers
 
     if not area then
-      API.send_error_response(
-        "Voucher area not found in shop",
-        ERROR_CODES.INVALID_GAME_STATE,
-        {}
-      )
+      API.send_error_response("Voucher area not found in shop", ERROR_CODES.INVALID_GAME_STATE, {})
       return
     end
 
@@ -911,7 +906,6 @@ API.functions["shop"] = function(args)
     local use_button = card.children.buy_button and card.children.buy_button.definition
     G.FUNCS.use_card(use_button)
 
-
     -- Wait until the shop is idle and dollars are updated (redeem is non-atomic)
     ---@type PendingRequest
     API.pending_requests["shop"] = {
@@ -923,7 +917,6 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-
 
   -- TODO: add other shop actions [buy_and_use | open_pack | redeem_voucher]
   else
