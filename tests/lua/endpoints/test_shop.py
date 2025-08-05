@@ -400,3 +400,59 @@ class TestShop:
             ["current_state"],
             ErrorCode.INVALID_GAME_STATE.value,
         )
+
+    def test_redeem_voucher_success(self, tcp_client: socket.socket) -> None:
+        """Redeem the first voucher successfully and verify effects."""
+        # Capture shop state before redemption
+        before_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert before_state["state"] == State.SHOP.value
+        assert "shop_vouchers" in before_state
+        assert before_state["shop_vouchers"]["cards"], "No vouchers available to redeem"
+
+        voucher_cost = before_state["shop_vouchers"]["cards"][0]["cost"]
+        dollars_before = before_state["game"]["dollars"]
+        discount_before = before_state["game"].get("discount_percent", 0)
+
+        # Redeem the voucher at index 0
+        after_state = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "redeem_voucher", "index": 0}
+        )
+
+        # Verify we remain in shop state
+        assert after_state["state"] == State.SHOP.value
+
+        # Dollar count should decrease by voucher cost (cost may be 0 for free vouchers)
+        assert after_state["game"]["dollars"] == dollars_before - voucher_cost
+
+        # Discount percent should not decrease; usually increases after redeem
+        assert after_state["game"].get("discount_percent", 0) >= discount_before
+
+    def test_redeem_voucher_missing_index(self, tcp_client: socket.socket) -> None:
+        """Missing index for redeem_voucher should raise INVALID_PARAMETER."""
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "redeem_voucher"}
+        )
+        assert_error_response(
+            response,
+            "Missing required field: index",
+            ["field"],
+            ErrorCode.MISSING_ARGUMENTS.value,
+        )
+
+    def test_redeem_voucher_index_out_of_range(self, tcp_client: socket.socket) -> None:
+        """Index >= len(shop_vouchers.cards) should raise PARAMETER_OUT_OF_RANGE."""
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert game_state["state"] == State.SHOP.value
+        out_of_range_index = len(game_state["shop_vouchers"]["cards"])
+
+        response = send_and_receive_api_message(
+            tcp_client,
+            "shop",
+            {"action": "redeem_voucher", "index": out_of_range_index},
+        )
+        assert_error_response(
+            response,
+            "Voucher index out of range",
+            ["index", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
+        )

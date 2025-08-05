@@ -886,10 +886,6 @@ API.functions["shop"] = function(args)
     end
 
     local card = area.cards[card_pos]
-
-    sendDebugMessage("Redeeming voucher", "API")
-    sendDebugMessage(tostring(card), "API")
-
     -- Check affordability
     local dollars_before = G.GAME.dollars
     if dollars_before < card.cost then
@@ -900,7 +896,6 @@ API.functions["shop"] = function(args)
       )
       return
     end
-    local expected_dollars = dollars_before - card.cost
 
     -- Activate the voucher's purchase button to redeem
     local use_button = card.children.buy_button and card.children.buy_button.definition
