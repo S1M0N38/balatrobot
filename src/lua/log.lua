@@ -204,7 +204,7 @@ function hook_cash_out()
 end
 
 -- -----------------------------------------------------------------------------
--- shop Hook
+-- shop Hooks
 -- -----------------------------------------------------------------------------
 
 ---Hooks into G.FUNCS.toggle_shop
@@ -235,9 +235,28 @@ function hook_buy_card()
   sendDebugMessage("Hooked into G.FUNCS.buy_from_shop for logging", "LOG")
 end
 
--- -----------------------------------------------------------------------------
--- reroll_shop Hook
--- -----------------------------------------------------------------------------
+---Hooks into card:use_card
+function hook_redeem_voucher()
+  local original_function = G.FUNCS.use_card
+  -- e is the UI element for use_card button on the targeted card.
+  G.FUNCS.use_card = function(e)
+    local card = e.config.ref_table
+
+    if card.ability.set == 'Voucher' then
+      for i, card in ipairs(G.shop_vouchers.cards) do
+        if card.sort_id == card.sort_id then
+          local function_call = { name = "shop", arguments = { action = "redeem_voucher", index = i - 1 } }
+          LOG.schedule_write(function_call)
+          break
+        end
+      end
+    end
+
+    -- TODO: Other use_card cases (planet, tarot, spectral)
+    return original_function(e)
+  end
+  sendDebugMessage("Hooked into G.FUNCS.buy_from_shop for logging", "LOG")
+end
 
 ---Hooks into G.FUNCS.reroll_shop
 function hook_reroll_shop()
@@ -476,6 +495,7 @@ function LOG.init()
   hook_cash_out()
   hook_toggle_shop()
   hook_buy_card()
+  hook_redeem_voucher()
   hook_reroll_shop()
   hook_hand_rearrange()
   hook_sell_card()

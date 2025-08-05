@@ -861,6 +861,70 @@ API.functions["shop"] = function(args)
       end,
     }
 
+  elseif action == "redeem_voucher" then
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
+      return
+    end
+
+    local area = G.shop_vouchers
+
+    if not area then
+      API.send_error_response(
+        "Voucher area not found in shop",
+        ERROR_CODES.INVALID_GAME_STATE,
+        {}
+      )
+      return
+    end
+
+    -- Get voucher index (1-based) and validate range
+    local card_pos = args.index + 1
+    if not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Voucher index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, valid_range = "0-" .. tostring(#area.cards - 1) }
+      )
+      return
+    end
+
+    local card = area.cards[card_pos]
+
+    sendDebugMessage("Redeeming voucher", "API")
+    sendDebugMessage(tostring(card), "API")
+
+    -- Check affordability
+    local dollars_before = G.GAME.dollars
+    if dollars_before < card.cost then
+      API.send_error_response(
+        "Not enough dollars to redeem voucher",
+        ERROR_CODES.INVALID_ACTION,
+        { dollars = dollars_before, cost = card.cost }
+      )
+      return
+    end
+    local expected_dollars = dollars_before - card.cost
+
+    -- Activate the voucher's purchase button to redeem
+    local use_button = card.children.buy_button and card.children.buy_button.definition
+    G.FUNCS.use_card(use_button)
+
+
+    -- Wait until the shop is idle and dollars are updated (redeem is non-atomic)
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS["shop"]["redeem_voucher"]()
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+
+
   -- TODO: add other shop actions [buy_and_use | open_pack | redeem_voucher]
   else
     API.send_error_response(
