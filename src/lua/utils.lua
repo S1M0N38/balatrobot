@@ -798,6 +798,26 @@ utils.COMPLETION_CONDITIONS = {
       local elapsed = socket.gettime() - condition_timestamps.shop_reroll
       return elapsed > 0.30
     end,
+    redeem_voucher = function()
+      local base_condition = G.STATE == G.STATES.SHOP
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduve the threshold
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.shop_redeem_voucher = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.shop_redeem_voucher then
+        condition_timestamps.shop_redeem_voucher = socket.gettime()
+      end
+
+      -- Check if 0.3 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.shop_redeem_voucher
+      return elapsed > 0.10
+    end,
   },
   sell_joker = {
     [""] = function()
