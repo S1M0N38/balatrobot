@@ -913,12 +913,72 @@ API.functions["shop"] = function(args)
       end,
     }
 
-  -- TODO: add other shop actions [buy_and_use | open_pack | redeem_voucher]
+  elseif action == "buy_and_use" then
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
+      return
+    end
+
+    -- Get card index (1-based) and shop area (shop_jokers also holds consumables)
+    local card_pos = args.index + 1
+    local area = G.shop_jokers
+
+    -- Validate card index is in range
+    if not area or not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Card index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, valid_range = "0-" .. tostring(#area.cards - 1) }
+      )
+      return
+    end
+
+    -- Evaluate card
+    local card = area.cards[card_pos]
+
+    -- Check if the card can be afforded
+    if card.cost > G.GAME.dollars then
+      API.send_error_response(
+        "Card is not affordable",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index, cost = card.cost, dollars = G.GAME.dollars }
+      )
+      return
+    end
+
+    -- Locate the Buy & Use button definition
+    local buy_and_use_button = card.children.buy_and_use_button and card.children.buy_and_use_button.definition
+    if not buy_and_use_button then
+      API.send_error_response(
+        "Card has no buy_and_use button",
+        ERROR_CODES.INVALID_GAME_STATE,
+        { index = args.index, card_name = card.name }
+      )
+      return
+    end
+
+    -- Activate the buy_and_use button via the game's shop function
+    G.FUNCS.buy_from_shop(buy_and_use_button)
+
+    -- Defer sending response until the shop has processed the purchase and use
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS["shop"]["buy_and_use"]()
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+  elseif action == "open_pack" then
+    -- TODO: add open_pack
   else
     API.send_error_response(
       "Invalid action for shop",
       ERROR_CODES.INVALID_ACTION,
-      { action = action, valid_actions = { "next_round", "buy_card", "reroll" } }
+      { action = action, valid_actions = { "next_round", "buy_card", "reroll", "buy_and_use", "redeem_voucher" } }
     )
     return
   end
