@@ -58,6 +58,8 @@ def normalize_step(step: dict[str, Any]) -> dict[str, Any]:
                 for card in game_state["consumables"]["cards"]:
                     card.pop("highlighted", None)
                     card.pop("sort_id", None)
+            if "game" in game_state and "smods_version" in game_state["game"]:
+                game_state["game"].pop("smods_version", None)
 
     # we don't care about the game_state_before when starting a run
     if step.get("function", {}).get("name") == "start_run":
