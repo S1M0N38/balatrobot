@@ -775,7 +775,7 @@ utils.COMPLETION_CONDITIONS = {
       local elapsed = socket.gettime() - condition_timestamps.shop_buy_card
       return elapsed > 0.1
     end,
-    buy_and_use = function()
+    buy_and_use_card = function()
       local base_condition = G.STATE == G.STATES.SHOP
         and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduve the threshold
         and G.STATE_COMPLETE

@@ -221,11 +221,13 @@ end
 function hook_buy_card()
   local original_function = G.FUNCS.buy_from_shop
   -- e is the UI element for buy_card button on the targeted card.
+
   G.FUNCS.buy_from_shop = function(e)
     local card_id = e.config.ref_table.sort_id
+    local action = (e.config and e.config.id) or "buy_card"
     for i, card in ipairs(G.shop_jokers.cards) do
       if card.sort_id == card_id then
-        local function_call = { name = "shop", arguments = { action = "buy_card", index = i - 1 } }
+        local function_call = { name = "shop", arguments = { action = action, index = i - 1 } }
         LOG.schedule_write(function_call)
         break
       end

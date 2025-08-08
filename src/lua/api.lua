@@ -913,7 +913,7 @@ API.functions["shop"] = function(args)
       end,
     }
 
-  elseif action == "buy_and_use" then
+  elseif action == "buy_and_use_card" then
     -- Validate index argument
     if args.index == nil then
       API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
@@ -965,7 +965,7 @@ API.functions["shop"] = function(args)
     ---@type PendingRequest
     API.pending_requests["shop"] = {
       condition = function()
-        return utils.COMPLETION_CONDITIONS["shop"]["buy_and_use"]()
+        return utils.COMPLETION_CONDITIONS["shop"]["buy_and_use_card"]()
       end,
       action = function()
         local game_state = utils.get_game_state()
