@@ -881,6 +881,27 @@ utils.COMPLETION_CONDITIONS = {
       return elapsed > 0.30
     end,
   },
+  use_consumable = {
+    [""] = function()
+      local base_condition = #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduce the threshold
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.use_consumable = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.use_consumable then
+        condition_timestamps.use_consumable = socket.gettime()
+      end
+
+      -- Check if 0.2 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.use_consumable
+      return elapsed > 0.20
+    end,
+  },
 }
 
 return utils
