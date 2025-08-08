@@ -86,7 +86,7 @@ class TestUseConsumablePlanet:
         )
         assert_error_response(
             response,
-            "index out of range",
+            "Consumable index out of range",
             expected_error_code=ErrorCode.PARAMETER_OUT_OF_RANGE.value,
         )
 
@@ -126,8 +126,22 @@ class TestUseConsumablePlanet:
         )
         assert_error_response(
             response,
-            "index out of range",
+            "Consumable index out of range",
             expected_error_code=ErrorCode.PARAMETER_OUT_OF_RANGE.value,
+        )
+
+    def test_use_consumable_float_index(
+        self,
+        tcp_client: socket.socket,
+    ) -> None:
+        """Test using consumable with float index."""
+        response = send_and_receive_api_message(
+            tcp_client, "use_consumable", {"index": 1.5}
+        )
+        assert_error_response(
+            response,
+            "Invalid parameter type",
+            expected_error_code=ErrorCode.INVALID_PARAMETER.value,
         )
 
 
@@ -175,7 +189,7 @@ class TestUseConsumableNoConsumables:
         )
         assert_error_response(
             response,
-            "No consumables available",
+            "No consumables available to use",
             expected_error_code=ErrorCode.MISSING_GAME_OBJECT.value,
         )
 
