@@ -242,27 +242,38 @@ function hook_buy_card()
   sendDebugMessage("Hooked into G.FUNCS.buy_from_shop for logging", "LOG")
 end
 
----Hooks into card:use_card
-function hook_redeem_voucher()
+---Hooks into G.FUNCS.use_card for voucher redemption and consumable usage logging
+function hook_use_card()
   local original_function = G.FUNCS.use_card
   -- e is the UI element for use_card button on the targeted card.
   G.FUNCS.use_card = function(e)
     local card = e.config.ref_table
 
     if card.ability.set == "Voucher" then
-      for i, card in ipairs(G.shop_vouchers.cards) do
-        if card.sort_id == card.sort_id then
+      for i, shop_card in ipairs(G.shop_vouchers.cards) do
+        if shop_card.sort_id == card.sort_id then
           local function_call = { name = "shop", arguments = { action = "redeem_voucher", index = i - 1 } }
+          LOG.schedule_write(function_call)
+          break
+        end
+      end
+    elseif
+      (card.ability.set == "Planet" or card.ability.set == "Tarot" or card.ability.set == "Spectral")
+      and card.area == G.consumeables
+    then
+      -- Only log consumables used from consumables area
+      for i, consumable_card in ipairs(G.consumeables.cards) do
+        if consumable_card.sort_id == card.sort_id then
+          local function_call = { name = "use_consumable", arguments = { index = i - 1 } }
           LOG.schedule_write(function_call)
           break
         end
       end
     end
 
-    -- TODO: Other use_card cases (planet, tarot, spectral)
     return original_function(e)
   end
-  sendDebugMessage("Hooked into G.FUNCS.buy_from_shop for logging", "LOG")
+  sendDebugMessage("Hooked into G.FUNCS.use_card for voucher and consumable logging", "LOG")
 end
 
 ---Hooks into G.FUNCS.reroll_shop
@@ -502,7 +513,7 @@ function LOG.init()
   hook_cash_out()
   hook_toggle_shop()
   hook_buy_card()
-  hook_redeem_voucher()
+  hook_use_card()
   hook_reroll_shop()
   hook_hand_rearrange()
   hook_sell_card()
