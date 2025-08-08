@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .enums import State
 
@@ -54,7 +54,34 @@ class HandActionRequest(BalatroBaseModel):
 class ShopActionRequest(BalatroBaseModel):
     """Request model for shop actions."""
 
-    action: Literal["next_round"] = Field(..., description="Shop action to perform")
+    action: Literal[
+        "next_round",
+        "buy_card",
+        "buy_and_use_card",
+        "reroll",
+        "redeem_voucher",
+    ] = Field(..., description="Shop action to perform")
+    index: int | None = Field(
+        None,
+        ge=0,
+        description="0-based index required for buy_card, buy_and_use_card, redeem_voucher",
+    )
+
+    @model_validator(mode="after")
+    def _validate_index_applicability(self) -> "ShopActionRequest":
+        requires_index = {"buy_card", "redeem_voucher", "buy_and_use_card"}
+        if self.action in requires_index:
+            if self.index is None:
+                raise ValueError(
+                    "'index' is required when action is one of: buy_card, buy_and_use_card, redeem_voucher"
+                )
+        else:
+            # Ensure index is not provided for actions that don't accept it
+            if self.index is not None:
+                raise ValueError(
+                    "'index' must not be provided when action is not one of: buy_card, buy_and_use_card, redeem_voucher"
+                )
+        return self
 
 
 # =============================================================================
