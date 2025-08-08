@@ -1088,12 +1088,22 @@ API.functions["use_consumable"] = function(args)
     return
   end
 
-  -- Validate that index is a number
+  -- Validate that index is a number and an integer
   if type(args.index) ~= "number" then
     API.send_error_response(
       "Invalid parameter type",
       ERROR_CODES.INVALID_PARAMETER,
       { parameter = "index", expected_type = "number" }
+    )
+    return
+  end
+
+  -- Validate that index is an integer
+  if args.index % 1 ~= 0 then
+    API.send_error_response(
+      "Invalid parameter type",
+      ERROR_CODES.INVALID_PARAMETER,
+      { parameter = "index", expected_type = "integer" }
     )
     return
   end
