@@ -7,7 +7,7 @@ SETTINGS = {}
 
 -- BalatroBot Configuration
 local config = {
-  dt = fast and (4.0 / 60.0) or (1.0 / 60.0),
+  dt = headless and (4.99 / 60.0) or (1.0 / 60.0),
   headless = headless,
   fast = fast,
 }
