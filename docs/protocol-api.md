@@ -83,14 +83,14 @@ The BalatroBot API operates as a finite state machine that mirrors the natural f
 
 The game progresses through these states in a typical flow: `MENU` → `BLIND_SELECT` → `SELECTING_HAND` → `ROUND_EVAL` → `SHOP` → `BLIND_SELECT` (or `GAME_OVER`).
 
-| State            | Value | Description                  | Available Functions                                                       |
-| ---------------- | ----- | ---------------------------- | ------------------------------------------------------------------------- |
-| `MENU`           | 11    | Main menu screen             | `start_run`                                                               |
-| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind`, `sell_joker`, `sell_consumable`                   |
-| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard`, `rearrange_hand`, `sell_joker`, `sell_consumable` |
-| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`, `sell_joker`, `sell_consumable`                               |
-| `SHOP`           | 5     | Shop interface               | `shop`, `sell_joker`, `sell_consumable`                                   |
-| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`                                                              |
+| State            | Value | Description                  | Available Functions                                                                         |
+| ---------------- | ----- | ---------------------------- | ------------------------------------------------------------------------------------------- |
+| `MENU`           | 11    | Main menu screen             | `start_run`                                                                                 |
+| `BLIND_SELECT`   | 7     | Selecting or skipping blinds | `skip_or_select_blind`, `sell_joker`, `sell_consumable`, `use_consumable`                   |
+| `SELECTING_HAND` | 1     | Playing or discarding cards  | `play_hand_or_discard`, `rearrange_hand`, `sell_joker`, `sell_consumable`, `use_consumable` |
+| `ROUND_EVAL`     | 8     | Round completion evaluation  | `cash_out`, `sell_joker`, `sell_consumable`, `use_consumable`                               |
+| `SHOP`           | 5     | Shop interface               | `shop`, `sell_joker`, `sell_consumable`, `use_consumable`                                   |
+| `GAME_OVER`      | 4     | Game ended                   | `go_to_menu`                                                                                |
 
 ### Validation
 
@@ -122,6 +122,7 @@ The BalatroBot API provides core functions that correspond to the main game acti
 | `shop`                  | Performs shop actions: proceed to next round (`next_round`), purchase a card (`buy_card`), or reroll shop (`reroll`) |
 | `sell_joker`            | Sells a joker from the player's collection for money                                                                 |
 | `sell_consumable`       | Sells a consumable from the player's collection for money                                                            |
+| `use_consumable`        | Uses a consumable card from the player's collection (Tarot, Planet, or Spectral cards)                               |
 
 ### Parameters
 
@@ -137,6 +138,7 @@ The following table details the parameters required for each function. Note that
 | `shop`                  | `action` (string): Shop action ("next_round", "buy_card", "reroll", or **"redeem_voucher"**)<br>`index` (number, required when `action` = "buy_card" or `action` = **"redeem_voucher"**): 0-based card index to purchase / redeem                                         |
 | `sell_joker`            | `index` (number): 0-based index of the joker to sell from the player's joker collection                                                                                                                                                                                   |
 | `sell_consumable`       | `index` (number): 0-based index of the consumable to sell from the player's consumable collection                                                                                                                                                                         |
+| `use_consumable`        | `index` (number): 0-based index of the consumable to use from the player's consumable collection                                                                                                                                                                          |
 
 ### Shop Actions
 
