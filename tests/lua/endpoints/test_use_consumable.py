@@ -38,7 +38,6 @@ class TestUseConsumablePlanet:
         )
 
         assert game_state["state"] == State.SHOP.value
-        print(game_state["consumables"]["cards"][0]["label"])
         # we are expecting to have a planet card in the consumables
 
         yield game_state
