@@ -340,7 +340,7 @@
 
 -- Shop card ability (G.shop_*.cards[].ability)
 ---@class GShopCardAbility
----@field set string The set of the card: "Joker", "Planet", "Voucher", "Booster", or "Consumable"
+---@field set string The set of the card: "Joker", "Planet", "Tarot", "Spectral", "Voucher", "Booster", or "Consumable"
 
 -- Shop card configuration (G.shop_*.cards[].config)
 ---@class GShopCardConfig

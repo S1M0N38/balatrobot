@@ -318,6 +318,9 @@ function utils.get_game_state()
     if G.consumeables.cards then
       for i, card in pairs(G.consumeables.cards) do
         cards[i] = {
+          ability = {
+            set = card.ability.set,
+          },
           label = card.label,
           cost = card.cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
@@ -344,6 +347,9 @@ function utils.get_game_state()
     local cards = {}
     for i, card in pairs(G.hand.cards) do
       cards[i] = {
+        ability = {
+          set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
+        },
         -- ability = table of card abilities effect, mult, extra_value
         label = card.label, -- str (default "Base Card") | ... | ... | ?
         -- playing_card = card.config.card.playing_card, -- int. The card index in the deck for the current round ?
@@ -403,6 +409,9 @@ function utils.get_game_state()
     if G.jokers.cards then
       for i, card in pairs(G.jokers.cards) do
         cards[i] = {
+          ability = {
+            set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
+          },
           label = card.label,
           cost = card.cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
