@@ -1,5 +1,6 @@
 local json = require("json")
 local socket = require("socket")
+local gamestate = require("gamestate")
 
 LOG = {
   mod_path = nil,
@@ -33,7 +34,7 @@ function LOG.update()
     if pending_log.condition() then
       -- Update the log entry with after function call info
       pending_log.log_entry["timestamp_ms_after"] = math.floor(socket.gettime() * 1000)
-      pending_log.log_entry["game_state_after"] = utils.get_game_state()
+      pending_log.log_entry["game_state_after"] = gamestate.get()
       LOG.write(pending_log.log_entry)
       -- Prepare for the next log entry
       LOG.game_state_before = pending_log.log_entry.game_state_after
@@ -408,7 +409,7 @@ function hook_hand_rearrange()
             timestamp_ms_before = timestamp_ms,
             game_state_before = LOG.game_state_before,
             timestamp_ms_after = timestamp_ms,
-            game_state_after = utils.get_game_state(),
+            game_state_after = gamestate.get(),
           }
 
           sendInfoMessage(function_call.name .. "(" .. json.encode(function_call.arguments) .. ")", "LOG")
