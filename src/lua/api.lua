@@ -1,5 +1,6 @@
 local socket = require("socket")
 local json = require("json")
+local gamestate = require("gamestate")
 
 -- Constants
 local SOCKET_TIMEOUT = 0
@@ -198,7 +199,7 @@ API.functions["get_game_state"] = function(_)
   API.pending_requests["get_game_state"] = {
     condition = utils.COMPLETION_CONDITIONS["get_game_state"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -210,7 +211,7 @@ end
 API.functions["go_to_menu"] = function(_)
   if G.STATE == G.STATES.MENU and G.MAIN_MENU_UI then
     sendDebugMessage("go_to_menu called but already in menu", "API")
-    local game_state = utils.get_game_state()
+    local game_state = gamestate.get()
     API.send_response(game_state)
     return
   end
@@ -219,7 +220,7 @@ API.functions["go_to_menu"] = function(_)
   API.pending_requests["go_to_menu"] = {
     condition = utils.COMPLETION_CONDITIONS["go_to_menu"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -279,7 +280,7 @@ API.functions["start_run"] = function(args)
   API.pending_requests["start_run"] = {
     condition = utils.COMPLETION_CONDITIONS["start_run"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -336,7 +337,7 @@ API.functions["skip_or_select_blind"] = function(args)
     API.pending_requests["skip_or_select_blind"] = {
       condition = utils.COMPLETION_CONDITIONS["skip_or_select_blind"]["select"],
       action = function()
-        local game_state = utils.get_game_state()
+        local game_state = gamestate.get()
         API.send_response(game_state)
       end,
       args = args,
@@ -349,7 +350,7 @@ API.functions["skip_or_select_blind"] = function(args)
     API.pending_requests["skip_or_select_blind"] = {
       condition = utils.COMPLETION_CONDITIONS["skip_or_select_blind"]["skip"],
       action = function()
-        local game_state = utils.get_game_state()
+        local game_state = gamestate.get()
         API.send_response(game_state)
       end,
     }
@@ -450,7 +451,7 @@ API.functions["play_hand_or_discard"] = function(args)
   API.pending_requests["play_hand_or_discard"] = {
     condition = utils.COMPLETION_CONDITIONS["play_hand_or_discard"][args.action],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -524,7 +525,7 @@ API.functions["rearrange_hand"] = function(args)
   API.pending_requests["rearrange_hand"] = {
     condition = utils.COMPLETION_CONDITIONS["rearrange_hand"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -600,7 +601,7 @@ API.functions["rearrange_jokers"] = function(args)
   API.pending_requests["rearrange_jokers"] = {
     condition = utils.COMPLETION_CONDITIONS["rearrange_jokers"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -676,7 +677,7 @@ API.functions["rearrange_consumables"] = function(args)
   API.pending_requests["rearrange_consumables"] = {
     condition = utils.COMPLETION_CONDITIONS["rearrange_consumables"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -701,7 +702,7 @@ API.functions["cash_out"] = function(_)
   API.pending_requests["cash_out"] = {
     condition = utils.COMPLETION_CONDITIONS["cash_out"][""],
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -737,7 +738,7 @@ API.functions["shop"] = function(args)
     API.pending_requests["shop"] = {
       condition = utils.COMPLETION_CONDITIONS["shop"]["next_round"],
       action = function()
-        local game_state = utils.get_game_state()
+        local game_state = gamestate.get()
         API.send_response(game_state)
       end,
     }
@@ -829,7 +830,7 @@ API.functions["shop"] = function(args)
         return utils.COMPLETION_CONDITIONS["shop"]["buy_card"]()
       end,
       action = function()
-        local game_state = utils.get_game_state()
+        local game_state = gamestate.get()
         API.send_response(game_state)
       end,
     }
@@ -856,7 +857,7 @@ API.functions["shop"] = function(args)
         return utils.COMPLETION_CONDITIONS["shop"]["reroll"]()
       end,
       action = function()
-        local game_state = utils.get_game_state()
+        local game_state = gamestate.get()
         API.send_response(game_state)
       end,
     }
@@ -908,7 +909,7 @@ API.functions["shop"] = function(args)
         return utils.COMPLETION_CONDITIONS["shop"]["redeem_voucher"]()
       end,
       action = function()
-        local game_state = utils.get_game_state()
+        local game_state = gamestate.get()
         API.send_response(game_state)
       end,
     }
@@ -999,7 +1000,7 @@ API.functions["sell_joker"] = function(args)
       return utils.COMPLETION_CONDITIONS["sell_joker"][""]()
     end,
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -1094,7 +1095,7 @@ API.functions["use_consumable"] = function(args)
       return utils.COMPLETION_CONDITIONS["use_consumable"][""]()
     end,
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
@@ -1179,7 +1180,7 @@ API.functions["sell_consumable"] = function(args)
       return utils.COMPLETION_CONDITIONS["sell_consumable"][""]()
     end,
     action = function()
-      local game_state = utils.get_game_state()
+      local game_state = gamestate.get()
       API.send_response(game_state)
     end,
   }
