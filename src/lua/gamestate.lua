@@ -81,12 +81,12 @@ function gamestate.get()
       --
 
       current_round = {
-        -- "ancient_card": { -- maybe some random card used by some joker/effect? idk
+        -- "ancient_card": { -- joker specific: Ancient Joker provides 1.5x mult for this suit when played
         --   "suit": "Spades" | "Hearts" | "Diamonds" | "Clubs",
         -- },
         -- any_hand_drawn = true, -- bool (default true) ??
         -- "cards_flipped": int, (Defualt 0)
-        -- "castle_card": { -- ??
+        -- "castle_card": { -- joker specific: Castle gains chips when this suit is discarded
         --   "suit": "Spades" | "Hearts" | "Diamonds" | "Clubs",
         -- },
 
@@ -108,29 +108,29 @@ function gamestate.get()
 
         --"dollars": int, (default 0) -- maybe dollars earned in this round?
         -- "dollars_to_be_earned": str, (default "") -- ??
-        -- "free_rerolls": int, (default 0) -- Number  of free rerolls in the shop?
+        -- "free_rerolls": int, (default 0) -- Number of free rerolls in the shop, provided by the joker "Chaos the Clown"
         hands_left = G.GAME.current_round.hands_left, -- Number of hands left for this round
         hands_played = G.GAME.current_round.hands_played, -- Number of hands played in this round
 
         -- Reroll information (used in shop state)
         reroll_cost = G.GAME.current_round.reroll_cost, -- Current cost for a shop reroll
         free_rerolls = G.GAME.current_round.free_rerolls, -- Free rerolls remaining this round
-        -- "idol_card": { -- what's a idol card?? maybe some random used by some joker/effect? idk
+        -- "idol_card": { -- joker specific: Idol provides 1.5x mult for exact card when played
         --   "rank": "Ace" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "Jack" | "Queen" | "King",
         --   "suit": "Spades" | "Hearts" | "Diamonds" | "Clubs",
         -- },
         -- "jokers_purchased": int, (default 0) -- Number of jokers purchased in this round ?
-        -- "mail_card": { -- what's a mail card?? maybe some random used by some joker/effect? idk
+        -- "mail_card": { -- joker specific: Mail in rebate provides four dollars when this rank is discarded
         --   "id": int -- id of the mail card
         --   "rank": str, --
         --  }
-        -- "most_played_poker_hand": str, (Default "High Card")
+        -- "most_played_poker_hand": str, (Default "High Card") -- Most played hand this GAME.
         -- "reroll_cost": int, (default 5)
         -- "reroll_cost_increase": int, (default 0)
         -- "round_dollars": int, (default 0) ??
         -- "round_text": str, (default "Round ")
         -- "used_packs": table/list,
-        voucher = { -- this is a list cuz some effect can give multiple vouchers per ante
+        voucher = { -- this is a list since skip tags can cause multiple vouchers to appear in the shop
           -- "1": "v_hone",
           -- "spawn": {
           --   "v_hone": "..."
@@ -138,39 +138,39 @@ function gamestate.get()
         },
       },
 
-      -- "disabled_ranks" = table/list, -- there are some boss that disable certain ranks
-      -- "disabled_suits" = table/list, -- there are some boss that disable certain suits
+      -- "disabled_ranks" = table/list, -- Some boss blinds disable certain ranks
+      -- "disabled_suits" = table/list, -- Some boss blinds disable certain suits
 
       discount_percent = G.GAME.discount_percent, -- int (default 0) this lower the price in the shop. A voucher must be redeemed
       dollars = G.GAME.dollars, -- int , current dollars in the run
 
-      -- "ecto_minus": int,
-      -- "edition_rate": int, (default 1) -- change the prob. to find a card which is not a base?
-      -- "hand_usage": table/list, (default {}) -- maybe track the hand played so far in the run?
+      -- "ecto_minus": int,  -- The decrement to hand size that the next ectoplasm spectral card will apply
+      -- "edition_rate": int, (default 1) -- change the prob. to find a card which has an edition in the shop. Increased by vouchers
+      -- "hand_usage": table/list, (default {}) -- tracks the number of times each hand has been played this run for some jokers (supernova, etc.)
 
-      -- table/list. Maybe this track the various hand levels?
+      -- table/list. Tracks hand levels for gameplay and statistics for Run Info tab. (key to gameplay)
       -- "hands": {
       --   "Five of a Kind": {...},
       --   "Flush": {
-      --     "_saved_d_u": true, This is a private field so we are not interested in it
-      --     "chips": 35, current chips reward
-      --     "example": {
+      --     "_saved_d_u": true, -- This is a private field so we are not interested in it
+      --     "chips": 35, -- current chips reward
+      --     "example": { -- Example hand for Run Info tab, not required for gameplay or set gamestate
       --       "1": "...",
       --       "2": "...",
       --       "3": "...",
       --       "4": "...",
       --       "5": "..."
       --     },
-      --     "l_chips": 15, boundary for chips?
-      --     "l_mult": 2, boundary for mult?
-      --     "level": 1, level of the hand
-      --     "mult": 4, curent mult reward
-      --     "order": 7, order for how good the hand is Five of a Kind is 1, High Card is 12
-      --     "played": 0, how many time the hand has been played in this run
-      --     "played_this_round": 0, how many time the hand has been played in this round
-      --     "s_chips": 35, boundary for chips?
-      --     "s_mult": 4, boundary for mult?
-      --     "visible": true, is this hand visible in the Run Info interface
+      --     "l_chips": 15, -- Increment to chips on level up
+      --     "l_mult": 2, -- increment to mult on level up
+      --     "level": 1, -- level of the hand
+      --     "mult": 4, -- current mult reward
+      --     "order": 7, -- order for how good the hand is Five of a Kind is 1, High Card is 12
+      --     "played": 0, -- how many time the hand has been played in this run
+      --     "played_this_round": 0, --how many time the hand has been played in this round
+      --     "s_chips": 35, -- boundary for chips?
+      --     "s_mult": 4, -- boundary for mult?
+      --     "visible": true, -- is this hand visible in the Run Info interface. Special hands are not visible until played (e.g. flush five)
       --   },
       --   "Flush Five": {...},
       --   "Flush House": {...},
@@ -184,7 +184,7 @@ function gamestate.get()
       --   "Two Pair": {...},
       -- },
       hands_played = G.GAME.hands_played, -- (default 0) hand played in this run
-      inflation = G.GAME.inflation, -- (default 0) maybe there are some stakes that increase the prices in the shop ?
+      inflation = G.GAME.inflation, -- (default 0) Used by one challenge "inflation" to increase shop prices
       interest_amount = G.GAME.interest_amount, -- (default 1) how much each $ is worth at the eval round stage
       interest_cap = G.GAME.interest_cap, -- (default 25) cap for interest, e.g. 25 dollar means that every each 5 dollar you get one $
 
@@ -193,7 +193,7 @@ function gamestate.get()
       -- joker_usage = G.GAME.joker_usage, -- list/table maybe a list of jokers used in the run?
       --
       last_blind = last_blind,
-      -- legendary_mod = G.GAME.legendary_mod, -- (default 1) maybe the probality/modifier to find a legendary joker in the shop?
+      -- legendary_mod = G.GAME.legendary_mod, -- (default 1) The probality/modifier to find a legendary joker in the shop?
 
       max_jokers = G.GAME.max_jokers, --(default 0) the number of held jokers?
 
@@ -206,7 +206,7 @@ function gamestate.get()
       --   -- }
       -- },
       -- pack_size = G.GAME.pack_size (int default 2), -- number of pack slots ?
-      -- perishable_rounds = int (default 5), -- ??
+      -- perishable_rounds = int (default 5), -- Number of rounds before a perishable joker will become innate.
       -- perscribed_bosses = list/table, -- ??
 
       planet_rate = G.GAME.planet_rate, -- (int default 4) -- prob that a planet card appers in the shop
@@ -214,7 +214,7 @@ function gamestate.get()
       -- pool_flags = list/table, -- ??
 
       previous_round = {
-        -- I think that this table will contain the previous round info
+        -- This table contains the previous round info
         -- "dollars": int, (default 4, this is the dollars amount when starting red deck white stake)
       },
       probabilities = {
@@ -243,9 +243,9 @@ function gamestate.get()
         -- shuffle = float,
       },
       -- rare_mod = G.GAME.rare_mod, (int default 1) -- maybe the probality/modifier to find a rare joker in the shop?
-      -- rental_rate = int (default 3), -- maybe the probality/modifier to find a rental card in the shop?
+      -- rental_rate = int (default 3), -- The probality/modifier to find a rental joker in the shop (gold stake only)
       round = G.GAME.round, -- number of the current round. 0 before starting the first rounthe first round
-      round_bonus = { -- What's a "round_bonus"? Some bonus given at the end of the round? maybe use in the eval round phase
+      round_bonus = { -- Likely used on the green deck's special ability. pays out gold for unused discards and hands
         -- "discards": int, (default 0) ??
         -- "next_hands": int, (default 0) ??
       },
@@ -275,15 +275,15 @@ function gamestate.get()
         name = G.GAME.selected_back.name, -- name of the deck
         -- pos = {x = int (default 0), y = int (default 0)}, -- ??
       },
-      -- seleted_back_key = table -- ??
+      -- seleted_back_key = table -- Likely the card key of the selected deck
       shop = {
         -- contains info about the shop
         -- joker_max = int (default 2), -- max number that can appear in the shop or the number of shop slots?
       },
-      skips = G.GAME.skips, -- number of skips in this run
+      skips = G.GAME.skips, -- number of skips used in this run, used to compute some skip tags and the "Throwback" Joker
       smods_version = G.GAME.smods_version, -- version of smods loaded
-      -- sort = str, (default "desc") card sort order. descending (desc) or suit, I guess?
-      -- spectral_rate = int (default 0), -- prob that a spectral card appear in the shop
+      -- sort = str, (default "desc") -- The in-hand card sort order. rank descending ('desc') or 'suit' - also effects tarot/spectral card selection area
+      -- spectral_rate = int (default 0), -- prob that a spectral card appear in the shop. Only > 0 if the Ghost deck is in use
       stake = G.GAME.stake, --int (default 1), -- the stake for the run (1 for White Stake, 2 for Red Stake ...)
       -- starting_deck_size = int (default 52), -- the starting deck size for the run.
       starting_params = {
@@ -299,9 +299,9 @@ function gamestate.get()
 
       -- tag_tally = -- int (default 0), -- what's a tally?
       tags = tags,
-      tarot_rate = G.GAME.tarot_rate, -- int (default 4), -- prob that a tarot card appear in the shop
+      tarot_rate = G.GAME.tarot_rate, -- int (default 4), -- prob that a tarot card appear in the shop, effected by vouchers
       uncommon_mod = G.GAME.uncommon_mod, -- int (default 1), -- prob that an uncommon joker appear in the shop
-      unused_discards = G.GAME.unused_discards, -- int (default 0), -- number of discards left at the of a round. This is used some time to in the eval round phase
+      unused_discards = G.GAME.unused_discards, -- int (default 0), -- number of discards left at the of a round. This is used for some joker calculations in the eval round phase
       -- used_jokers = { -- table/list to track the joker usage through the run ?
       --   c_base = bool
       -- }
