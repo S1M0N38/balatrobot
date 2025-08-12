@@ -268,10 +268,10 @@ function gamestate.get()
       },
       seeded = G.GAME.seeded, -- bool if the run use a seed or not
       selected_back = {
-        -- The back should be the deck: Red Deck, Black Deck, etc.
-        -- This table contains functions and info about deck selection
+        -- The back is the deck: Red Deck, Black Deck, etc.
+        -- This table contains functions and info about deck selection and effects
         -- effect = {} -- contains function e.g. "set"
-        -- loc_name = str, -- ?? (default "Red Deck")
+        -- loc_name = str, -- localized name of the deck (default "Red Deck")
         name = G.GAME.selected_back.name, -- name of the deck
         -- pos = {x = int (default 0), y = int (default 0)}, -- ??
       },
@@ -328,8 +328,10 @@ function gamestate.get()
             center_key = card.config.center_key,
           },
           debuff = card.debuff,
-          facing = card.facing,
-          highlighted = card.highlighted,
+          facing = card.facing, -- Always "front" for consumables.
+          highlighted = card.highlighted, -- bool. True if the card is selected.
+          sell_cost = card.sell_cost, -- int. The $ value of the card when sold.
+          edition = card.edition, -- string or nil. Can only be negative for consumables
         }
       end
     end
@@ -347,37 +349,38 @@ function gamestate.get()
     local cards = {}
     for i, card in pairs(G.hand.cards) do
       cards[i] = {
-        ability = {
+        ability = { -- table of card abilities effect: enhancements, editions, seals, extra chips on discard, etc.
           set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
         },
-        -- ability = table of card abilities effect, mult, extra_value
         label = card.label, -- str (default "Base Card") | ... | ... | ?
         -- playing_card = card.config.card.playing_card, -- int. The card index in the deck for the current round ?
-        -- sell_cost = card.sell_cost, -- int (default 1). The dollars you get if you sell this card ?
         sort_id = card.sort_id, -- int. Unique identifier for this card instance
         base = {
           -- These should be the valude for the original base card
           -- without any modifications
-          id = card.base.id, -- ??
+          id = card.base.id, -- Used to identify the rank of the card.
           name = card.base.name,
-          nominal = card.base.nominal,
-          original_value = card.base.original_value,
+          nominal = card.base.nominal, -- Used to measure the value (chips) of the card. Follows blackjack rules. May be increased by some jokers.
+          original_value = card.base.original_value, -- Used to measure the original value (chips) of the card. Follows blackjack rules.
           suit = card.base.suit,
-          times_played = card.base.times_played,
-          value = card.base.value,
+          times_played = card.base.times_played, -- Used to track how many times the card has been played in this run.
+          value = card.base.value, -- str name of the Card. 1-10, Jack, Queen, King, Ace.
         },
         config = {
-          card_key = card.config.card_key,
+          card_key = card.config.card_key, -- Shorthand for card. I.E. S_K for Spades King.
           card = {
             name = card.config.card.name,
             suit = card.config.card.suit,
             value = card.config.card.value,
           },
         },
-        debuff = card.debuff,
-        -- debuffed_by_blind = bool (default false). True if the card is debuffed by the blind
-        facing = card.facing, -- str (default "front") | ... | ... | ?
+        debuff = card.debuff, -- Debuffed cards may be played but add no chips and trigger no effects.
+        facing = card.facing, -- str (default "front") | back
         highlighted = card.highlighted, -- bool (default false). True if the card is highlighted
+
+        -- The following values exist but are not needed for gameplay
+        -- sell_cost = card.sell_cost, -- int (default 1). All cards have a sell cost, but playing cards can not be sold.
+        -- debuffed_by_blind = bool (default false). True if the card is debuffed by the blind. Joker specific: Only used for matador joker.
       }
     end
 
@@ -385,12 +388,12 @@ function gamestate.get()
       cards = cards,
       config = {
         card_count = G.hand.config.card_count, -- (int) number of cards in the hand
-        card_limit = G.hand.config.card_limit, -- (int) max number of cards in the hand
-        highlighted_limit = G.hand.config.highlighted_limit, -- (int) max number of highlighted cards in the hand
-        -- lr_padding ?? flaot
-        -- sort = G.hand.config.sort, -- (str) sort order of the hand. "desc" | ... | ? not really... idk
-        -- temp_limit ?? (int)
-        -- type ?? (Default "hand", str)
+        card_limit = G.hand.config.card_limit, -- (int) max number of cards in the hand, note that this is a soft limit. May be exceeded by Cryptid, DNA
+        highlighted_limit = G.hand.config.highlighted_limit, -- (int) max number of highlighted cards in the hand (always 5 without mods)
+        sort = G.hand.config.sort, -- (str) sort order of the hand. "desc" (rank) | "suit" (likely important for the player)
+        temp_limit = G.hand.config.highlighted_limit, -- (int) temp_limit (hand size limit) may be exceed the normal hand limit if the juggler skip tag is used. Otherwise equal to card_limit
+        -- type -- (Default "hand", str). I believe this will always be "hand" in this context
+        -- lr_padding -- float, used for drawing cards in the UI
       },
       -- container = table for UI elements. we are not interested in it
       -- created_on_pause = bool ??
@@ -452,7 +455,7 @@ function gamestate.get()
           config = {
             center_key = card.config.center_key, -- id of the card
           },
-          debuff = card.debuff, -- bool. True if the card is a debuff
+          debuff = card.debuff, -- bool. True if the card is debuffed
           cost = card.cost, -- int. The cost of the card
           label = card.label, -- str. The label of the card
           facing = card.facing, -- str. The facing of the card: front | back

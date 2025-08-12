@@ -202,6 +202,8 @@
 ---@field card_count number Number of cards in hand
 ---@field card_limit number Maximum cards allowed in hand
 ---@field highlighted_limit number Maximum cards that can be highlighted
+---@field sort string Sort order of the hand. "desc" (rank) | "suit"
+---@field temp_limit number Temporary hand limit, used by the skip tag Juggler and some jokers.
 
 -- Hand card (G.hand.cards[])
 ---@class G.Hand.Cards
@@ -294,7 +296,7 @@
 ---@field facing string Card facing direction ("front", "back")
 ---@field highlighted boolean Whether consumable is highlighted
 ---@field ability G.Consumable.Ability Consumable-specific ability data
----@field edition? G.Card.Edition Card edition (Foil, Holographic, Polychrome, Negative)
+---@field edition? G.Card.Edition Card edition (Only Negative for consumables)
 ---@field area? table Reference to the card area containing this consumable
 ---@field unique_val number Unique value for this consumable instance
 
