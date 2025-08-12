@@ -978,7 +978,7 @@ API.functions["shop"] = function(args)
     API.send_error_response(
       "Invalid action for shop",
       ERROR_CODES.INVALID_ACTION,
-      { action = action, valid_actions = { "next_round", "buy_card", "reroll", "buy_and_use", "redeem_voucher" } }
+      { action = action, valid_actions = { "next_round", "buy_card", "reroll", "buy_and_use_card", "redeem_voucher" } }
     )
     return
   end

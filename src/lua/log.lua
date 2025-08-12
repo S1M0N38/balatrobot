@@ -226,6 +226,10 @@ function hook_buy_card()
     local card_id = e.config.ref_table.sort_id
     -- If e.config.id is present, it is the buy_and_use_card button.
     local action = (e.config and e.config.id) or "buy_card"
+    -- Normalize internal button id to API action name
+    if action == "buy_and_use" then
+      action = "buy_and_use_card"
+    end
     for i, card in ipairs(G.shop_jokers.cards) do
       if card.sort_id == card_id then
         local function_call = { name = "shop", arguments = { action = action, index = i - 1 } }

@@ -245,6 +245,111 @@ class TestShop:
         assert purchase_response["jokers"]["cards"][0]["cost"] == 6
 
     # ------------------------------------------------------------------
+    # buy_and_use_card
+    # ------------------------------------------------------------------
+
+    def test_buy_and_use_card_success(self, tcp_client: socket.socket) -> None:
+        """Buy-and-use a consumable card directly from the shop."""
+
+        def _consumables_count(state: dict) -> int:
+            consumables = state.get("shop_jokers") or {}
+            return len(consumables.get("cards", []) or [])
+
+        before_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert before_state["state"] == State.SHOP.value
+
+        # Find a consumable in shop_jokers (Planet/Tarot/Spectral)
+        idx = None
+        cost = None
+        for i, card in enumerate(before_state["shop_jokers"]["cards"]):
+            if card["ability"]["set"] in {"Planet", "Tarot", "Spectral"}:
+                idx = i
+                cost = card["cost"]
+                break
+
+        if idx is None:
+            pytest.skip("No consumable available in shop to buy_and_use for this seed")
+
+        dollars_before = before_state["game"]["dollars"]
+        consumables_before = _consumables_count(before_state)
+
+        after_state = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "buy_and_use_card", "index": idx}
+        )
+
+        assert after_state["state"] == State.SHOP.value
+        assert after_state["game"]["dollars"] == dollars_before - cost
+        # Using directly should not add to consumables area
+        assert _consumables_count(after_state) == consumables_before
+
+    def test_buy_and_use_card_missing_index(self, tcp_client: socket.socket) -> None:
+        """Missing index for buy_and_use_card should raise INVALID_PARAMETER."""
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "buy_and_use_card"}
+        )
+        assert_error_response(
+            response,
+            "Missing required field: index",
+            ["field"],
+            ErrorCode.MISSING_ARGUMENTS.value,
+        )
+
+    def test_buy_and_use_card_index_out_of_range(
+        self, tcp_client: socket.socket
+    ) -> None:
+        """Index >= len(shop_jokers.cards) should raise PARAMETER_OUT_OF_RANGE."""
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert game_state["state"] == State.SHOP.value
+
+        out_of_range_index = len(game_state["shop_jokers"]["cards"])
+        response = send_and_receive_api_message(
+            tcp_client,
+            "shop",
+            {"action": "buy_and_use_card", "index": out_of_range_index},
+        )
+        assert_error_response(
+            response,
+            "Card index out of range",
+            ["index", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
+        )
+
+    def test_buy_and_use_card_not_affordable(self, tcp_client: socket.socket) -> None:
+        """Attempting to buy_and_use a consumable more expensive than current dollars should error."""
+        # Reduce dollars first by buying a cheap joker
+        _ = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "buy_card", "index": 0}
+        )
+
+        mid_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        dollars_now = mid_state["game"]["dollars"]
+
+        # Find a consumable still in the shop with cost greater than current dollars
+        idx = None
+        for i, card in enumerate(mid_state["shop_jokers"]["cards"]):
+            if (
+                card["ability"]["set"] in {"Planet", "Tarot", "Spectral"}
+                and card["cost"] > dollars_now
+            ):
+                idx = i
+                break
+
+        if idx is None:
+            pytest.skip(
+                "No unaffordable consumable found to test buy_and_use_card error path"
+            )
+
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "buy_and_use_card", "index": idx}
+        )
+        assert_error_response(
+            response,
+            "Card is not affordable",
+            ["index", "cost", "dollars"],
+            ErrorCode.INVALID_ACTION.value,
+        )
+
+    # ------------------------------------------------------------------
     # reroll shop
     # ------------------------------------------------------------------
 
