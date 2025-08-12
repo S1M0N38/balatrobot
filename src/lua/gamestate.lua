@@ -56,7 +56,7 @@ function gamestate.get()
     game = {
       -- STOP_USE = int (default 0), -- ??
       bankrupt_at = G.GAME.bankrupt_at,
-      -- banned_keys = table/list, -- ??
+      -- banned_keys = table/list, -- Likely for challenges that ban certain jokers or cards.
       base_reroll_cost = G.GAME.base_reroll_cost,
 
       -- blind = {}, This is active during the playing phase and contains
@@ -78,17 +78,20 @@ function gamestate.get()
       -- "consumeable_buffer": int, (default 0) -- number of cards in the consumeable buffer?
       -- consumeable_usage = { }, -- table/list to track the consumable usage through the run.
       -- "current_boss_streak": int, (default 0) -- in the simple round should be == to the ante?
-      --
 
       current_round = {
+
+        -- TODO: joker specific computation, likely can be removed.
         -- "ancient_card": { -- joker specific: Ancient Joker provides 1.5x mult for this suit when played
         --   "suit": "Spades" | "Hearts" | "Diamonds" | "Clubs",
         -- },
-        -- any_hand_drawn = true, -- bool (default true) ??
-        -- "cards_flipped": int, (Defualt 0)
         -- "castle_card": { -- joker specific: Castle gains chips when this suit is discarded
         --   "suit": "Spades" | "Hearts" | "Diamonds" | "Clubs",
         -- },
+
+        -- any_hand_drawn = true, -- bool (default true) ??
+        -- "cards_flipped": int, (Defualt 0)
+
 
         -- This should contains interesting info during playing phase
         -- "current_hand": {
@@ -144,7 +147,6 @@ function gamestate.get()
       discount_percent = G.GAME.discount_percent, -- int (default 0) this lower the price in the shop. A voucher must be redeemed
       dollars = G.GAME.dollars, -- int , current dollars in the run
 
-      -- "ecto_minus": int,  -- The decrement to hand size that the next ectoplasm spectral card will apply
       -- "edition_rate": int, (default 1) -- change the prob. to find a card which has an edition in the shop. Increased by vouchers
       -- "hand_usage": table/list, (default {}) -- tracks the number of times each hand has been played this run for some jokers (supernova, etc.)
 
@@ -188,24 +190,22 @@ function gamestate.get()
       interest_amount = G.GAME.interest_amount, -- (default 1) how much each $ is worth at the eval round stage
       interest_cap = G.GAME.interest_cap, -- (default 25) cap for interest, e.g. 25 dollar means that every each 5 dollar you get one $
 
-      -- joker_buffer = int, -- (default 0) ??
       -- joker_rate = int, -- (default 20) prob that a joker appear in the shop
-      -- joker_usage = G.GAME.joker_usage, -- list/table maybe a list of jokers used in the run?
-      --
+
       last_blind = last_blind,
       -- legendary_mod = G.GAME.legendary_mod, -- (default 1) The probality/modifier to find a legendary joker in the shop?
 
       max_jokers = G.GAME.max_jokers, --(default 0) the number of held jokers?
 
-      -- modifiers = list/table, -- ??
-      -- orbital_choices = { -- what's an orbital choice?? This is a list (table with int keys). related to pseudorandom
+      -- modifiers = list/table, -- Likely card modifiers available to the player. For example, negatives don't appear in the first ante.
+      -- orbital_choices = { -- The orbital skip tag uses this to upgrade hands when present. This is a list (table with int keys). related to pseudorandom
       --   -- 1: {
       --   --   "Big": "Two Pair",
       --   --   "Boss": "Three of a Kind",
       --   --   "Small": "Full House"
       --   -- }
       -- },
-      -- pack_size = G.GAME.pack_size (int default 2), -- number of pack slots ?
+      -- pack_size = G.GAME.pack_size (int default 2), -- number of cards available in the pack states. Set by the opened pack.
       -- perishable_rounds = int (default 5), -- Number of rounds before a perishable joker will become innate.
       -- perscribed_bosses = list/table, -- ??
 
@@ -302,13 +302,21 @@ function gamestate.get()
       tarot_rate = G.GAME.tarot_rate, -- int (default 4), -- prob that a tarot card appear in the shop, effected by vouchers
       uncommon_mod = G.GAME.uncommon_mod, -- int (default 1), -- prob that an uncommon joker appear in the shop
       unused_discards = G.GAME.unused_discards, -- int (default 0), -- number of discards left at the of a round. This is used for some joker calculations in the eval round phase
-      -- used_jokers = { -- table/list to track the joker usage through the run ?
-      --   c_base = bool
-      -- }
+
       used_vouchers = G.GAME.used_vouchers, -- table/list to track the voucher usage through the run. Should be the ones that can be see in "Run Info"
       voucher_text = G.GAME.voucher_text, -- str (default ""), -- the text of the voucher for the current run
       win_ante = G.GAME.win_ante, -- int (default 8), -- the ante for the win condition
       won = G.GAME.won, -- bool (default false), -- true if the run is won (e.g. current ante > win_ante)
+
+      -- TODO: niche, will be a long time before considering these
+      -- "ecto_minus": int,  -- The decrement to hand size that the next ectoplasm spectral card will apply
+
+      -- TODO: Safe to remove these
+      -- joker_buffer = int, -- (default 0) -- Joker specifc: used to compute the riff-raff joker which creates jokers. Some jokers free up slots so the buffer is only needed internally to balatro.
+      -- joker_usage = G.GAME.joker_usage, -- list/table maybe a list of jokers used in all runs for long-term statistics
+      -- used_jokers = { -- table/list to track the joker usage through the run ?
+      --   c_base = bool
+      -- }
     }
   end
 
@@ -492,9 +500,9 @@ function gamestate.get()
           debuff = card.debuff,
           cost = card.cost,
           label = card.label,
-          facing = card.facing,
+          facing = card.facing, -- Will always be "front" for vouchers.
           highlighted = card.highlighted,
-          sell_cost = card.sell_cost,
+          sell_cost = card.sell_cost, -- Never used for vouchers.
         }
       end
     end
@@ -528,7 +536,7 @@ function gamestate.get()
           cost = card.cost,
           label = card.label,
           highlighted = card.highlighted,
-          sell_cost = card.sell_cost,
+          sell_cost = card.sell_cost, -- Never used for boosters/packs.
         }
       end
     end
