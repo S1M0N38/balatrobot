@@ -148,3 +148,148 @@ class BalatroClient:
                 error_code="E001",
                 context={"error": str(e)},
             ) from e
+
+    # Checkpoint Management Methods
+
+    def save_checkpoint(self, checkpoint_name: str | None = None) -> dict:
+        """Save current game state as a checkpoint.
+
+        Args:
+            checkpoint_name: Optional name for the checkpoint.
+                           If not provided, timestamp will be used.
+
+        Returns:
+            Dictionary containing checkpoint details including name and metadata
+
+        Raises:
+            BalatroError: If no active game or save fails
+        """
+        args = {}
+        if checkpoint_name:
+            args["checkpoint_name"] = checkpoint_name
+
+        response = self.send_message("save_checkpoint", args)
+        logger.info(f"Checkpoint saved: {response.get('checkpoint_name')}")
+        return response
+
+    def load_checkpoint(self, checkpoint_name: str, mode: str = "restart") -> dict:
+        """Load game state from a checkpoint.
+
+        Args:
+            checkpoint_name: Name of the checkpoint to load
+            mode: Load mode - "restart" (full game restart),
+                            "overwrite" (just update save file),
+                            "resume" (experimental partial restore)
+
+        Returns:
+            Dictionary containing success status and loaded game info
+
+        Raises:
+            BalatroError: If checkpoint not found or load fails
+        """
+        response = self.send_message(
+            "load_checkpoint", {"checkpoint_name": checkpoint_name, "mode": mode}
+        )
+        logger.info(f"Checkpoint loaded: {checkpoint_name} (mode: {mode})")
+        return response
+
+    def list_checkpoints(self) -> list[dict]:
+        """List all available checkpoints.
+
+        Returns:
+            List of checkpoint metadata dictionaries sorted by creation time
+
+        Raises:
+            BalatroError: If listing fails
+        """
+        response = self.send_message("list_checkpoints")
+        return response.get("checkpoints", [])
+
+    def delete_checkpoint(self, checkpoint_name: str) -> dict:
+        """Delete a checkpoint.
+
+        Args:
+            checkpoint_name: Name of the checkpoint to delete
+
+        Returns:
+            Dictionary with success status and deleted checkpoint name
+
+        Raises:
+            BalatroError: If checkpoint not found or deletion fails
+        """
+        response = self.send_message(
+            "delete_checkpoint", {"checkpoint_name": checkpoint_name}
+        )
+        logger.info(f"Checkpoint deleted: {checkpoint_name}")
+        return response
+
+    def export_checkpoint(self, checkpoint_name: str) -> dict:
+        """Export checkpoint data as base64 for external storage.
+
+        Args:
+            checkpoint_name: Name of the checkpoint to export
+
+        Returns:
+            Dictionary with checkpoint_name, base64 data, and metadata
+
+        Raises:
+            BalatroError: If checkpoint not found or export fails
+        """
+        response = self.send_message(
+            "export_checkpoint", {"checkpoint_name": checkpoint_name}
+        )
+        logger.info(f"Checkpoint exported: {checkpoint_name}")
+        return response
+
+    def import_checkpoint(
+        self, checkpoint_name: str, data: str, metadata: dict | None = None
+    ) -> dict:
+        """Import checkpoint data from base64.
+
+        Args:
+            checkpoint_name: Name for the imported checkpoint
+            data: Base64 encoded checkpoint data
+            metadata: Optional metadata dictionary
+
+        Returns:
+            Dictionary with success status
+
+        Raises:
+            BalatroError: If import fails
+        """
+        args = {"checkpoint_name": checkpoint_name, "data": data}
+        if metadata:
+            args["metadata"] = metadata
+
+        response = self.send_message("import_checkpoint", args)
+        logger.info(f"Checkpoint imported: {checkpoint_name}")
+        return response
+
+    def set_profile_save(
+        self, checkpoint_name: str, profile: str | None = None
+    ) -> dict:
+        """Set the profile's save file to a checkpoint without restarting.
+
+        This overwrites the save file so the checkpoint will be loaded
+        on next game start or continue.
+
+        Args:
+            checkpoint_name: Name of the checkpoint to use
+            profile: Target profile (default: current profile)
+
+        Returns:
+            Dictionary with success status and message
+
+        Raises:
+            BalatroError: If checkpoint not found or operation fails
+        """
+        args = {"checkpoint_name": checkpoint_name}
+        if profile:
+            args["profile"] = profile
+
+        response = self.send_message("set_profile_save", args)
+        logger.info(
+            f"Profile save set to checkpoint: {checkpoint_name} "
+            f"(profile: {profile or 'current'})"
+        )
+        return response

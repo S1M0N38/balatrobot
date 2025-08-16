@@ -1245,4 +1245,449 @@ API.functions["sell_consumable"] = function(args)
   }
 end
 
+--------------------------------------------------------------------------------
+-- Checkpoint System
+--------------------------------------------------------------------------------
+
+---Creates a checkpoint directory if it doesn't exist
+---@return string The checkpoint directory path
+local function ensure_checkpoint_dir()
+  local checkpoint_dir = "checkpoints"
+  if not love.filesystem.getInfo(checkpoint_dir) then
+    love.filesystem.createDirectory(checkpoint_dir)
+  end
+  return checkpoint_dir
+end
+
+---Saves current game state to a checkpoint
+---@param args table Arguments containing checkpoint_name (optional)
+API.functions["save_checkpoint"] = function(args)
+  -- Ensure we're in a valid game state
+  if not G.GAME or not G.GAME.round then
+    API.send_error_response("No active game to checkpoint", ERROR_CODES.INVALID_GAME_STATE)
+    return
+  end
+
+  -- Trigger the native save function
+  save_run()
+
+  ---@type PendingRequest
+  API.pending_requests["save_checkpoint"] = {
+    condition = function()
+      -- Wait for save to complete
+      return G.FILE_HANDLER and not G.FILE_HANDLER.update_queued
+    end,
+    action = function()
+      -- Read the save file
+      local save_path = G.SETTINGS.profile .. "/save.jkr"
+      local save_data = get_compressed(save_path)
+
+      if not save_data then
+        API.send_error_response("Failed to read save file", ERROR_CODES.INVALID_GAME_STATE)
+        return
+      end
+
+      -- Generate checkpoint name if not provided
+      local checkpoint_name = args.checkpoint_name
+      if not checkpoint_name then
+        checkpoint_name = os.date("%Y%m%d_%H%M%S") .. "_checkpoint"
+      end
+
+      -- Ensure checkpoint directory exists
+      local checkpoint_dir = ensure_checkpoint_dir()
+      local checkpoint_path = checkpoint_dir .. "/" .. checkpoint_name .. ".jkr"
+
+      -- Write checkpoint file (already compressed)
+      love.filesystem.write(checkpoint_path, save_data)
+
+      -- Also save metadata about the checkpoint
+      local metadata = {
+        name = checkpoint_name,
+        created_at = os.time(),
+        profile = G.SETTINGS.profile,
+        round = G.GAME.round,
+        ante = G.GAME.round_resets.ante,
+        dollars = G.GAME.dollars,
+        deck = G.GAME.selected_back_key or "Unknown",
+        stake = G.GAME.stake or 1,
+      }
+
+      local metadata_path = checkpoint_dir .. "/" .. checkpoint_name .. ".meta"
+      love.filesystem.write(metadata_path, json.encode(metadata))
+
+      API.send_response({
+        success = true,
+        checkpoint_name = checkpoint_name,
+        metadata = metadata,
+      })
+    end,
+  }
+end
+
+---Loads a game state from a checkpoint
+---@param args table Arguments containing checkpoint_name and optional mode
+API.functions["load_checkpoint"] = function(args)
+  local valid, err_msg, err_code = validate_request(args, { "checkpoint_name" })
+  if not valid then
+    API.send_error_response(err_msg, err_code)
+    return
+  end
+
+  local checkpoint_dir = ensure_checkpoint_dir()
+  local checkpoint_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".jkr"
+
+  -- Check if checkpoint exists
+  if not love.filesystem.getInfo(checkpoint_path) then
+    API.send_error_response(
+      "Checkpoint not found",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { checkpoint_name = args.checkpoint_name }
+    )
+    return
+  end
+
+  -- Read checkpoint data
+  local checkpoint_data = love.filesystem.read(checkpoint_path)
+  if not checkpoint_data then
+    API.send_error_response(
+      "Failed to read checkpoint",
+      ERROR_CODES.INVALID_GAME_STATE,
+      { checkpoint_name = args.checkpoint_name }
+    )
+    return
+  end
+
+  -- Determine load mode (default to "restart" for full game restart)
+  local mode = args.mode or "restart"
+
+  if mode == "restart" then
+    -- Full restart: Write checkpoint to save file and restart the run
+    local save_path = G.SETTINGS.profile .. "/save.jkr"
+    love.filesystem.write(save_path, checkpoint_data)
+
+    -- Delete current run and reload from checkpoint
+    G:delete_run()
+    G.SAVED_GAME = get_compressed(save_path)
+    if G.SAVED_GAME ~= nil then
+      G.SAVED_GAME = STR_UNPACK(G.SAVED_GAME)
+    end
+
+    -- Start the run from saved state
+    G:start_run({ savetext = G.SAVED_GAME })
+
+    ---@type PendingRequest
+    API.pending_requests["load_checkpoint"] = {
+      condition = function()
+        -- Wait for game to be fully loaded
+        return G.STATE and G.GAME and G.GAME.round and not G.CONTROLLER.locks.load
+      end,
+      action = function()
+        API.send_response({
+          success = true,
+          checkpoint_name = args.checkpoint_name,
+          mode = mode,
+          state = G.STATE,
+          round = G.GAME.round,
+          ante = G.GAME.round_resets.ante,
+        })
+      end,
+    }
+  elseif mode == "overwrite" then
+    -- Just overwrite the save file without restarting
+    -- Useful for setting up a checkpoint to be loaded on next game start
+    local save_path = G.SETTINGS.profile .. "/save.jkr"
+    love.filesystem.write(save_path, checkpoint_data)
+
+    API.send_response({
+      success = true,
+      checkpoint_name = args.checkpoint_name,
+      mode = mode,
+      message = "Save file overwritten. Checkpoint will be loaded on next game start.",
+    })
+  elseif mode == "resume" then
+    -- Attempt to resume mid-action by restoring state more granularly
+    -- This is experimental and may not work for all game states
+
+    -- Decompress and parse the checkpoint
+    local decompressed = checkpoint_data
+    if string.sub(decompressed, 1, 6) ~= "return" then
+      local success
+      success, decompressed = pcall(love.data.decompress, "string", "deflate", checkpoint_data)
+      if not success then
+        API.send_error_response("Failed to decompress checkpoint", ERROR_CODES.INVALID_GAME_STATE)
+        return
+      end
+    end
+
+    local checkpoint_state = STR_UNPACK(decompressed)
+
+    -- Try to restore the game state while preserving current UI
+    if checkpoint_state then
+      -- Restore card areas
+      if checkpoint_state.cardAreas then
+        for k, v in pairs(checkpoint_state.cardAreas) do
+          if G[k] and G[k].load then
+            G[k]:load(v)
+          end
+        end
+      end
+
+      -- Restore game state
+      if checkpoint_state.GAME then
+        -- Preserve certain UI states
+        local current_state = G.STATE
+        G.GAME = checkpoint_state.GAME
+
+        -- Restore blind
+        if checkpoint_state.BLIND then
+          G.GAME.blind = Blind(checkpoint_state.BLIND.config.blind)
+          G.GAME.blind:load(checkpoint_state.BLIND)
+        end
+
+        -- Restore deck
+        if checkpoint_state.BACK then
+          G.GAME.selected_back = Back(checkpoint_state.BACK.name)
+          G.GAME.selected_back:load(checkpoint_state.BACK)
+        end
+
+        -- Try to maintain current state if compatible
+        if checkpoint_state.STATE and (current_state == G.STATES.MENU or args.force_state) then
+          G.STATE = checkpoint_state.STATE
+        end
+      end
+
+      -- Restore tags
+      if checkpoint_state.tags then
+        G.GAME.tags = {}
+        for k, v in ipairs(checkpoint_state.tags) do
+          local tag = Tag(v.key)
+          tag:load(v)
+          G.GAME.tags[k] = tag
+        end
+      end
+
+      API.send_response({
+        success = true,
+        checkpoint_name = args.checkpoint_name,
+        mode = mode,
+        state = G.STATE,
+        round = G.GAME and G.GAME.round or 0,
+        ante = G.GAME and G.GAME.round_resets and G.GAME.round_resets.ante or 0,
+        message = "Checkpoint partially restored. Some UI elements may need refresh.",
+      })
+    else
+      API.send_error_response("Failed to parse checkpoint data", ERROR_CODES.INVALID_GAME_STATE)
+    end
+  else
+    API.send_error_response(
+      "Invalid load mode",
+      ERROR_CODES.INVALID_PARAMETER,
+      { mode = mode, valid_modes = { "restart", "overwrite", "resume" } }
+    )
+  end
+end
+
+---Lists all available checkpoints
+---@param _ table Arguments (not used)
+API.functions["list_checkpoints"] = function(_)
+  local checkpoint_dir = ensure_checkpoint_dir()
+  local checkpoints = {}
+
+  -- Get all files in checkpoint directory
+  local files = love.filesystem.getDirectoryItems(checkpoint_dir)
+
+  for _, filename in ipairs(files) do
+    -- Only process .meta files
+    if filename:match("%.meta$") then
+      local base_name = filename:gsub("%.meta$", "")
+      local meta_path = checkpoint_dir .. "/" .. filename
+      local checkpoint_path = checkpoint_dir .. "/" .. base_name .. ".jkr"
+
+      -- Check that both files exist
+      if love.filesystem.getInfo(checkpoint_path) then
+        local meta_data = love.filesystem.read(meta_path)
+        if meta_data then
+          local ok, metadata = pcall(json.decode, meta_data)
+          if ok then
+            table.insert(checkpoints, metadata)
+          end
+        end
+      end
+    end
+  end
+
+  -- Sort by creation time (newest first)
+  table.sort(checkpoints, function(a, b)
+    return (a.created_at or 0) > (b.created_at or 0)
+  end)
+
+  API.send_response({
+    checkpoints = checkpoints,
+  })
+end
+
+---Deletes a checkpoint
+---@param args table Arguments containing checkpoint_name
+API.functions["delete_checkpoint"] = function(args)
+  local valid, err_msg, err_code = validate_request(args, { "checkpoint_name" })
+  if not valid then
+    API.send_error_response(err_msg, err_code)
+    return
+  end
+
+  local checkpoint_dir = ensure_checkpoint_dir()
+  local checkpoint_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".jkr"
+  local metadata_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".meta"
+
+  -- Check if checkpoint exists
+  if not love.filesystem.getInfo(checkpoint_path) then
+    API.send_error_response(
+      "Checkpoint not found",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { checkpoint_name = args.checkpoint_name }
+    )
+    return
+  end
+
+  -- Remove both checkpoint and metadata files
+  love.filesystem.remove(checkpoint_path)
+  love.filesystem.remove(metadata_path)
+
+  API.send_response({
+    success = true,
+    deleted = args.checkpoint_name,
+  })
+end
+
+---Exports checkpoint data as base64 for external storage
+---@param args table Arguments containing checkpoint_name
+API.functions["export_checkpoint"] = function(args)
+  local valid, err_msg, err_code = validate_request(args, { "checkpoint_name" })
+  if not valid then
+    API.send_error_response(err_msg, err_code)
+    return
+  end
+
+  local checkpoint_dir = ensure_checkpoint_dir()
+  local checkpoint_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".jkr"
+  local metadata_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".meta"
+
+  -- Check if checkpoint exists
+  if not love.filesystem.getInfo(checkpoint_path) then
+    API.send_error_response(
+      "Checkpoint not found",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { checkpoint_name = args.checkpoint_name }
+    )
+    return
+  end
+
+  -- Read checkpoint and metadata
+  local checkpoint_data = love.filesystem.read(checkpoint_path)
+  local metadata = love.filesystem.read(metadata_path)
+
+  if not checkpoint_data then
+    API.send_error_response("Failed to read checkpoint", ERROR_CODES.INVALID_GAME_STATE)
+    return
+  end
+
+  -- Encode to base64 for safe transport
+  local encoded_data = love.data.encode("string", "base64", checkpoint_data)
+
+  API.send_response({
+    checkpoint_name = args.checkpoint_name,
+    data = encoded_data,
+    metadata = metadata and json.decode(metadata) or nil,
+  })
+end
+
+---Imports checkpoint data from base64
+---@param args table Arguments containing checkpoint_name and data
+API.functions["import_checkpoint"] = function(args)
+  local valid, err_msg, err_code = validate_request(args, { "checkpoint_name", "data" })
+  if not valid then
+    API.send_error_response(err_msg, err_code)
+    return
+  end
+
+  -- Decode from base64
+  local success, checkpoint_data = pcall(love.data.decode, "string", "base64", args.data)
+  if not success then
+    API.send_error_response(
+      "Failed to decode checkpoint data",
+      ERROR_CODES.INVALID_ARGUMENTS,
+      { error = tostring(checkpoint_data) }
+    )
+    return
+  end
+
+  -- Ensure checkpoint directory exists
+  local checkpoint_dir = ensure_checkpoint_dir()
+  local checkpoint_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".jkr"
+  local metadata_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".meta"
+
+  -- Write checkpoint file
+  love.filesystem.write(checkpoint_path, checkpoint_data)
+
+  -- Create or update metadata
+  local metadata = args.metadata
+    or {
+      name = args.checkpoint_name,
+      created_at = os.time(),
+      imported = true,
+    }
+
+  love.filesystem.write(metadata_path, json.encode(metadata))
+
+  API.send_response({
+    success = true,
+    checkpoint_name = args.checkpoint_name,
+    message = "Checkpoint imported successfully",
+  })
+end
+
+---Sets the active profile's save to a checkpoint without restarting
+---@param args table Arguments containing checkpoint_name and optional profile
+API.functions["set_profile_save"] = function(args)
+  local valid, err_msg, err_code = validate_request(args, { "checkpoint_name" })
+  if not valid then
+    API.send_error_response(err_msg, err_code)
+    return
+  end
+
+  local checkpoint_dir = ensure_checkpoint_dir()
+  local checkpoint_path = checkpoint_dir .. "/" .. args.checkpoint_name .. ".jkr"
+
+  -- Check if checkpoint exists
+  if not love.filesystem.getInfo(checkpoint_path) then
+    API.send_error_response(
+      "Checkpoint not found",
+      ERROR_CODES.MISSING_GAME_OBJECT,
+      { checkpoint_name = args.checkpoint_name }
+    )
+    return
+  end
+
+  -- Read checkpoint data
+  local checkpoint_data = love.filesystem.read(checkpoint_path)
+  if not checkpoint_data then
+    API.send_error_response("Failed to read checkpoint", ERROR_CODES.INVALID_GAME_STATE)
+    return
+  end
+
+  -- Determine target profile (default to current)
+  local target_profile = args.profile or G.SETTINGS.profile
+  local save_path = target_profile .. "/save.jkr"
+
+  -- Write to the profile's save file
+  love.filesystem.write(save_path, checkpoint_data)
+
+  API.send_response({
+    success = true,
+    checkpoint_name = args.checkpoint_name,
+    profile = target_profile,
+    message = "Profile save updated. Will be loaded on next game start or continue.",
+  })
+end
+
 return API
