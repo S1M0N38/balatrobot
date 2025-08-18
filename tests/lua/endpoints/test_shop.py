@@ -1,11 +1,17 @@
 import socket
+import time
+from pathlib import Path
 from typing import Generator
 
 import pytest
 
 from balatrobot.enums import ErrorCode, State
 
-from ..conftest import assert_error_response, send_and_receive_api_message
+from ..conftest import (
+    assert_error_response,
+    prepare_checkpoint,
+    send_and_receive_api_message,
+)
 
 
 class TestShop:
@@ -16,31 +22,41 @@ class TestShop:
         self, tcp_client: socket.socket
     ) -> Generator[None, None, None]:
         """Set up and tear down each test method."""
-        # Start a run
-        start_run_args = {
-            "deck": "Red Deck",
-            "stake": 1,
-            "challenge": None,
-            "seed": "OOOO155",  # four of a kind in first hand
-        }
-        send_and_receive_api_message(tcp_client, "start_run", start_run_args)
+        # Load checkpoint that already has the game in shop state
+        checkpoint_path = Path(__file__).parent / "checkpoints" / "basic_shop_setup.jkr"
 
-        # Select blind
-        send_and_receive_api_message(
-            tcp_client, "skip_or_select_blind", {"action": "select"}
-        )
-
-        # Play a winning hand (four of a kind) to reach shop
-        game_state = send_and_receive_api_message(
-            tcp_client,
-            "play_hand_or_discard",
-            {"action": "play_hand", "cards": [0, 1, 2, 3]},
-        )
-        assert game_state["state"] == State.ROUND_EVAL.value
-
-        # Cash out to reach shop
-        game_state = send_and_receive_api_message(tcp_client, "cash_out", {})
+        # if checkpoint_path.exists():
+        # Use the checkpoint for faster test setup
+        game_state = prepare_checkpoint(tcp_client, checkpoint_path)
+        time.sleep(0.5)
         assert game_state["state"] == State.SHOP.value
+        # else:
+        #     # Fallback to manual setup if checkpoint doesn't exist
+        #     start_run_args = {
+        #         "deck": "Red Deck",
+        #         "stake": 1,
+        #         "challenge": None,
+        #         "seed": "OOOO155",  # four of a kind in first hand
+        #     }
+        #     send_and_receive_api_message(tcp_client, "start_run", start_run_args)
+
+        #     # Select blind
+        #     send_and_receive_api_message(
+        #         tcp_client, "skip_or_select_blind", {"action": "select"}
+        #     )
+
+        #     # Play a winning hand (four of a kind) to reach shop
+        #     game_state = send_and_receive_api_message(
+        #         tcp_client,
+        #         "play_hand_or_discard",
+        #         {"action": "play_hand", "cards": [0, 1, 2, 3]},
+        #     )
+        #     assert game_state["state"] == State.ROUND_EVAL.value
+
+        #     # Cash out to reach shop
+        #     game_state = send_and_receive_api_message(tcp_client, "cash_out", {})
+        #     assert game_state["state"] == State.SHOP.value
+
         yield
         send_and_receive_api_message(tcp_client, "go_to_menu", {})
 
