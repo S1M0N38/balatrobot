@@ -1190,6 +1190,7 @@ end
 --------------------------------------------------------------------------------
 
 ---Gets the current save file location and profile information
+---Note that this will return a non-existent windows path linux, see normalization in client.py
 ---@param _ table Arguments (not used)
 API.functions["get_save_info"] = function(_)
   local save_info = {
@@ -1219,6 +1220,56 @@ API.functions["get_save_info"] = function(_)
   end
 
   API.send_response(save_info)
+end
+
+---Loads a save file directly and starts a run from it
+---This allows loading a specific save state without requiring a game restart
+---@param args LoadSaveArgs Arguments containing the save file path
+API.functions["load_save"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "save_path" })
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  -- Load the save file using get_compressed
+  local save_data = get_compressed(args.save_path)
+  if not save_data then
+    API.send_error_response("Failed to load save file", ERROR_CODES.MISSING_GAME_OBJECT, { save_path = args.save_path })
+    return
+  end
+
+  -- Unpack the save data
+  local success, save_table = pcall(STR_UNPACK, save_data)
+  if not success then
+    API.send_error_response(
+      "Failed to parse save file",
+      ERROR_CODES.INVALID_PARAMETER,
+      { save_path = args.save_path, error = tostring(save_table) }
+    )
+    return
+  end
+
+  -- Delete current run if exists
+  G:delete_run()
+
+  -- Start run with the loaded save
+  G:start_run({ savetext = save_table })
+
+  -- Wait for run to start
+  ---@type PendingRequest
+  API.pending_requests["load_save"] = {
+    condition = function()
+      return G.STATE and G.STATE ~= G.STATES.SPLASH and G.GAME and G.GAME.round
+    end,
+    action = function()
+      local game_state = utils.get_game_state()
+      API.send_response(game_state)
+    end,
+  }
 end
 
 return API
