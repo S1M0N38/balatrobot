@@ -2,6 +2,7 @@
 
 import json
 import logging
+import platform
 import shutil
 import socket
 from datetime import datetime
@@ -155,20 +156,71 @@ class BalatroClient:
 
     # Checkpoint Management Methods
 
+    def _convert_windows_path_to_linux(self, windows_path: str) -> str:
+        """Convert Windows path to Linux Steam Proton path if on Linux.
+
+        Args:
+            windows_path: Windows-style path (e.g., "C:/Users/.../Balatro/3/save.jkr")
+
+        Returns:
+            Converted path for Linux or original path for other platforms
+        """
+
+        # Use proton prefix if on linux
+        if platform.system() == "Linux" and windows_path.startswith("C:"):
+            # Replace C: with Linux Steam Proton prefix
+            linux_prefix = str(
+                Path(
+                    "~/.steam/steam/steamapps/compatdata/2379780/pfx/drive_c"
+                ).expanduser()
+            )
+            # Remove C: or C:/ and replace with Linux prefix
+            if windows_path.startswith("C:/"):
+                return linux_prefix + "/" + windows_path[3:]
+            elif windows_path.startswith("C:\\"):
+                # Also handle backslash format
+                return linux_prefix + "/" + windows_path[3:].replace("\\", "/")
+            else:
+                # C: without slash
+                return linux_prefix + "/" + windows_path[2:]
+
+        return windows_path
+
     def get_save_info(self) -> dict:
         """Get the current save file location and profile information.
 
         Returns:
             Dictionary containing:
-            - profile_path: Current profile path
-            - save_file_path: Path to save.jkr file
+            - profile_path: Current profile path (e.g., "3")
+            - save_directory: Full path to Love2D save directory
+            - save_file_path: Full OS-specific path to save.jkr file
             - has_active_run: Whether a run is currently active
             - save_exists: Whether the save file exists
 
         Raises:
             BalatroError: If request fails
         """
-        return self.send_message("get_save_info")
+        save_info = self.send_message("get_save_info")
+
+        # Convert Windows paths to Linux Steam Proton paths if needed
+        if "save_file_path" in save_info and save_info["save_file_path"]:
+            save_info["save_file_path"] = self._convert_windows_path_to_linux(
+                save_info["save_file_path"]
+            )
+        if "save_directory" in save_info and save_info["save_directory"]:
+            save_info["save_directory"] = self._convert_windows_path_to_linux(
+                save_info["save_directory"]
+            )
+
+        return save_info
+
+    def checkpoint_dir(self) -> Path:
+        """Get the directory where checkpoints are stored.
+
+        Returns:
+            Path to the checkpoints directory
+        """
+        return Path.home() / "dev" / "striby-balatrobot" / "dump" / "checkpoints"
 
     def save_checkpoint(self, checkpoint_name: str | None = None) -> Path:
         """Save the current save.jkr file as a checkpoint.
@@ -191,15 +243,16 @@ class BalatroClient:
                 "No save file exists to checkpoint", ErrorCode.INVALID_GAME_STATE
             )
 
-        # Expand the save file path (handles ~)
-        save_path = Path(save_info["save_file_path"]).expanduser()
+        # Get the full save file path from API (already OS-specific)
+        save_path = Path(save_info["save_file_path"])
         if not save_path.exists():
             raise BalatroError(
                 f"Save file not found: {save_path}", ErrorCode.MISSING_GAME_OBJECT
             )
 
         # Create checkpoints directory
-        checkpoints_dir = Path.home() / ".local" / "share" / "Balatro" / "checkpoints"
+        # TODO: make not hardcoded
+        checkpoints_dir = self.checkpoint_dir()
         checkpoints_dir.mkdir(parents=True, exist_ok=True)
 
         # Generate checkpoint name if not provided
@@ -231,16 +284,14 @@ class BalatroClient:
         if not save_info.get("profile_path"):
             raise BalatroError("No active profile", ErrorCode.INVALID_GAME_STATE)
 
-        # Expand the save file path
-        save_path = Path(save_info["save_file_path"]).expanduser()
+        # Get the full save file path from API (already OS-specific)
+        save_path = Path(save_info["save_file_path"])
 
         # Determine checkpoint path
         checkpoint_path = Path(checkpoint)
         if not checkpoint_path.is_absolute():
             # Look in checkpoints directory
-            checkpoints_dir = (
-                Path.home() / ".local" / "share" / "Balatro" / "checkpoints"
-            )
+            checkpoints_dir = self.checkpoint_dir()
             checkpoint_path = checkpoints_dir / checkpoint
             if not checkpoint_path.suffix:
                 checkpoint_path = checkpoint_path.with_suffix(".jkr")
@@ -267,7 +318,7 @@ class BalatroClient:
         Returns:
             List of checkpoint info dictionaries with name, path, size, and modified time
         """
-        checkpoints_dir = Path.home() / ".local" / "share" / "Balatro" / "checkpoints"
+        checkpoints_dir = self.checkpoint_dir()
         if not checkpoints_dir.exists():
             return []
 
@@ -297,7 +348,7 @@ class BalatroClient:
             BalatroError: If checkpoint not found
             IOError: If deletion fails
         """
-        checkpoints_dir = Path.home() / ".local" / "share" / "Balatro" / "checkpoints"
+        checkpoints_dir = self.checkpoint_dir()
         checkpoint_path = checkpoints_dir / f"{checkpoint_name}.jkr"
 
         if not checkpoint_path.exists():
