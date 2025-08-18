@@ -225,6 +225,26 @@ API.functions["go_to_menu"] = function(_)
   }
 end
 
+---Gets the current save file location and profile information
+---@param _ table Arguments (not used)
+API.functions["get_save_info"] = function(_)
+  local save_info = {
+    profile_path = G.SETTINGS and G.SETTINGS.profile or nil,
+    save_file_path = G.SETTINGS and G.SETTINGS.profile and (G.SETTINGS.profile .. "/save.jkr") or nil,
+    has_active_run = G.GAME and G.GAME.round and true or false,
+  }
+
+  -- Check if save file exists
+  if save_info.save_file_path then
+    local save_data = get_compressed(save_info.save_file_path)
+    save_info.save_exists = save_data ~= nil
+  else
+    save_info.save_exists = false
+  end
+
+  API.send_response(save_info)
+end
+
 ---Starts a new game run with specified parameters
 ---Call G.FUNCS.start_run() to start a new game run with specified parameters.
 ---If log_path is provided, the run log will be saved to the specified full path (must include .jsonl extension), otherwise uses runs/timestamp.jsonl.
@@ -1196,6 +1216,7 @@ local function ensure_checkpoint_dir()
   if not love.filesystem.getInfo(checkpoint_dir) then
     love.filesystem.createDirectory(checkpoint_dir)
   end
+  sendDebugMessage("Validated checkpoint directory: " .. checkpoint_dir)
   return checkpoint_dir
 end
 
@@ -1208,19 +1229,23 @@ API.functions["save_checkpoint"] = function(args)
     return
   end
 
+  sendDebugMessage("DELETEME: Saving run for checkpoint", "API")
   -- Trigger the native save function
   save_run()
 
+  sendDebugMessage("DELETEME: Hey I did save the gamestate for a checkpoint", "API")
   ---@type PendingRequest
   API.pending_requests["save_checkpoint"] = {
     condition = function()
       -- Wait for save to complete
-      return G.FILE_HANDLER and not G.FILE_HANDLER.update_queued
+      return utils.COMPLETION_CONDITIONS["save_checkpoint"][""]()
     end,
     action = function()
       -- Read the save file
+      sendDebugMessage("DELETEME: Attempting to GET save file", "API")
       local save_path = G.SETTINGS.profile .. "/save.jkr"
       local save_data = get_compressed(save_path)
+      sendDebugMessage("DELETEME: CHECKOUT SAVEEEE LOC save_data: " .. save_data, "API")
 
       if not save_data then
         API.send_error_response("Failed to read save file", ERROR_CODES.INVALID_GAME_STATE)
@@ -1237,6 +1262,8 @@ API.functions["save_checkpoint"] = function(args)
       local checkpoint_dir = ensure_checkpoint_dir()
       local checkpoint_path = checkpoint_dir .. "/" .. checkpoint_name .. ".jkr"
 
+      sendDebugMessage("DELETEME: Attempting to WRITE new save file", "API")
+
       -- Write checkpoint file (already compressed)
       love.filesystem.write(checkpoint_path, save_data)
 
@@ -1252,6 +1279,7 @@ API.functions["save_checkpoint"] = function(args)
         stake = G.GAME.stake or 1,
       }
 
+      sendDebugMessage("DELETEME: Attempting to WRITE metadata file", "API")
       local metadata_path = checkpoint_dir .. "/" .. checkpoint_name .. ".meta"
       love.filesystem.write(metadata_path, json.encode(metadata))
 
