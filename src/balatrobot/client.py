@@ -222,12 +222,14 @@ class BalatroClient:
         """
         return Path.home() / "dev" / "striby-balatrobot" / "dump" / "checkpoints"
 
-    def save_checkpoint(self, checkpoint_name: str | None = None) -> Path:
+    def save_checkpoint(self, checkpoint_name: str | Path | None = None) -> Path:
         """Save the current save.jkr file as a checkpoint.
 
         Args:
-            checkpoint_name: Optional name for the checkpoint.
-                           If not provided, timestamp will be used.
+            checkpoint_name: Either:
+                - A checkpoint name (saved to checkpoints dir)
+                - A full path where the checkpoint should be saved
+                - None (uses timestamp in checkpoints dir)
 
         Returns:
             Path to the saved checkpoint file
@@ -250,17 +252,30 @@ class BalatroClient:
                 f"Save file not found: {save_path}", ErrorCode.MISSING_GAME_OBJECT
             )
 
-        # Create checkpoints directory
-        # TODO: make not hardcoded
-        checkpoints_dir = self.checkpoint_dir()
-        checkpoints_dir.mkdir(parents=True, exist_ok=True)
-
-        # Generate checkpoint name if not provided
-        if not checkpoint_name:
+        # Determine checkpoint path
+        if checkpoint_name is None:
+            # Use timestamp in checkpoints directory
+            checkpoints_dir = self.checkpoint_dir()
+            checkpoints_dir.mkdir(parents=True, exist_ok=True)
             checkpoint_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Create checkpoint file path
-        checkpoint_path = checkpoints_dir / f"{checkpoint_name}.jkr"
+            checkpoint_path = checkpoints_dir / f"{checkpoint_name}.jkr"
+        elif (
+            isinstance(checkpoint_name, Path)
+            or "/" in str(checkpoint_name)
+            or "\\" in str(checkpoint_name)
+        ):
+            # Full or relative path provided
+            checkpoint_path = Path(checkpoint_name)
+            # Ensure parent directory exists
+            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            # Add .jkr extension if not present
+            if not checkpoint_path.suffix:
+                checkpoint_path = checkpoint_path.with_suffix(".jkr")
+        else:
+            # Simple name provided, use checkpoints directory
+            checkpoints_dir = self.checkpoint_dir()
+            checkpoints_dir.mkdir(parents=True, exist_ok=True)
+            checkpoint_path = checkpoints_dir / f"{checkpoint_name}.jkr"
 
         # Copy save file to checkpoint
         shutil.copy2(save_path, checkpoint_path)
@@ -303,10 +318,10 @@ class BalatroClient:
                 ErrorCode.MISSING_GAME_OBJECT,
             )
 
-        # Backup current save (optional)
-        if save_path.exists():
-            backup_path = save_path.with_suffix(".jkr.backup")
-            shutil.copy2(save_path, backup_path)
+        # # Backup current save (optional)
+        # if save_path.exists():
+        #     backup_path = save_path.with_suffix(".jkr.backup")
+        #     shutil.copy2(save_path, backup_path)
 
         # Overwrite save with checkpoint
         shutil.copy2(checkpoint_path, save_path)
@@ -337,6 +352,73 @@ class BalatroClient:
         # Sort by modified time (newest first)
         checkpoints.sort(key=lambda x: x["modified"], reverse=True)
         return checkpoints
+
+    def prepare_test_save(self, source_path: str | Path) -> str:
+        """Prepare a test save file for use with load_save.
+
+        This copies a .jkr file from your test directory into Love2D's save directory
+        in a temporary profile so it can be loaded with load_save().
+
+        Args:
+            source_path: Path to the .jkr save file to prepare
+
+        Returns:
+            The Love2D-relative path to use with load_save()
+            (e.g., "test_99/save.jkr")
+
+        Raises:
+            BalatroError: If source file not found
+            IOError: If file operations fail
+        """
+        source = Path(source_path)
+        if not source.exists():
+            raise BalatroError(
+                f"Source save file not found: {source}", ErrorCode.MISSING_GAME_OBJECT
+            )
+
+        # Get save directory info
+        save_info = self.get_save_info()
+        if not save_info.get("save_directory"):
+            raise BalatroError(
+                "Cannot determine Love2D save directory", ErrorCode.INVALID_GAME_STATE
+            )
+
+        # Use a high-numbered test profile to avoid conflicts
+        test_profile = "test_99"
+        save_dir = Path(save_info["save_directory"])
+        test_dir = save_dir / test_profile
+        test_dir.mkdir(parents=True, exist_ok=True)
+
+        # Copy the save file to the test profile
+        dest_path = test_dir / "save.jkr"
+        shutil.copy2(source, dest_path)
+
+        # Return the Love2D-relative path
+        return f"{test_profile}/save.jkr"
+
+    def load_save(self, save_path: str | Path) -> dict:
+        """Load a save file directly without requiring a game restart.
+
+        This method loads a save file (in Love2D's save directory format) and starts
+        a run from that save state. Unlike load_checkpoint which copies to the profile's
+        save location and requires restart, this directly loads the save into the game.
+
+        Args:
+            save_path: Path to the save file relative to Love2D save directory
+                      (e.g., "3/save.jkr" for profile 3's save)
+
+        Returns:
+            Game state after loading the save
+
+        Raises:
+            BalatroError: If save file not found or loading fails
+        """
+        # Convert to string if Path object
+        if isinstance(save_path, Path):
+            save_path = str(save_path)
+
+        # Send load_save request to API
+        return self.send_message("load_save", {"save_path": save_path})
 
     def delete_checkpoint(self, checkpoint_name: str) -> None:
         """Delete a checkpoint file.
