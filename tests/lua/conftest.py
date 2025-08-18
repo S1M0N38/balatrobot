@@ -1,7 +1,9 @@
 """Lua API test-specific configuration and fixtures."""
 
 import json
+import shutil
 import socket
+from pathlib import Path
 from typing import Any, Generator
 
 import pytest
@@ -100,3 +102,61 @@ def assert_error_response(
         assert "context" in response
         for key in expected_context_keys:
             assert key in response["context"]
+
+
+def prepare_checkpoint(sock: socket.socket, checkpoint_path: Path) -> dict[str, Any]:
+    """Prepare a checkpoint file for loading and load it into the game.
+
+    This function copies a checkpoint file to Love2D's save directory and loads it
+    directly without requiring a game restart.
+
+    Args:
+        sock: Socket connection to the game.
+        checkpoint_path: Path to the checkpoint .jkr file to load.
+
+    Returns:
+        Game state after loading the checkpoint.
+
+    Raises:
+        FileNotFoundError: If checkpoint file doesn't exist.
+        RuntimeError: If loading the checkpoint fails.
+    """
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
+
+    # First, get the save directory from the game
+    game_state = send_and_receive_api_message(sock, "get_save_info", {})
+
+    # Determine the Love2D save directory
+    # On Linux with Steam, convert Windows paths
+    import platform
+
+    save_dir_str = game_state["save_directory"]
+    if platform.system() == "Linux" and save_dir_str.startswith("C:"):
+        # Replace C: with Linux Steam Proton prefix
+        linux_prefix = (
+            Path.home() / ".steam/steam/steamapps/compatdata/2379780/pfx/drive_c"
+        )
+        save_dir_str = str(linux_prefix) + "/" + save_dir_str[3:]
+
+    save_dir = Path(save_dir_str)
+
+    # Copy checkpoint to a test profile in Love2D save directory
+    test_profile = "test_checkpoint"
+    test_dir = save_dir / test_profile
+    test_dir.mkdir(parents=True, exist_ok=True)
+
+    dest_path = test_dir / "save.jkr"
+    shutil.copy2(checkpoint_path, dest_path)
+
+    # Load the save using the new load_save API function
+    love2d_path = f"{test_profile}/save.jkr"
+    game_state = send_and_receive_api_message(
+        sock, "load_save", {"save_path": love2d_path}
+    )
+
+    # Check for errors
+    if "error" in game_state:
+        raise RuntimeError(f"Failed to load checkpoint: {game_state['error']}")
+
+    return game_state
