@@ -23,7 +23,7 @@ def test_load_save():
         logger.info(f"Preparing test save from: {checkpoint_file}")
 
         # This copies the file to Love2D's save directory and returns the relative path
-        save_path = client.prepare_test_save(checkpoint_file)
+        save_path = client.prepare_save(checkpoint_file)
         logger.info(f"Save prepared at Love2D path: {save_path}")
 
         # Now load the save directly (no restart needed!)
