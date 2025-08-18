@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Test the new checkpoint system."""
 
-from pathlib import Path
-
 from src.balatrobot.client import BalatroClient
 
 
