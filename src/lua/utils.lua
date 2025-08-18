@@ -911,6 +911,16 @@ utils.COMPLETION_CONDITIONS = {
       return elapsed > 0.20
     end,
   },
+  save_checkpoint = {
+    [""] = function()
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+  },
+  load_checkpoint = {
+    [""] = function()
+      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+    end,
+  },
 }
 
 return utils
