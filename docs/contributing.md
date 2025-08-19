@@ -157,6 +157,53 @@ The testing system automatically handles Balatro instance management:
 
 Both test commands keep instances running after completion for faster subsequent runs.
 
+#### Using Checkpoints for Test Setup
+
+The checkpointing system allows you to save and load specific game states, significantly speeding up test setup:
+
+**Creating Test Checkpoints:**
+
+```bash
+# Create a checkpoint at a specific game state
+python scripts/create_test_checkpoint.py shop tests/lua/endpoints/checkpoints/shop_state.jkr
+python scripts/create_test_checkpoint.py blind_select tests/lua/endpoints/checkpoints/blind_select.jkr
+python scripts/create_test_checkpoint.py in_game tests/lua/endpoints/checkpoints/in_game.jkr
+```
+
+**Using Checkpoints in Tests:**
+
+```python
+# In conftest.py or test files
+from ..conftest import prepare_checkpoint
+
+def setup_and_teardown(tcp_client):
+    # Load a checkpoint directly (no restart needed!)
+    checkpoint_path = Path(__file__).parent / "checkpoints" / "shop_state.jkr"
+    game_state = prepare_checkpoint(tcp_client, checkpoint_path)
+    assert game_state["state"] == State.SHOP.value
+```
+
+**Benefits of Checkpoints:**
+
+- **Faster Tests**: Skip manual game setup steps (particularly helpful for edge cases)
+- **Consistency**: Always start from exact same state
+- **Reusability**: Share checkpoints across multiple tests
+- **No Restarts**: Uses `load_save` API to load directly from any game state
+
+**Python Client Methods:**
+
+```python
+from balatrobot import BalatroClient
+
+with BalatroClient() as client:
+    # Save current game state as checkpoint
+    client.save_checkpoint("tests/fixtures/my_state.jkr")
+
+    # Load a checkpoint for testing
+    save_path = client.prepare_save("tests/fixtures/my_state.jkr")
+    game_state = client.load_save(save_path)
+```
+
 **Manual Setup for Advanced Testing:**
 
 ```bash

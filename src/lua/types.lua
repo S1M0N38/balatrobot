@@ -30,6 +30,13 @@
 ---@field state any The current game state
 ---@field context? table Optional additional context about the error
 
+---@class SaveInfoResponse
+---@field profile_path string|nil Current profile path (e.g., "3")
+---@field save_directory string|nil Full path to Love2D save directory
+---@field save_file_path string|nil Full OS-specific path to save.jkr file
+---@field has_active_run boolean Whether a run is currently active
+---@field save_exists boolean Whether a save file exists
+
 ---@class StartRunArgs
 ---@field deck string The deck name to use
 ---@field stake? number The stake level (optional)
@@ -69,6 +76,9 @@
 
 ---@class SellConsumableArgs
 ---@field index number The index of the consumable to sell (0-based)
+
+---@class LoadSaveArgs
+---@field save_path string Path to the save file relative to Love2D save directory (e.g., "3/save.jkr")
 
 -- =============================================================================
 -- Main API Module (defined in api.lua)
