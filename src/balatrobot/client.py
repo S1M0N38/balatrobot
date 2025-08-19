@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 class BalatroClient:
     """Client for communicating with the BalatroBot game API.
 
+    The client provides methods for game control, state management, and development tools
+    including a checkpointing system for saving and loading game states.
+
     Attributes:
         host: Host address to connect to
         port: Port number to connect to
@@ -188,6 +191,8 @@ class BalatroClient:
     def get_save_info(self) -> dict:
         """Get the current save file location and profile information.
 
+        Development tool for working with save files and checkpoints.
+
         Returns:
             Dictionary containing:
             - profile_path: Current profile path (e.g., "3")
@@ -198,6 +203,9 @@ class BalatroClient:
 
         Raises:
             BalatroError: If request fails
+
+        Note:
+            This is primarily for development and testing purposes.
         """
         save_info = self.send_message("get_save_info")
 
@@ -324,6 +332,9 @@ class BalatroClient:
         a run from that save state. Unlike load_checkpoint which copies to the profile's
         save location and requires restart, this directly loads the save into the game.
 
+        This is particularly useful for testing as it allows you to quickly jump to
+        specific game states without manual setup.
+
         Args:
             save_path: Path to the save file relative to Love2D save directory
                       (e.g., "3/save.jkr" for profile 3's save)
@@ -333,6 +344,20 @@ class BalatroClient:
 
         Raises:
             BalatroError: If save file not found or loading fails
+
+        Note:
+            This is a development tool that bypasses normal game flow.
+            Use with caution in production bots.
+
+        Example:
+            ```python
+            # Load a profile's save directly
+            game_state = client.load_save("3/save.jkr")
+
+            # Or use with prepare_save for external files
+            save_path = client.prepare_save("tests/fixtures/shop_state.jkr")
+            game_state = client.load_save(save_path)
+            ```
         """
         # Convert to string if Path object
         if isinstance(save_path, Path):
@@ -342,6 +367,14 @@ class BalatroClient:
         return self.send_message("load_save", {"save_path": save_path})
 
     def load_absolute_save(self, save_path: str | Path) -> dict:
-        """Load a save from an absolute path."""
+        """Load a save from an absolute path. Takes a full path from the OS as a .jkr file and loads it into the game.
+
+        Args:
+            save_path: Path to the save file relative to Love2D save directory
+                      (e.g., "3/save.jkr" for profile 3's save)
+
+        Returns:
+            Game state after loading the save
+        """
         love_save_path = self.prepare_save(save_path)
         return self.load_save(love_save_path)
