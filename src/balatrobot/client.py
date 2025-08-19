@@ -3,6 +3,7 @@
 import json
 import logging
 import platform
+import re
 import shutil
 import socket
 from pathlib import Path
@@ -168,23 +169,19 @@ class BalatroClient:
             Converted path for Linux or original path for other platforms
         """
 
-        # Use proton prefix if on linux
-        if platform.system() == "Linux" and windows_path.startswith("C:"):
-            # Replace C: with Linux Steam Proton prefix
-            linux_prefix = str(
-                Path(
-                    "~/.steam/steam/steamapps/compatdata/2379780/pfx/drive_c"
-                ).expanduser()
-            )
-            # Remove C: or C:/ and replace with Linux prefix
-            if windows_path.startswith("C:/"):
-                return linux_prefix + "/" + windows_path[3:]
-            elif windows_path.startswith("C:\\"):
-                # Also handle backslash format
-                return linux_prefix + "/" + windows_path[3:].replace("\\", "/")
-            else:
-                # C: without slash
-                return linux_prefix + "/" + windows_path[2:]
+        if platform.system() == "Linux":
+            # Match Windows drive letter and path (e.g., "C:/...", "D:\\...", "E:...")
+            match = re.match(r"^([A-Z]):[\\/]*(.*)", windows_path, re.IGNORECASE)
+            if match:
+                # Replace drive letter with Linux Steam Proton prefix
+                linux_prefix = str(
+                    Path(
+                        "~/.steam/steam/steamapps/compatdata/2379780/pfx/drive_c"
+                    ).expanduser()
+                )
+                # Normalize slashes and join with prefix
+                rest_of_path = match.group(2).replace("\\", "/")
+                return linux_prefix + "/" + rest_of_path
 
         return windows_path
 
