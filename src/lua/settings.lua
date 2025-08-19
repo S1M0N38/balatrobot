@@ -26,6 +26,12 @@ local function configure_balatro_speed()
   -- Skip intro and splash screens
   G.SETTINGS.skip_splash = "Yes"
 
+  -- Disable audio
+  G.SETTINGS.SOUND.volume = 0
+  G.SETTINGS.SOUND.music_volume = 0
+  G.SETTINGS.SOUND.game_sounds_volume = 0
+  G.F_MUTE = true
+
   if config.fast then
     -- Disable VSync completely
     love.window.setVSync(0)
@@ -45,12 +51,6 @@ local function configure_balatro_speed()
     G.SETTINGS.GRAPHICS.texture_scaling = 1 -- Fastest (nearest neighbor)
     G.SETTINGS.rumble = false
     G.F_RUMBLE = nil
-
-    -- Disable audio
-    G.SETTINGS.SOUND.volume = 0
-    G.SETTINGS.SOUND.music_volume = 0
-    G.SETTINGS.SOUND.game_sounds_volume = 0
-    G.F_MUTE = true
 
     -- Performance optimizations
     G.F_ENABLE_PERF_OVERLAY = false
@@ -104,6 +104,7 @@ local function configure_balatro_speed()
 
     sendInfoMessage("BalatroBot: Running in normal mode")
   end
+
 end
 
 -- Configure headless mode optimizations
