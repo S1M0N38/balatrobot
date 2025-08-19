@@ -104,7 +104,6 @@ local function configure_balatro_speed()
 
     sendInfoMessage("BalatroBot: Running in normal mode")
   end
-
 end
 
 -- Configure headless mode optimizations
