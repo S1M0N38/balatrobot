@@ -156,6 +156,38 @@ The `shop` function supports multiple in-shop actions. Use the `action` field in
 
 The `open_pack` action is coming soon.
 
+### Development Tools
+
+These endpoints are primarily for development, testing, and debugging purposes:
+
+#### `get_save_info`
+
+Returns information about the current save file location and profile.
+
+**Arguments:** None
+
+**Returns:**
+
+- `profile_path` _(string)_ – Current profile path (e.g., "3")
+- `save_directory` _(string)_ – Full path to Love2D save directory
+- `save_file_path` _(string)_ – Full OS-specific path to save.jkr file
+- `has_active_run` _(boolean)_ – Whether a run is currently active
+- `save_exists` _(boolean)_ – Whether a save file exists
+
+#### `load_save`
+
+Loads a save file directly without requiring a game restart. This is useful for testing specific game states.
+
+**Arguments:**
+
+- `save_path` _(string)_ – Path to the save file relative to Love2D save directory (e.g., "3/save.jkr")
+
+**Returns:** Game state after loading the save
+
+!!! warning "Development Use"
+
+    These endpoints are intended for development and testing. The `load_save` function bypasses normal game flow and should be used carefully.
+
 ### Errors
 
 All API functions validate their inputs and game state before execution. Error responses include an `error` message, standardized `error_code`, current `state` value, and optional `context` with additional details.
