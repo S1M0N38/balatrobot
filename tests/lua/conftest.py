@@ -1,6 +1,7 @@
 """Lua API test-specific configuration and fixtures."""
 
 import json
+import platform
 import shutil
 import socket
 from pathlib import Path
@@ -129,7 +130,6 @@ def prepare_checkpoint(sock: socket.socket, checkpoint_path: Path) -> dict[str, 
 
     # Determine the Love2D save directory
     # On Linux with Steam, convert Windows paths
-    import platform
 
     save_dir_str = game_state["save_directory"]
     if platform.system() == "Linux" and save_dir_str.startswith("C:"):
