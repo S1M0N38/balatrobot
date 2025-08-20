@@ -1212,7 +1212,17 @@ API.functions["get_save_info"] = function(_)
 
   -- Check if save file exists (using the relative path for Love2D filesystem)
   if save_info.profile_path then
-    local relative_path = save_info.profile_path .. "/save.jkr"
+    save_info.save_file_path = path_join(save_info.save_directory, save_info.profile_path, "save.jkr")
+  elseif save_info.profile_path then
+    -- Fallback to relative path if we can't get save directory
+    save_info.save_file_path = path_join(save_info.profile_path, "save.jkr")
+  else
+    save_info.save_file_path = nil
+  end
+
+  -- Check if save file exists (using the relative path for Love2D filesystem)
+  if save_info.profile_path then
+    local relative_path = path_join(save_info.profile_path, "save.jkr")
     local save_data = get_compressed(relative_path)
     save_info.save_exists = save_data ~= nil
   else
