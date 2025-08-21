@@ -249,7 +249,7 @@ class TestShop:
         """Buy-and-use a consumable card directly from the shop."""
 
         def _consumables_count(state: dict) -> int:
-            consumables = state.get("shop_jokers") or {}
+            consumables = state.get("consumeables") or {}
             return len(consumables.get("cards", []) or [])
 
         before_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
@@ -314,8 +314,9 @@ class TestShop:
     def test_buy_and_use_card_not_affordable(self, tcp_client: socket.socket) -> None:
         """Attempting to buy_and_use a consumable more expensive than current dollars should error."""
         # Reduce dollars first by buying a cheap joker
+
         _ = send_and_receive_api_message(
-            tcp_client, "shop", {"action": "buy_card", "index": 0}
+            tcp_client, "shop", {"action": "redeem_voucher", "index": 0}
         )
 
         mid_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
