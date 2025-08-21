@@ -144,12 +144,13 @@ The following table details the parameters required for each function. Note that
 
 The `shop` function supports multiple in-shop actions. Use the `action` field inside the `arguments` object to specify which of these to execute.
 
-| Action           | Description                                                                                     | Additional Parameters                                          |
-| ---------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `next_round`     | Leave the shop and proceed to the next blind selection.                                         | —                                                              |
-| `buy_card`       | Purchase the card at the supplied `index` in `shop_jokers`.                                     | `index` _(number)_ – 0-based position of the card to buy       |
-| `reroll`         | Spend dollars to refresh the shop offer (cost shown in-game).                                   | —                                                              |
-| `redeem_voucher` | Redeem the voucher at the supplied `index` in `shop_vouchers`, applying its discount or effect. | `index` _(number)_ – 0-based position of the voucher to redeem |
+| Action             | Description                                                                                                       | Additional Parameters                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `next_round`       | Leave the shop and proceed to the next blind selection.                                                           | —                                                              |
+| `buy_card`         | Purchase the card at the supplied `index` in `shop_jokers`.                                                       | `index` _(number)_ – 0-based position of the card to buy       |
+| `buy_and_use_card` | Purchase and use the card at the supplied `index` in `shop_jokers`; only some consumables may be bought and used. | `index` _(number)_ – 0-based position of the card to buy       |
+| `reroll`           | Spend dollars to refresh the shop offer (cost shown in-game).                                                     | —                                                              |
+| `redeem_voucher`   | Redeem the voucher at the supplied `index` in `shop_vouchers`, applying its discount or effect.                   | `index` _(number)_ – 0-based position of the voucher to redeem |
 
 !!! note "Future actions"
 

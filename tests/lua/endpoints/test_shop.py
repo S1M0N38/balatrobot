@@ -558,3 +558,25 @@ class TestShop:
             ["index", "cost", "dollars"],
             ErrorCode.INVALID_ACTION.value,
         )
+
+    # ------------------------------------------------------------------
+    # New test: buy_and_use unavailable despite being a consumable
+    # ------------------------------------------------------------------
+
+    def test_buy_and_use_card_button_missing(self, tcp_client: socket.socket) -> None:
+        """Use a checkpoint where a consumable cannot be bought-and-used and assert proper error."""
+        checkpoint_path = Path(__file__).parent / "checkpoints" / "buy_cant_use.jkr"
+        game_state = prepare_checkpoint(tcp_client, checkpoint_path)
+        assert game_state["state"] == State.SHOP.value
+
+        response = send_and_receive_api_message(
+            tcp_client,
+            "shop",
+            {"action": "buy_and_use_card", "index": 1},
+        )
+        assert_error_response(
+            response,
+            "Consumable cannot be used at this time",
+            ["index"],
+            ErrorCode.INVALID_ACTION.value,
+        )
