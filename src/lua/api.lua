@@ -946,6 +946,16 @@ API.functions["shop"] = function(args)
       return
     end
 
+      -- Check if the consumable can be used
+    if not card:can_use_consumeable() then
+      API.send_error_response(
+        "Consumable cannot be used at this time",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index }
+      )
+      return
+    end
+
     -- Locate the Buy & Use button definition
     local buy_and_use_button = card.children.buy_and_use_button and card.children.buy_and_use_button.definition
     if not buy_and_use_button then

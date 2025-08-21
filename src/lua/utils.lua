@@ -787,6 +787,26 @@ utils.COMPLETION_CONDITIONS = {
     next_round = function()
       return G.STATE == G.STATES.BLIND_SELECT and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
     end,
+    buy_and_use_card = function()
+      local base_condition = G.STATE == G.STATES.SHOP
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduve the threshold
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.shop_buy_and_use = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.shop_buy_and_use then
+        condition_timestamps.shop_buy_and_use = socket.gettime()
+      end
+
+      -- Check if 0.1 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.shop_buy_and_use
+      return elapsed > 0.1
+    end,
     reroll = function()
       local base_condition = G.STATE == G.STATES.SHOP
         and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD - 1 -- need to reduve the threshold
