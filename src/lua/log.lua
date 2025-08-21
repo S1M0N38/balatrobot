@@ -218,14 +218,22 @@ function hook_toggle_shop()
   sendDebugMessage("Hooked into G.FUNCS.toggle_shop for logging", "LOG")
 end
 
+-- Hooks into G.FUNCS.buy_from_shop for buy_card and buy_and_use_card
 function hook_buy_card()
   local original_function = G.FUNCS.buy_from_shop
   -- e is the UI element for buy_card button on the targeted card.
+
   G.FUNCS.buy_from_shop = function(e)
     local card_id = e.config.ref_table.sort_id
+    -- If e.config.id is present, it is the buy_and_use_card button.
+    local action = (e.config and e.config.id) or "buy_card"
+    -- Normalize internal button id to API action name
+    if action == "buy_and_use" then
+      action = "buy_and_use_card"
+    end
     for i, card in ipairs(G.shop_jokers.cards) do
       if card.sort_id == card_id then
-        local function_call = { name = "shop", arguments = { action = "buy_card", index = i - 1 } }
+        local function_call = { name = "shop", arguments = { action = action, index = i - 1 } }
         LOG.schedule_write(function_call)
         break
       end
