@@ -135,7 +135,7 @@ The following table details the parameters required for each function. Note that
 | `play_hand_or_discard`  | `action` (string): Either "play_hand" or "discard"<br>`cards` (array): Card indices (0-indexed, 1-5 cards)                                                                                                                                                                |
 | `rearrange_hand`        | `cards` (array): Card indices (0-indexed, exactly `hand_size` elements)                                                                                                                                                                                                   |
 | `rearrange_consumables` | `consumables` (array): Consumable indices (0-indexed, exactly number of consumables in consumable area)                                                                                                                                                                   |
-| `shop`                  | `action` (string): Shop action ("next_round", "buy_card", "buy_and_use_card", "reroll", or **"redeem_voucher"**)<br>`index` (number, required when `action` is one of: "buy_card", "buy_and_use_card", **"redeem_voucher"**): 0-based index to target                     |
+| `shop`                  | `action` (string): Shop action ("next_round", "buy_card", "reroll", or **"redeem_voucher"**)<br>`index` (number, required when `action` = "buy_card" or `action` = **"redeem_voucher"**): 0-based card index to purchase / redeem                                         |
 | `sell_joker`            | `index` (number): 0-based index of the joker to sell from the player's joker collection                                                                                                                                                                                   |
 | `sell_consumable`       | `index` (number): 0-based index of the consumable to sell from the player's consumable collection                                                                                                                                                                         |
 | `use_consumable`        | `index` (number): 0-based index of the consumable to use from the player's consumable collection                                                                                                                                                                          |
@@ -144,17 +144,16 @@ The following table details the parameters required for each function. Note that
 
 The `shop` function supports multiple in-shop actions. Use the `action` field inside the `arguments` object to specify which of these to execute.
 
-| Action             | Description                                                                                     | Additional Parameters                                          |
-| ------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `next_round`       | Leave the shop and proceed to the next blind selection.                                         | —                                                              |
-| `buy_card`         | Purchase the card at the supplied `index` in `shop_jokers`.                                     | `index` _(number)_ – 0-based position of the card to buy       |
-| `buy_and_use_card` | Buy and immediately use a consumable card at the supplied `index` in `shop_jokers`.             | `index` _(number)_ – 0-based position of the card to buy/use   |
-| `reroll`           | Spend dollars to refresh the shop offer (cost shown in-game).                                   | —                                                              |
-| `redeem_voucher`   | Redeem the voucher at the supplied `index` in `shop_vouchers`, applying its discount or effect. | `index` _(number)_ – 0-based position of the voucher to redeem |
+| Action           | Description                                                                                     | Additional Parameters                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `next_round`     | Leave the shop and proceed to the next blind selection.                                         | —                                                              |
+| `buy_card`       | Purchase the card at the supplied `index` in `shop_jokers`.                                     | `index` _(number)_ – 0-based position of the card to buy       |
+| `reroll`         | Spend dollars to refresh the shop offer (cost shown in-game).                                   | —                                                              |
+| `redeem_voucher` | Redeem the voucher at the supplied `index` in `shop_vouchers`, applying its discount or effect. | `index` _(number)_ – 0-based position of the voucher to redeem |
 
 !!! note "Future actions"
 
-The `open_pack` action is coming soon.
+Additional shop actions such as `buy_and_use_card` and `open_pack` are planned.
 
 ### Development Tools
 

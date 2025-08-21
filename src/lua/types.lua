@@ -66,7 +66,7 @@
 ---@field consumables number[] Array of consumable indices for every consumable (0-based)
 
 ---@class ShopActionArgs
----@field action "next_round" | "buy_card" | "reroll" | "redeem_voucher" | "buy_and_use_card" The action to perform
+---@field action "next_round" | "buy_card" | "reroll" | "redeem_voucher" | "buy_and_use_card" | "redeem_voucher" The action to perform
 ---@field index? number The index of the card to act on (buy_card, buy_and_use_card, redeem_voucher, open_pack) (0-based)
 
 -- TODO: add "open_pack"
