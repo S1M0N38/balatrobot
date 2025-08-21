@@ -1,5 +1,4 @@
 import socket
-import time
 from pathlib import Path
 from typing import Generator
 
@@ -26,7 +25,7 @@ class TestShop:
         checkpoint_path = Path(__file__).parent / "checkpoints" / "basic_shop_setup.jkr"
 
         game_state = prepare_checkpoint(tcp_client, checkpoint_path)
-        time.sleep(0.5)
+        # time.sleep(0.5)
         assert game_state["state"] == State.SHOP.value
 
         yield

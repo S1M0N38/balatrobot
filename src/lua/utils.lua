@@ -891,14 +891,26 @@ utils.COMPLETION_CONDITIONS = {
       return elapsed > 0.20
     end,
   },
-  save_checkpoint = {
+  load_save = {
     [""] = function()
-      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
-    end,
-  },
-  load_checkpoint = {
-    [""] = function()
-      return #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
+      local base_condition = G.STATE and G.STATE ~= G.STATES.SPLASH and G.GAME and G.GAME.round
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.load_save = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.load_save then
+        condition_timestamps.load_save = socket.gettime()
+      end
+
+      -- Check if 0.5 seconds have passed (nature of start_run)
+      local elapsed = socket.gettime() - condition_timestamps.load_save
+      return elapsed > 0.50
     end,
   },
 }

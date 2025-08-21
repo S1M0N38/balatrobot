@@ -1263,7 +1263,7 @@ API.functions["load_save"] = function(args)
   ---@type PendingRequest
   API.pending_requests["load_save"] = {
     condition = function()
-      return G.STATE and G.STATE ~= G.STATES.SPLASH and G.GAME and G.GAME.round
+      return utils.COMPLETION_CONDITIONS["load_save"][""]()
     end,
     action = function()
       local game_state = utils.get_game_state()
