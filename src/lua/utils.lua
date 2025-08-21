@@ -893,7 +893,10 @@ utils.COMPLETION_CONDITIONS = {
   },
   load_save = {
     [""] = function()
-      local base_condition = G.STATE and G.STATE ~= G.STATES.SPLASH and G.GAME and G.GAME.round
+      local base_condition = G.STATE
+        and G.STATE ~= G.STATES.SPLASH
+        and G.GAME
+        and G.GAME.round
         and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
         and G.STATE_COMPLETE
 
