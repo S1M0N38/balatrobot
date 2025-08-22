@@ -109,20 +109,20 @@ The BalatroBot API provides core functions that correspond to the main game acti
 
 ### Overview
 
-| Name                    | Description                                                                                        |
-| ----------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `get_game_state`        | Retrieves the current complete game state                                                          |
-| `go_to_menu`            | Returns to the main menu from any game state                                                       |
-| `start_run`             | Starts a new game run with specified configuration                                                 |
-| `skip_or_select_blind`  | Handles blind selection - either select the current blind to play or skip it                       |
-| `play_hand_or_discard`  | Plays selected cards or discards them                                                              |
-| `rearrange_hand`        | Reorders the current hand according to the supplied index list                                     |
-| `rearrange_consumables` | Reorders the consumables according to the supplied index list                                      |
-| `cash_out`              | Proceeds from round completion to the shop phase                                                   |
-| `shop`                  | Performs shop actions: proceed to next round (`next_round`), purchase (and use) a card (`buy_card` | `buy_and_use_card`), or reroll shop (`reroll`) |
-| `sell_joker`            | Sells a joker from the player's collection for money                                               |
-| `sell_consumable`       | Sells a consumable from the player's collection for money                                          |
-| `use_consumable`        | Uses a consumable card from the player's collection (Tarot, Planet, or Spectral cards)             |
+| Name | Description |
+| \----------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `get_game_state` | Retrieves the current complete game state |
+| `go_to_menu` | Returns to the main menu from any game state |
+| `start_run` | Starts a new game run with specified configuration |
+| `skip_or_select_blind` | Handles blind selection - either select the current blind to play or skip it |
+| `play_hand_or_discard` | Plays selected cards or discards them |
+| `rearrange_hand` | Reorders the current hand according to the supplied index list |
+| `rearrange_consumables` | Reorders the consumables according to the supplied index list |
+| `cash_out` | Proceeds from round completion to the shop phase |
+| `shop` | Performs shop actions: proceed to next round (`next_round`), purchase (and use) a card (`buy_card` | `buy_and_use_card`), or reroll shop (`reroll`) |
+| `sell_joker` | Sells a joker from the player's collection for money |
+| `sell_consumable` | Sells a consumable from the player's collection for money |
+| `use_consumable` | Uses a consumable card from the player's collection (Tarot, Planet, or Spectral cards) |
 
 ### Parameters
 
