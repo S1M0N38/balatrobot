@@ -946,7 +946,7 @@ API.functions["shop"] = function(args)
       return
     end
 
-      -- Check if the consumable can be used
+    -- Check if the consumable can be used
     if not card:can_use_consumeable() then
       API.send_error_response(
         "Consumable cannot be used at this time",
