@@ -214,6 +214,7 @@ with BalatroClient() as client:
 # Start instances manually
 ./balatro.sh -p 12346 -p 12347          # Two instances
 ./balatro.sh --headless --fast -p 12346 -p 12347 -p 12348 -p 12349  # Full setup
+./balatro.sh --audio -p 12346                                    # With audio enabled
 
 # Manual parallel testing
 pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349 tests/lua/
@@ -223,6 +224,7 @@ pytest -n 4 --port 12346 --port 12347 --port 12348 --port 12349 tests/lua/
 
 - **`--headless`**: No graphics, ideal for servers
 - **`--fast`**: 10x speed, disabled effects, optimal for testing
+- **`--audio`**: Enable audio (disabled by default for performance)
 
 ### Documentation
 
@@ -261,6 +263,7 @@ Configure BalatroBot behavior with these environment variables:
 
 - **`BALATROBOT_HEADLESS=1`**: Disable graphics for server environments
 - **`BALATROBOT_FAST=1`**: Enable 10x speed with disabled effects for testing
+- **`BALATROBOT_AUDIO=1`**: Enable audio (disabled by default for performance)
 - **`BALATROBOT_PORT`**: TCP communication port (default: "12346")
 
 ## Communication & Community
