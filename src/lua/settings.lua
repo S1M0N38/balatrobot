@@ -1,6 +1,7 @@
 -- Environment Variables
 local headless = os.getenv("BALATROBOT_HEADLESS") == "1"
 local fast = os.getenv("BALATROBOT_FAST") == "1"
+local audio = os.getenv("BALATROBOT_AUDIO") == "1"
 local port = os.getenv("BALATROBOT_PORT")
 
 SETTINGS = {}
@@ -10,6 +11,7 @@ local config = {
   dt = headless and (4.99 / 60.0) or (1.0 / 60.0),
   headless = headless,
   fast = fast,
+  audio = audio,
 }
 
 -- Apply Love2D patches for performance
@@ -26,11 +28,21 @@ local function configure_balatro_speed()
   -- Skip intro and splash screens
   G.SETTINGS.skip_splash = "Yes"
 
-  -- Disable audio
-  G.SETTINGS.SOUND.volume = 0
-  G.SETTINGS.SOUND.music_volume = 0
-  G.SETTINGS.SOUND.game_sounds_volume = 0
-  G.F_MUTE = true
+  -- Configure audio based on --audio flag
+  if config.audio then
+    -- Enable audio when --audio flag is used
+    G.SETTINGS.SOUND = G.SETTINGS.SOUND or {}
+    G.SETTINGS.SOUND.volume = 50
+    G.SETTINGS.SOUND.music_volume = 100
+    G.SETTINGS.SOUND.game_sounds_volume = 100
+    G.F_MUTE = false
+  else
+    -- Disable audio by default
+    G.SETTINGS.SOUND.volume = 0
+    G.SETTINGS.SOUND.music_volume = 0
+    G.SETTINGS.SOUND.game_sounds_volume = 0
+    G.F_MUTE = true
+  end
 
   if config.fast then
     -- Disable VSync completely
@@ -55,7 +67,7 @@ local function configure_balatro_speed()
     -- Performance optimizations
     G.F_ENABLE_PERF_OVERLAY = false
     G.SETTINGS.WINDOW.vsync = 0
-    G.F_SOUND_THREAD = false
+    G.F_SOUND_THREAD = config.audio -- Enable sound thread only if audio is enabled
     G.F_VERBOSE = false
 
     sendInfoMessage("BalatroBot: Running in fast mode")
@@ -72,16 +84,18 @@ local function configure_balatro_speed()
 
     -- Feature flags - restore defaults from globals.lua
     G.F_ENABLE_PERF_OVERLAY = false
-    G.F_MUTE = false
-    G.F_SOUND_THREAD = true
+    G.F_MUTE = not config.audio -- Mute if audio is disabled
+    G.F_SOUND_THREAD = config.audio -- Enable sound thread only if audio is enabled
     G.F_VERBOSE = true
     G.F_RUMBLE = nil
 
-    -- Audio settings - restore normal levels
-    G.SETTINGS.SOUND = G.SETTINGS.SOUND or {}
-    G.SETTINGS.SOUND.volume = 50
-    G.SETTINGS.SOUND.music_volume = 100
-    G.SETTINGS.SOUND.game_sounds_volume = 100
+    -- Audio settings - only restore if audio is enabled
+    if config.audio then
+      G.SETTINGS.SOUND = G.SETTINGS.SOUND or {}
+      G.SETTINGS.SOUND.volume = 50
+      G.SETTINGS.SOUND.music_volume = 100
+      G.SETTINGS.SOUND.game_sounds_volume = 100
+    end
 
     -- Graphics settings - restore normal quality
     G.SETTINGS.GRAPHICS = G.SETTINGS.GRAPHICS or {}
