@@ -1,1 +1,2 @@
 *.jsonl filter=lfs diff=lfs merge=lfs -text
+tests/lua/endpoints/checkpoints/** filter=lfs diff=lfs merge=lfs -text
