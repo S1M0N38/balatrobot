@@ -423,6 +423,9 @@ API.functions["play_hand_or_discard"] = function(args)
     end
   end
 
+  -- Clear any existing highlights before selecting new cards to prevent state pollution
+  G.hand:unhighlight_all()
+
   -- Select cards
   for _, card_index in ipairs(args.cards) do
     G.hand.cards[card_index]:click()
