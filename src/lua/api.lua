@@ -981,13 +981,78 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-  -- TODO: add other shop actions (open_pack)
+  elseif action == "open_pack" then
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
+      return
+    end
+
+    -- Get booster pack index (1-based) and shop area
+    local card_pos = args.index + 1
+    local area = G.shop_booster
+
+    -- Validate shop_booster area exists
+    if not area then
+      API.send_error_response("Booster area not found in shop", ERROR_CODES.INVALID_GAME_STATE, {})
+      return
+    end
+
+    -- Validate card index is in range
+    if not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Booster pack index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, valid_range = "0-" .. tostring(#area.cards - 1) }
+      )
+      return
+    end
+
+    -- Get the booster pack card
+    local card = area.cards[card_pos]
+
+    -- Check if it's actually a booster pack
+    if not card.ability or card.ability.set ~= "Booster" then
+      API.send_error_response("Card is not a booster pack", ERROR_CODES.INVALID_ACTION, { index = args.index })
+      return
+    end
+
+    -- Check if the pack can be afforded
+    if card.cost > G.GAME.dollars then
+      API.send_error_response(
+        "Booster pack is not affordable",
+        ERROR_CODES.INVALID_ACTION,
+        { index = args.index, cost = card.cost, dollars = G.GAME.dollars }
+      )
+      return
+    end
+
+    -- Use buy_from_shop to purchase and open the pack
+    local buy_button = card.children.buy_button and card.children.buy_button.definition
+    if not buy_button then
+      API.send_error_response("Booster pack has no buy button", ERROR_CODES.INVALID_GAME_STATE, { index = args.index })
+      return
+    end
+
+    -- Activate the buy button to purchase and open the pack
+    G.FUNCS.buy_from_shop(buy_button)
+
+    -- Send response once the pack is opened
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS["shop"]["open_pack"]()
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
   else
-    API.send_error_response(
-      "Invalid action for shop",
-      ERROR_CODES.INVALID_ACTION,
-      { action = action, valid_actions = { "next_round", "buy_card", "reroll" } }
-    )
+    API.send_error_response("Invalid action for shop", ERROR_CODES.INVALID_ACTION, {
+      action = action,
+      valid_actions = { "next_round", "buy_card", "reroll", "redeem_voucher", "buy_and_use_card", "open_pack" },
+    })
     return
   end
 end

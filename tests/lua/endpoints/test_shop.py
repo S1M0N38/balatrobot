@@ -580,3 +580,115 @@ class TestShop:
             ["index"],
             ErrorCode.INVALID_ACTION.value,
         )
+
+    # ------------------------------------------------------------------
+    # open_pack tests
+    # ------------------------------------------------------------------
+
+    def test_open_pack_success(self, tcp_client: socket.socket) -> None:
+        """Test successfully opening a booster pack from the shop."""
+        # Get current game state while in shop
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert game_state["state"] == State.SHOP.value
+
+        # Find a booster pack to open
+        shop_booster = game_state.get("shop_booster", {})
+        booster_cards = shop_booster.get("cards", [])
+
+        if not booster_cards:
+            pytest.skip("No booster packs available in shop for this seed")
+
+        # Get first booster pack
+        booster_cost = booster_cards[0]["cost"]
+        dollars_before = game_state["game"]["dollars"]
+
+        # Open the first booster pack
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "open_pack", "index": 0}
+        )
+
+        # Should transition to a pack state (e.g., BUFFOON_PACK)
+        assert response["state"] in [
+            State.TAROT_PACK.value,
+            State.PLANET_PACK.value,
+            State.SPECTRAL_PACK.value,
+            State.STANDARD_PACK.value,
+            State.BUFFOON_PACK.value,
+        ]
+
+        # Dollars should be reduced by the cost
+        assert response["game"]["dollars"] == dollars_before - booster_cost
+
+        # Pack cards should be available
+        assert "pack_cards" in response
+        assert len(response["pack_cards"]["cards"]) > 0
+
+    def test_open_pack_missing_index(self, tcp_client: socket.socket) -> None:
+        """Test open_pack returns error when index is missing."""
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "open_pack"}
+        )
+
+        assert_error_response(
+            response,
+            "Missing required field: index",
+            ["field"],
+            ErrorCode.MISSING_ARGUMENTS.value,
+        )
+
+    def test_open_pack_index_out_of_range(self, tcp_client: socket.socket) -> None:
+        """Test open_pack returns error when index is out of range."""
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        assert game_state["state"] == State.SHOP.value
+
+        shop_booster = game_state.get("shop_booster", {})
+        booster_cards = shop_booster.get("cards", [])
+        out_of_range_index = len(booster_cards)
+
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "open_pack", "index": out_of_range_index}
+        )
+
+        assert_error_response(
+            response,
+            "Booster pack index out of range",
+            ["index", "valid_range"],
+            ErrorCode.PARAMETER_OUT_OF_RANGE.value,
+        )
+
+    def test_open_pack_not_affordable(self, tcp_client: socket.socket) -> None:
+        """Test open_pack returns error when booster pack is not affordable."""
+        # Buy items to reduce dollars
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+
+        # Buy the Hone voucher to reduce dollars
+        send_and_receive_api_message(
+            tcp_client, "shop", {"action": "redeem_voucher", "index": 0}
+        )
+
+        # Now check if any booster pack is unaffordable
+        game_state = send_and_receive_api_message(tcp_client, "get_game_state", {})
+        shop_booster = game_state.get("shop_booster", {})
+        booster_cards = shop_booster.get("cards", [])
+        dollars_now = game_state["game"]["dollars"]
+
+        # Find an unaffordable pack
+        idx = None
+        for i, card in enumerate(booster_cards):
+            if card["cost"] > dollars_now:
+                idx = i
+                break
+
+        if idx is None:
+            pytest.skip("No unaffordable booster pack found to test error path")
+
+        response = send_and_receive_api_message(
+            tcp_client, "shop", {"action": "open_pack", "index": idx}
+        )
+
+        assert_error_response(
+            response,
+            "Booster pack is not affordable",
+            ["index", "cost", "dollars"],
+            ErrorCode.INVALID_ACTION.value,
+        )
