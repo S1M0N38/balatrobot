@@ -53,6 +53,38 @@ function utils.get_game_state()
         -- So I think that the last blind refers  to the blind selected in the most recent BLIND_SELECT state.
       }
     end
+    local hands = {}
+    for name, hand in pairs(G.GAME.hands) do
+      hands[name] = {
+        -- visible = hand.visible, -- bool. Whether hand is unlocked/visible to player
+        order = hand.order, -- int. Ranking order (1=best, 12=worst)
+        mult = hand.mult, -- int. Current multiplier value
+        chips = hand.chips, -- int. Current chip value
+        s_mult = hand.s_mult, -- int. Starting multiplier
+        s_chips = hand.s_chips, -- int. Starting chips
+        level = hand.level, -- int. Current level of the hand
+        l_mult = hand.l_mult, -- int. Multiplier gained per level
+        l_chips = hand.l_chips, -- int. Chips gained per level
+        played = hand.played, -- int. Total times played
+        played_this_round = hand.played_this_round, -- int. Times played this round
+        example = hand.example, -- example of the hand in the format:
+        -- {{ "SUIT_RANK", boolean }, { "SUIT_RANK", boolean }, ...}
+        -- "SUIT_RANK" is a string, e.g. "S_A" or "H_4" (
+        --  - Suit prefixes:
+        --    - S_ = Spades ♠
+        --    - H_ = Hearts ♥
+        --    - D_ = Diamonds ♦
+        --    - C_ = Clubs ♣
+        --  - Rank suffixes:
+        --    - A = Ace
+        --    - 2-9 = Number cards
+        --    - T = Ten (10)
+        --    - J = Jack
+        --    - Q = Queen
+        --    - K = King
+        -- boolean is whether the card is part of the scoring hand
+      }
+    end
     game = {
       -- STOP_USE = int (default 0), -- ??
       bankrupt_at = G.GAME.bankrupt_at,
@@ -148,41 +180,7 @@ function utils.get_game_state()
       -- "edition_rate": int, (default 1) -- change the prob. to find a card which is not a base?
       -- "hand_usage": table/list, (default {}) -- maybe track the hand played so far in the run?
 
-      -- table/list. Maybe this track the various hand levels?
-      -- "hands": {
-      --   "Five of a Kind": {...},
-      --   "Flush": {
-      --     "_saved_d_u": true, This is a private field so we are not interested in it
-      --     "chips": 35, current chips reward
-      --     "example": {
-      --       "1": "...",
-      --       "2": "...",
-      --       "3": "...",
-      --       "4": "...",
-      --       "5": "..."
-      --     },
-      --     "l_chips": 15, boundary for chips?
-      --     "l_mult": 2, boundary for mult?
-      --     "level": 1, level of the hand
-      --     "mult": 4, curent mult reward
-      --     "order": 7, order for how good the hand is Five of a Kind is 1, High Card is 12
-      --     "played": 0, how many time the hand has been played in this run
-      --     "played_this_round": 0, how many time the hand has been played in this round
-      --     "s_chips": 35, boundary for chips?
-      --     "s_mult": 4, boundary for mult?
-      --     "visible": true, is this hand visible in the Run Info interface
-      --   },
-      --   "Flush Five": {...},
-      --   "Flush House": {...},
-      --   "Four of a Kind": {...},
-      --   "Full House": {...},
-      --   "High Card": {...},
-      --   "Pair": {...},
-      --   "Straight": {...},
-      --   "Straight Flush": {...},
-      --   "Three of a Kind": {...},
-      --   "Two Pair": {...},
-      -- },
+      hands = hands, -- table of all the hands in the game
       hands_played = G.GAME.hands_played, -- (default 0) hand played in this run
       inflation = G.GAME.inflation, -- (default 0) maybe there are some stakes that increase the prices in the shop ?
       interest_amount = G.GAME.interest_amount, -- (default 1) how much each $ is worth at the eval round stage
@@ -323,6 +321,7 @@ function utils.get_game_state()
           },
           label = card.label,
           cost = card.cost,
+          sell_cost = card.sell_cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
           config = {
             center_key = card.config.center_key,
@@ -349,12 +348,16 @@ function utils.get_game_state()
       cards[i] = {
         ability = {
           set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
+          effect = card.ability.effect, -- str. Enhancement type: "Bonus Card", "Mult Card", "Wild Card", "Glass Card", "Steel Card", "Stone Card", "Gold Card", "Lucky Card"
+          name = card.ability.name, -- str. Enhancement name: "Bonus Card", "Mult Card", "Wild Card", "Glass Card", "Steel Card", "Stone Card", "Gold Card", "Lucky Card"
         },
         -- ability = table of card abilities effect, mult, extra_value
         label = card.label, -- str (default "Base Card") | ... | ... | ?
         -- playing_card = card.config.card.playing_card, -- int. The card index in the deck for the current round ?
         -- sell_cost = card.sell_cost, -- int (default 1). The dollars you get if you sell this card ?
         sort_id = card.sort_id, -- int. Unique identifier for this card instance
+        seal = card.seal, -- str. Seal type: "Red", "Blue", "Gold", "Purple" or nil
+        edition = card.edition, -- table. Edition data: {type="foil/holo/polychrome/negative", chips=X, mult=X, x_mult=X} or nil
         base = {
           -- These should be the valude for the original base card
           -- without any modifications
@@ -414,7 +417,9 @@ function utils.get_game_state()
           },
           label = card.label,
           cost = card.cost,
+          sell_cost = card.sell_cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
+          edition = card.edition, -- table. Edition data: {type="foil/holo/polychrome/negative", chips=X, mult=X, x_mult=X} or nil
           config = {
             center_key = card.config.center_key,
           },
@@ -448,6 +453,8 @@ function utils.get_game_state()
         cards[i] = {
           ability = {
             set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
+            effect = card.ability.effect, -- str. Enhancement type (for playing cards only)
+            name = card.ability.name, -- str. Enhancement name (for playing cards only)
           },
           config = {
             center_key = card.config.center_key, -- id of the card
@@ -458,6 +465,8 @@ function utils.get_game_state()
           facing = card.facing, -- str. The facing of the card: front | back
           highlighted = card.highlighted, -- bool. True if the card is highlighted
           sell_cost = card.sell_cost, -- int. The sell cost of the card
+          seal = card.seal, -- str. Seal type: "Red", "Blue", "Gold", "Purple" (playing cards only) or nil
+          edition = card.edition, -- table. Edition data: {type="foil/holo/polychrome/negative", chips=X, mult=X, x_mult=X} (jokers/consumables) or nil
         }
       end
     end
@@ -544,7 +553,140 @@ function utils.get_game_state()
     shop_vouchers = shop_vouchers,
     shop_booster = shop_booster,
     consumables = consumables,
+    blinds = utils.get_blinds_info(),
   }
+end
+
+-- ==========================================================================
+-- Blind Information Functions
+-- ==========================================================================
+
+---Gets comprehensive blind information for the current ante
+---@return table blinds Information about small, big, and boss blinds
+function utils.get_blinds_info()
+  local blinds = {
+    small = {
+      name = "Small",
+      score = 0,
+      status = "Upcoming",
+      effect = "",
+      tag_name = "",
+      tag_effect = "",
+    },
+    big = {
+      name = "Big",
+      score = 0,
+      status = "Upcoming",
+      effect = "",
+      tag_name = "",
+      tag_effect = "",
+    },
+    boss = {
+      name = "",
+      score = 0,
+      status = "Upcoming",
+      effect = "",
+      tag_name = "",
+      tag_effect = "",
+    },
+  }
+
+  if not G.GAME or not G.GAME.round_resets then
+    return blinds
+  end
+
+  -- Get base blind amount for current ante
+  local ante = G.GAME.round_resets.ante or 1
+  local base_amount = get_blind_amount(ante) ---@diagnostic disable-line: undefined-global
+
+  -- Apply ante scaling
+  local ante_scaling = G.GAME.starting_params.ante_scaling or 1
+
+  -- Small blind (1x multiplier)
+  blinds.small.score = math.floor(base_amount * 1 * ante_scaling)
+  blinds.small.status = G.GAME.round_resets.blind_states.Small or "Upcoming"
+
+  -- Big blind (1.5x multiplier)
+  blinds.big.score = math.floor(base_amount * 1.5 * ante_scaling)
+  blinds.big.status = G.GAME.round_resets.blind_states.Big or "Upcoming"
+
+  -- Boss blind
+  local boss_choice = G.GAME.round_resets.blind_choices.Boss
+  if boss_choice and G.P_BLINDS[boss_choice] then
+    local boss_blind = G.P_BLINDS[boss_choice]
+    blinds.boss.name = boss_blind.name or ""
+    blinds.boss.score = math.floor(base_amount * (boss_blind.mult or 2) * ante_scaling)
+    blinds.boss.status = G.GAME.round_resets.blind_states.Boss or "Upcoming"
+
+    -- Get boss effect description
+    if boss_blind.key then
+      local loc_target = localize({ ---@diagnostic disable-line: undefined-global
+        type = "raw_descriptions",
+        key = boss_blind.key,
+        set = "Blind",
+        vars = { "" },
+      })
+      if loc_target and loc_target[1] then
+        blinds.boss.effect = loc_target[1]
+        if loc_target[2] then
+          blinds.boss.effect = blinds.boss.effect .. " " .. loc_target[2]
+        end
+      end
+    end
+  else
+    blinds.boss.name = "Boss"
+    blinds.boss.score = math.floor(base_amount * 2 * ante_scaling)
+    blinds.boss.status = G.GAME.round_resets.blind_states.Boss or "Upcoming"
+  end
+
+  -- Get tag information for Small and Big blinds
+  if G.GAME.round_resets.blind_tags then
+    -- Small blind tag
+    local small_tag_key = G.GAME.round_resets.blind_tags.Small
+    if small_tag_key and G.P_TAGS[small_tag_key] then
+      local tag_data = G.P_TAGS[small_tag_key]
+      blinds.small.tag_name = tag_data.name or ""
+
+      -- Get tag effect description
+      local tag_effect = localize({ ---@diagnostic disable-line: undefined-global
+        type = "raw_descriptions",
+        key = small_tag_key,
+        set = "Tag",
+        vars = { "" },
+      })
+      if tag_effect and tag_effect[1] then
+        blinds.small.tag_effect = tag_effect[1]
+        if tag_effect[2] then
+          blinds.small.tag_effect = blinds.small.tag_effect .. " " .. tag_effect[2]
+        end
+      end
+    end
+
+    -- Big blind tag
+    local big_tag_key = G.GAME.round_resets.blind_tags.Big
+    if big_tag_key and G.P_TAGS[big_tag_key] then
+      local tag_data = G.P_TAGS[big_tag_key]
+      blinds.big.tag_name = tag_data.name or ""
+
+      -- Get tag effect description
+      local tag_effect = localize({ ---@diagnostic disable-line: undefined-global
+        type = "raw_descriptions",
+        key = big_tag_key,
+        set = "Tag",
+        vars = { "" },
+      })
+      if tag_effect and tag_effect[1] then
+        blinds.big.tag_effect = tag_effect[1]
+        if tag_effect[2] then
+          blinds.big.tag_effect = blinds.big.tag_effect .. " " .. tag_effect[2]
+        end
+      end
+    end
+  end
+
+  -- Boss blind has no tags (tag_name and tag_effect remain empty strings)
+
+  return blinds
 end
 
 -- ==========================================================================
