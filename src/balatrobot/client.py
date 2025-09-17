@@ -130,9 +130,25 @@ class BalatroClient:
             message = request.model_dump_json() + "\n"
             self._socket.send(message.encode())
 
-            # Receive response
-            data = self._socket.recv(self.buffer_size)
-            response_data = json.loads(data.decode().strip())
+            # Receive response - keep receiving until we get the complete message
+            data = b""
+            while True:
+                chunk = self._socket.recv(self.buffer_size)
+                if not chunk:
+                    raise ConnectionFailedError(
+                        "Connection closed by server",
+                        error_code="E008",
+                        context={"received_bytes": len(data)},
+                    )
+                data += chunk
+                # Check if we have a complete message (ends with newline)
+                if b"\n" in data:
+                    # Take only the first complete message
+                    message_end = data.find(b"\n")
+                    complete_message = data[:message_end]
+                    break
+
+            response_data = json.loads(complete_message.decode().strip())
 
             # Check for error response
             if "error" in response_data:
