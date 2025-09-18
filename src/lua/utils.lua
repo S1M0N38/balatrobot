@@ -249,6 +249,9 @@ function utils.get_game_state()
       },
 
       -- round_resets = table/list, -- const used to reset the round? but should be not relevant for our use case
+      round_resets = {
+        ante = G.GAME.round_resets.ante or 1, -- number of the current ante (1-8 typically, can go higher)
+      },
       round_scores = {
         -- contains values used in the round eval phase?
         -- "cards_discarded": {
