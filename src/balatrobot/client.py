@@ -457,3 +457,27 @@ class BalatroClient:
         """
         love_save_path = self.prepare_save(save_path)
         return self.load_save(love_save_path)
+
+    def screenshot(self, path: Path | None = None) -> Path:
+        """
+        Take a screenshot and save as both PNG and JPEG formats.
+
+        Args:
+            path: Optional path for PNG file. If provided, PNG will be moved to this location.
+
+        Returns:
+            Path to the PNG screenshot. JPEG is saved alongside with .jpg extension.
+
+        Note:
+            The response now includes both 'path' (PNG) and 'jpeg_path' (JPEG) keys.
+            This method maintains backward compatibility by returning the PNG path.
+        """
+        screenshot_response = self.send_message("screenshot", {})
+
+        if path is None:
+            return Path(screenshot_response["path"])
+        else:
+            source_path = Path(screenshot_response["path"])
+            dest_path = path
+            source_path.rename(dest_path)
+            return dest_path
