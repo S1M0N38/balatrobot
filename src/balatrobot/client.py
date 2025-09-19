@@ -47,6 +47,62 @@ class BalatroClient:
         self.port = port
         self._socket: socket.socket | None = None
         self._connected = False
+        self._message_buffer = b""  # Buffer for incomplete messages
+
+    def _receive_complete_message(self) -> bytes:
+        """Receive a complete message from the socket, handling message boundaries properly."""
+        if not self._connected or not self._socket:
+            raise ConnectionFailedError(
+                "Socket not connected",
+                error_code="E008",
+                context={
+                    "connected": self._connected,
+                    "socket": self._socket is not None,
+                },
+            )
+
+        # Check if we already have a complete message in the buffer
+        while b"\n" not in self._message_buffer:
+            try:
+                chunk = self._socket.recv(self.buffer_size)
+            except socket.timeout:
+                raise ConnectionFailedError(
+                    "Socket timeout while receiving data",
+                    error_code="E008",
+                    context={
+                        "timeout": self.timeout,
+                        "buffer_size": len(self._message_buffer),
+                    },
+                )
+            except socket.error as e:
+                raise ConnectionFailedError(
+                    f"Socket error while receiving: {e}",
+                    error_code="E008",
+                    context={"error": str(e), "buffer_size": len(self._message_buffer)},
+                )
+
+            if not chunk:
+                raise ConnectionFailedError(
+                    "Connection closed by server",
+                    error_code="E008",
+                    context={"buffer_size": len(self._message_buffer)},
+                )
+            self._message_buffer += chunk
+
+        # Extract the first complete message
+        message_end = self._message_buffer.find(b"\n")
+        complete_message = self._message_buffer[:message_end]
+
+        # Update buffer to remove the processed message
+        remaining_data = self._message_buffer[message_end + 1 :]
+        self._message_buffer = remaining_data
+
+        # Log any remaining data for debugging
+        if remaining_data:
+            logger.warning(f"Data remaining in buffer: {len(remaining_data)} bytes")
+            logger.debug(f"Buffer preview: {remaining_data[:100]}...")
+
+        return complete_message
 
     def __enter__(self) -> Self:
         """Enter context manager and connect to the game."""
@@ -93,6 +149,8 @@ class BalatroClient:
             self._socket.close()
             self._socket = None
         self._connected = False
+        # Clear message buffer on disconnect
+        self._message_buffer = b""
 
     def send_message(self, name: str, arguments: dict | None = None) -> dict:
         """Send JSON message to Balatro and receive response
@@ -130,25 +188,23 @@ class BalatroClient:
             message = request.model_dump_json() + "\n"
             self._socket.send(message.encode())
 
-            # Receive response - keep receiving until we get the complete message
-            data = b""
-            while True:
-                chunk = self._socket.recv(self.buffer_size)
-                if not chunk:
-                    raise ConnectionFailedError(
-                        "Connection closed by server",
-                        error_code="E008",
-                        context={"received_bytes": len(data)},
-                    )
-                data += chunk
-                # Check if we have a complete message (ends with newline)
-                if b"\n" in data:
-                    # Take only the first complete message
-                    message_end = data.find(b"\n")
-                    complete_message = data[:message_end]
-                    break
+            # Receive response using improved message handling
+            complete_message = self._receive_complete_message()
 
-            response_data = json.loads(complete_message.decode().strip())
+            # Decode and validate the message
+            message_str = complete_message.decode().strip()
+            logger.debug(f"Raw message length: {len(message_str)} characters")
+            logger.debug(f"Message preview: {message_str[:100]}...")
+
+            # Ensure the message is properly formatted JSON
+            if not message_str:
+                raise BalatroError(
+                    "Empty response received from game",
+                    error_code="E001",
+                    context={"raw_data_length": len(complete_message)},
+                )
+
+            response_data = json.loads(message_str)
 
             # Check for error response
             if "error" in response_data:
@@ -167,10 +223,20 @@ class BalatroClient:
             ) from e
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON response from API request {name}: {e}")
+            logger.error(f"Problematic message content: {message_str[:200]}...")
+            logger.error(
+                f"Message buffer state: {len(self._message_buffer)} bytes remaining"
+            )
+
+            # Clear the message buffer to prevent cascading errors
+            if self._message_buffer:
+                logger.warning("Clearing message buffer due to JSON parse error")
+                self._message_buffer = b""
+
             raise BalatroError(
                 f"Invalid JSON response from game: {e}",
                 error_code="E001",
-                context={"error": str(e)},
+                context={"error": str(e), "message_preview": message_str[:100]},
             ) from e
 
     # Checkpoint Management Methods
