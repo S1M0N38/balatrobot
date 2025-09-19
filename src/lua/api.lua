@@ -1343,4 +1343,78 @@ API.functions["load_save"] = function(args)
   }
 end
 
+---Takes a screenshot of the current game state and saves it to LÖVE's write directory
+---Call love.graphics.captureScreenshot() to capture the current frame as compressed PNG image
+---Returns the path where the screenshot was saved
+API.functions["screenshot"] = function(args)
+  -- Track screenshot completion
+  local screenshot_completed = false
+  local screenshot_error = nil
+  local screenshot_filename = nil
+
+  -- Generate unique filename within LÖVE's write directory
+  local timestamp = tostring(love.timer.getTime()):gsub("%.", "")
+  screenshot_filename = "screenshot_" .. timestamp .. ".png"
+
+  -- Capture screenshot using LÖVE 11.0+ API
+  love.graphics.captureScreenshot(function(imagedata)
+    if imagedata then
+      -- Scale down the image to reduce file size (10% of original size)
+      local original_width = imagedata:getWidth()
+      local original_height = imagedata:getHeight()
+      local scale_factor = 0.2
+      local new_width = math.floor(original_width * scale_factor)
+      local new_height = math.floor(original_height * scale_factor)
+
+      -- Create a new scaled ImageData
+      local scaled_imagedata = love.image.newImageData(new_width, new_height)
+
+      -- Scale the image by sampling pixels
+      for y = 0, new_height - 1 do
+        for x = 0, new_width - 1 do
+          local src_x = math.floor(x / scale_factor)
+          local src_y = math.floor(y / scale_factor)
+          local r, g, b, a = imagedata:getPixel(src_x, src_y)
+          scaled_imagedata:setPixel(x, y, r, g, b, a)
+        end
+      end
+
+      -- Save the screenshot as PNG to LÖVE's write directory
+      local png_success, png_err = pcall(function()
+        scaled_imagedata:encode("png", screenshot_filename)
+      end)
+
+      if png_success then
+        screenshot_completed = true
+        sendDebugMessage("Screenshot saved: " .. screenshot_filename, "API")
+      else
+        screenshot_error = "Failed to save PNG screenshot: " .. tostring(png_err)
+        sendErrorMessage(screenshot_error, "API")
+      end
+    else
+      screenshot_error = "Failed to capture screenshot"
+      sendErrorMessage(screenshot_error, "API")
+    end
+  end)
+
+  -- Defer sending response until the screenshot operation completes
+  ---@type PendingRequest
+  API.pending_requests["screenshot"] = {
+    condition = function()
+      return screenshot_completed or screenshot_error ~= nil
+    end,
+    action = function()
+      if screenshot_error then
+        API.send_error_response(screenshot_error, ERROR_CODES.INVALID_ACTION, {})
+      else
+        -- Return screenshot path
+        local screenshot_response = {
+          path = love.filesystem.getSaveDirectory() .. "/" .. screenshot_filename,
+        }
+        API.send_response(screenshot_response)
+      end
+    end,
+  }
+end
+
 return API
