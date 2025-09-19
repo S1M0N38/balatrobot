@@ -54,13 +54,13 @@ local function configure_balatro_speed()
     G.ANIMATION_FPS = 60 -- 6x faster animations
 
     -- Disable visual effects
-    G.SETTINGS.reduced_motion = true
+    G.SETTINGS.reduced_motion = true -- Enable reduced motion in fast mode
     G.SETTINGS.screenshake = false
     G.VIBRATION = 0
-    G.SETTINGS.GRAPHICS.shadows = "Off"
-    G.SETTINGS.GRAPHICS.bloom = 0
-    G.SETTINGS.GRAPHICS.crt = 0
-    G.SETTINGS.GRAPHICS.texture_scaling = 1 -- Fastest (nearest neighbor)
+    G.SETTINGS.GRAPHICS.shadows = "Off" -- Always disable shadows
+    G.SETTINGS.GRAPHICS.bloom = 0 -- Always disable CRT bloom
+    G.SETTINGS.GRAPHICS.crt = 0 -- Always disable CRT
+    G.SETTINGS.GRAPHICS.texture_scaling = 1 -- Always disable pixel art smoothing
     G.SETTINGS.rumble = false
     G.F_RUMBLE = nil
 
@@ -99,17 +99,17 @@ local function configure_balatro_speed()
 
     -- Graphics settings - restore normal quality
     G.SETTINGS.GRAPHICS = G.SETTINGS.GRAPHICS or {}
-    G.SETTINGS.GRAPHICS.shadows = "On"
-    G.SETTINGS.GRAPHICS.bloom = 1
-    G.SETTINGS.GRAPHICS.crt = 70
-    G.SETTINGS.GRAPHICS.texture_scaling = 2
+    G.SETTINGS.GRAPHICS.shadows = "Off" -- Always disable shadows
+    G.SETTINGS.GRAPHICS.bloom = 0 -- Always disable CRT bloom
+    G.SETTINGS.GRAPHICS.crt = 0 -- Always disable CRT
+    G.SETTINGS.GRAPHICS.texture_scaling = 1 -- Always disable pixel art smoothing
 
     -- Window settings - restore normal display
     G.SETTINGS.WINDOW = G.SETTINGS.WINDOW or {}
     G.SETTINGS.WINDOW.vsync = 1
 
-    -- Visual effects - restore normal motion
-    G.SETTINGS.reduced_motion = false
+    -- Visual effects - enable reduced motion
+    G.SETTINGS.reduced_motion = true -- Always enable reduced motion
     G.SETTINGS.screenshake = true
     G.SETTINGS.rumble = G.F_RUMBLE
 
