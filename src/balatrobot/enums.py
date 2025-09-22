@@ -344,7 +344,7 @@ class Consumables(Enum):
     c_pluto = "Levels up High Card"
     c_planet_x = "Levels up Flush House"
     c_ceres = "Levels up Five of a Kind"
-    c_eris = "Levels up High Card"
+    c_eris = "Levels up Flush Five"
 
     # Spectral consumable cards with powerful effects.
 
