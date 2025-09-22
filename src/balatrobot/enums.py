@@ -124,7 +124,7 @@ class ErrorCode(Enum):
 
 
 @unique
-class JokerCards(Enum):
+class Jokers(Enum):
     """Joker cards available in Balatro with their effects."""
 
     # Common Jokers (Rarity 1)
@@ -301,8 +301,10 @@ class JokerCards(Enum):
 
 
 @unique
-class TarotCards(Enum):
-    """Tarot consumable cards and their effects."""
+class Consumables(Enum):
+    """Consumable cards available in Balatro with their effects."""
+
+    # Tarot consumable cards and their effects.
 
     c_fool = (
         "Creates the last Tarot or Planet Card used during this run (The Fool excluded)"
@@ -329,10 +331,7 @@ class TarotCards(Enum):
     c_judgement = "Creates a random Joker card (Must have room)"
     c_world = "Converts up to 3 selected cards to Spades"
 
-
-@unique
-class PlanetCards(Enum):
-    """Planet consumable cards that level up poker hands."""
+    # Planet consumable cards that level up poker hands.
 
     c_mercury = "Levels up Pair"
     c_venus = "Levels up Three of a Kind"
@@ -347,10 +346,7 @@ class PlanetCards(Enum):
     c_ceres = "Levels up Five of a Kind"
     c_eris = "Levels up High Card"
 
-
-@unique
-class SpectralCards(Enum):
-    """Spectral consumable cards with powerful effects."""
+    # Spectral consumable cards with powerful effects.
 
     c_familiar = "Destroy 1 random card in your hand, add 3 random Enhanced face cards to your hand"
     c_grim = (
@@ -375,7 +371,7 @@ class SpectralCards(Enum):
 
 
 @unique
-class Voucher(Enum):
+class Vouchers(Enum):
     """Voucher cards that provide permanent upgrades."""
 
     v_overstock_norm = "+1 card slot available in shop (to 3 slots)"
@@ -415,7 +411,7 @@ class Voucher(Enum):
 
 
 @unique
-class Tag(Enum):
+class Tags(Enum):
     """Tag rewards that provide various benefits."""
 
     tag_uncommon = "Shop has a free Uncommon Joker"
@@ -449,7 +445,7 @@ class Tag(Enum):
 
 
 @unique
-class CardEditions(Enum):
+class Editions(Enum):
     """Special editions that can be applied to cards."""
 
     e_foil = "+50 Chips"
@@ -459,7 +455,7 @@ class CardEditions(Enum):
 
 
 @unique
-class CardEnhancements(Enum):
+class Enhancements(Enum):
     """Enhancements that can be applied to playing cards."""
 
     m_bonus = "+30 Chips when scored"
@@ -473,7 +469,7 @@ class CardEnhancements(Enum):
 
 
 @unique
-class CardSeals(Enum):
+class Seals(Enum):
     """Seals that can be applied to playing cards."""
 
     Red = "Retrigger this card 1 time. Retriggering means that the effect of the cards is applied again including counting again in the score calculation"
