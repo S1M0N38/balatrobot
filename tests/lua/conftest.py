@@ -74,7 +74,10 @@ def send_and_receive_api_message(
 
 
 def assert_error_response(
-    response, expected_error_text, expected_context_keys=None, expected_error_code=None
+    response,
+    expected_error_text,
+    expected_context_keys=None,
+    expected_error_code=None,
 ):
     """
     Helper function to assert the format and content of an error response.
