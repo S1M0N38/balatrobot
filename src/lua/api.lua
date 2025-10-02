@@ -1094,7 +1094,7 @@ API.functions["use_consumable"] = function(args)
     -- Validate current game state is SELECTING_HAND when cards are provided
     if G.STATE ~= G.STATES.SELECTING_HAND then
       API.send_error_response(
-        "Cannot use consumable with cards when not in selecting hand state",
+        "Cannot use consumable with cards when there are no cards to select. Expects SELECTING_HAND state.",
         ERROR_CODES.INVALID_GAME_STATE,
         { current_state = G.STATE, required_state = G.STATES.SELECTING_HAND }
       )
@@ -1112,11 +1112,11 @@ API.functions["use_consumable"] = function(args)
     end
 
     -- Validate number of cards is between 1 and 5 (inclusive) for consistency with play_hand_or_discard
-    if #args.cards < 1 or #args.cards > 5 then
+    if #args.cards < 1 or #args.cards > 3 then
       API.send_error_response(
-        "Invalid number of cards. Expected 1-5, got " .. tostring(#args.cards),
+        "Invalid number of cards. Expected 1-3, got " .. tostring(#args.cards),
         ERROR_CODES.PARAMETER_OUT_OF_RANGE,
-        { cards_count = #args.cards, valid_range = "1-5" }
+        { cards_count = #args.cards, valid_range = "1-3" }
       )
       return
     end
@@ -1202,7 +1202,7 @@ API.functions["use_consumable"] = function(args)
   -- Check if the consumable can be used
   if not consumable_card:can_use_consumeable() then
     API.send_error_response(
-      "Consumable cannot be used at this time",
+      "Consumable cannot be used at this time. Some consumables require cards to be selected first.",
       ERROR_CODES.INVALID_ACTION,
       { index = args.index }
     )
