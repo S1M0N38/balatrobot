@@ -1089,6 +1089,66 @@ API.functions["use_consumable"] = function(args)
     return
   end
 
+  -- If cards parameter is provided, handle card selection
+  if args.cards then
+    -- Validate current game state is SELECTING_HAND when cards are provided
+    if G.STATE ~= G.STATES.SELECTING_HAND then
+      API.send_error_response(
+        "Cannot use consumable with cards when not in selecting hand state",
+        ERROR_CODES.INVALID_GAME_STATE,
+        { current_state = G.STATE, required_state = G.STATES.SELECTING_HAND }
+      )
+      return
+    end
+
+    -- Validate cards is an array
+    if type(args.cards) ~= "table" then
+      API.send_error_response(
+        "Invalid parameter type for cards. Expected array, got " .. tostring(type(args.cards)),
+        ERROR_CODES.INVALID_PARAMETER,
+        { parameter = "cards", expected_type = "array" }
+      )
+      return
+    end
+
+    -- Validate number of cards is between 1 and 5 (inclusive) for consistency with play_hand_or_discard
+    if #args.cards < 1 or #args.cards > 5 then
+      API.send_error_response(
+        "Invalid number of cards. Expected 1-5, got " .. tostring(#args.cards),
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { cards_count = #args.cards, valid_range = "1-5" }
+      )
+      return
+    end
+
+    -- Convert from 0-based to 1-based indexing
+    for i, card_index in ipairs(args.cards) do
+      args.cards[i] = card_index + 1
+    end
+
+    -- Check that all cards exist and are selectable
+    for _, card_index in ipairs(args.cards) do
+      if not G.hand or not G.hand.cards or not G.hand.cards[card_index] then
+        API.send_error_response(
+          "Invalid card index",
+          ERROR_CODES.INVALID_CARD_INDEX,
+          { card_index = card_index - 1, hand_size = G.hand and G.hand.cards and #G.hand.cards or 0 }
+        )
+        return
+      end
+    end
+
+    -- Clear any existing highlights before selecting new cards
+    if G.hand then
+      G.hand:unhighlight_all()
+    end
+
+    -- Select cards for the consumable to target
+    for _, card_index in ipairs(args.cards) do
+      G.hand.cards[card_index]:click()
+    end
+  end
+
   -- Validate that consumables exist
   if not G.consumeables or not G.consumeables.cards or #G.consumeables.cards == 0 then
     API.send_error_response(
