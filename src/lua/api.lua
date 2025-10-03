@@ -1105,66 +1105,6 @@ API.functions["use_consumable"] = function(args)
     return
   end
 
-  -- If cards parameter is provided, handle card selection
-  if args.cards then
-    -- Validate current game state is SELECTING_HAND when cards are provided
-    if G.STATE ~= G.STATES.SELECTING_HAND then
-      API.send_error_response(
-        "Cannot use consumable with cards when there are no cards to select. Expects SELECTING_HAND state.",
-        ERROR_CODES.INVALID_GAME_STATE,
-        { current_state = G.STATE, required_state = G.STATES.SELECTING_HAND }
-      )
-      return
-    end
-
-    -- Validate cards is an array
-    if type(args.cards) ~= "table" then
-      API.send_error_response(
-        "Invalid parameter type for cards. Expected array, got " .. tostring(type(args.cards)),
-        ERROR_CODES.INVALID_PARAMETER,
-        { parameter = "cards", expected_type = "array" }
-      )
-      return
-    end
-
-    -- Validate number of cards is between 1 and 5 (inclusive) for consistency with play_hand_or_discard
-    if #args.cards < 1 or #args.cards > 3 then
-      API.send_error_response(
-        "Invalid number of cards. Expected 1-3, got " .. tostring(#args.cards),
-        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
-        { cards_count = #args.cards, valid_range = "1-3" }
-      )
-      return
-    end
-
-    -- Convert from 0-based to 1-based indexing
-    for i, card_index in ipairs(args.cards) do
-      args.cards[i] = card_index + 1
-    end
-
-    -- Check that all cards exist and are selectable
-    for _, card_index in ipairs(args.cards) do
-      if not G.hand or not G.hand.cards or not G.hand.cards[card_index] then
-        API.send_error_response(
-          "Invalid card index",
-          ERROR_CODES.INVALID_CARD_INDEX,
-          { card_index = card_index - 1, hand_size = G.hand and G.hand.cards and #G.hand.cards or 0 }
-        )
-        return
-      end
-    end
-
-    -- Clear any existing highlights before selecting new cards
-    if G.hand then
-      G.hand:unhighlight_all()
-    end
-
-    -- Select cards for the consumable to target
-    for _, card_index in ipairs(args.cards) do
-      G.hand.cards[card_index]:click()
-    end
-  end
-
   -- Validate that consumables exist
   if not G.consumeables or not G.consumeables.cards or #G.consumeables.cards == 0 then
     API.send_error_response(
@@ -1215,13 +1155,107 @@ API.functions["use_consumable"] = function(args)
     return
   end
 
+  -- Get consumable's card requirements
+  local max_cards = consumable_card.ability.consumeable.max_highlighted
+  local min_cards = consumable_card.ability.consumeable.min_highlighted or 1
+  local consumable_name = consumable_card.ability.name or "Unknown"
+  local required_cards = max_cards ~= nil
+
+  -- Validate cards parameter type if provided
+  if args.cards ~= nil then
+    if type(args.cards) ~= "table" then
+      API.send_error_response(
+        "Invalid parameter type for cards. Expected array, got " .. tostring(type(args.cards)),
+        ERROR_CODES.INVALID_PARAMETER,
+        { parameter = "cards", expected_type = "array" }
+      )
+      return
+    end
+
+    -- Validate all elements are numbers
+    for i, card_index in ipairs(args.cards) do
+      if type(card_index) ~= "number" then
+        API.send_error_response(
+          "Invalid card index type. Expected number, got " .. tostring(type(card_index)),
+          ERROR_CODES.INVALID_PARAMETER,
+          { index = i - 1, value_type = type(card_index) }
+        )
+        return
+      end
+    end
+  end
+
+  -- The consumable does not require any card selection
+  if not required_cards and args.cards then
+    if #args.cards > 0 then
+      API.send_error_response(
+        "The selected consumable does not require card selection. Cards array must be empty or no cards array at all.",
+        ERROR_CODES.INVALID_PARAMETER,
+        { consumable_name = consumable_name }
+      )
+      return
+    end
+    -- If cards=[] (empty), that's fine, just skip the card selection logic
+  end
+
+  if required_cards then
+    if G.STATE ~= G.STATES.SELECTING_HAND then
+      API.send_error_response(
+        "Cannot use consumable with cards when there are no cards to select. Expects SELECTING_HAND state.",
+        ERROR_CODES.INVALID_GAME_STATE,
+        { current_state = G.STATE, required_state = G.STATES.SELECTING_HAND }
+      )
+      return
+    end
+
+    local num_cards = args.cards == nil and 0 or #args.cards
+    if num_cards < min_cards or num_cards > max_cards then
+      local range_msg = min_cards == max_cards and ("exactly " .. min_cards) or (min_cards .. "-" .. max_cards)
+      API.send_error_response(
+        "Invalid number of cards for "
+          .. consumable_name
+          .. ". Expected "
+          .. range_msg
+          .. ", got "
+          .. tostring(num_cards),
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { cards_count = num_cards, min_cards = min_cards, max_cards = max_cards, consumable_name = consumable_name }
+      )
+      return
+    end
+
+    -- Convert from 0-based to 1-based indexing
+    for i, card_index in ipairs(args.cards) do
+      args.cards[i] = card_index + 1
+    end
+
+    -- Check that all cards exist and are selectable
+    for _, card_index in ipairs(args.cards) do
+      if not G.hand or not G.hand.cards or not G.hand.cards[card_index] then
+        API.send_error_response(
+          "Invalid card index",
+          ERROR_CODES.INVALID_CARD_INDEX,
+          { card_index = card_index - 1, hand_size = G.hand and G.hand.cards and #G.hand.cards or 0 }
+        )
+        return
+      end
+    end
+
+    -- Clear any existing highlights before selecting new cards
+    if G.hand then
+      G.hand:unhighlight_all()
+    end
+
+    -- Select cards for the consumable to target
+    for _, card_index in ipairs(args.cards) do
+      G.hand.cards[card_index]:click()
+    end
+  end
+
   -- Check if the consumable can be used
   if not consumable_card:can_use_consumeable() then
-    API.send_error_response(
-      "Consumable cannot be used at this time. Some consumables require cards to be selected first.",
-      ERROR_CODES.INVALID_ACTION,
-      { index = args.index }
-    )
+    local error_msg = "Consumable cannot be used for unknown reason."
+    API.send_error_response(error_msg, ERROR_CODES.INVALID_ACTION, {})
     return
   end
 
