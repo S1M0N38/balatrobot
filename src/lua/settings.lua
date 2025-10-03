@@ -100,13 +100,13 @@ local function configure_balatro_speed()
     -- Graphics settings - restore normal quality
     G.SETTINGS.GRAPHICS = G.SETTINGS.GRAPHICS or {}
     G.SETTINGS.GRAPHICS.shadows = "Off" -- Always disable shadows
-    G.SETTINGS.GRAPHICS.bloom = 0 -- Always disable CRT bloom
+    G.SETTINGS.GRAPHICS.bloom = "Off" -- Always disable CRT bloom
     G.SETTINGS.GRAPHICS.crt = 0 -- Always disable CRT
     G.SETTINGS.GRAPHICS.texture_scaling = 1 -- Always disable pixel art smoothing
 
     -- Window settings - restore normal display
     G.SETTINGS.WINDOW = G.SETTINGS.WINDOW or {}
-    G.SETTINGS.WINDOW.vsync = 1
+    G.SETTINGS.WINDOW.vsync = 0
 
     -- Visual effects - enable reduced motion
     G.SETTINGS.reduced_motion = true -- Always enable reduced motion
