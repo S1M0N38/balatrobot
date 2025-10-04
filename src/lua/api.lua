@@ -984,13 +984,214 @@ API.functions["shop"] = function(args)
         API.send_response(game_state)
       end,
     }
-  -- TODO: add other shop actions (open_pack)
+  elseif action == "buy_booster" then
+    -- Validate index argument
+    if args.index == nil then
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
+      return
+    end
+
+    local area = G.shop_booster
+
+    if not area then
+      API.send_error_response("Booster area not found in shop", ERROR_CODES.INVALID_GAME_STATE, {})
+      return
+    end
+
+    -- Get booster index (1-based) and validate range
+    local card_pos = args.index + 1
+    if not area.cards or not area.cards[card_pos] then
+      API.send_error_response(
+        "Booster index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, valid_range = "0-" .. tostring(#area.cards - 1) }
+      )
+      return
+    end
+
+    local card = area.cards[card_pos]
+    -- Check affordability
+    local dollars_before = G.GAME.dollars
+    if dollars_before < card.cost then
+      API.send_error_response(
+        "Not enough dollars to buy booster",
+        ERROR_CODES.INVALID_ACTION,
+        { dollars = dollars_before, cost = card.cost }
+      )
+      return
+    end
+
+    -- Activate the booster's use button to open it
+    local open_button = card.children.buy_button and card.children.buy_button.definition
+    if not open_button then
+      API.send_error_response("Booster has no open button", ERROR_CODES.INVALID_GAME_STATE, { index = args.index })
+      return
+    end
+
+    G.FUNCS.use_card(open_button)
+
+    -- Wait until we enter a pack state
+    ---@type PendingRequest
+    API.pending_requests["shop"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS["shop"]["buy_booster"]()
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
   else
-    API.send_error_response(
-      "Invalid action for shop",
-      ERROR_CODES.INVALID_ACTION,
-      { action = action, valid_actions = { "next_round", "buy_card", "reroll" } }
-    )
+    API.send_error_response("Invalid action for shop", ERROR_CODES.INVALID_ACTION, {
+      action = action,
+      valid_actions = {
+        "next_round",
+        "buy_card",
+        "reroll",
+        "buy_and_use_card",
+        "redeem_voucher",
+        "buy_booster",
+      },
+    })
+    return
+  end
+end
+
+---Opens a booster pack and selects or skips cards
+---@param args OpenPackArgs The open pack action arguments
+API.functions["open_pack"] = function(args)
+  -- Validate required parameters
+  local success, error_message, error_code, context = validate_request(args, { "action" })
+  if not success then
+    ---@cast error_message string
+    ---@cast error_code string
+    API.send_error_response(error_message, error_code, context)
+    return
+  end
+
+  local action = args.action
+
+  if action == "select_card" then
+    -- Validate required index parameter
+    if args.index == nil then
+      API.send_error_response("Missing required field: index", ERROR_CODES.MISSING_ARGUMENTS, { field = "index" })
+      return
+    end
+
+    -- Validate that pack cards exist
+    if not G.pack_cards or not G.pack_cards.cards or #G.pack_cards.cards == 0 then
+      API.send_error_response(
+        "No pack cards available. Open a pack first using the buy_booster action from the shop.",
+        ERROR_CODES.MISSING_GAME_OBJECT,
+        { pack_cards_available = false }
+      )
+      return
+    end
+
+    -- Convert from 0-based to 1-based indexing
+    local card_index = args.index + 1
+
+    -- Validate card index is in range
+    if card_index < 1 or card_index > #G.pack_cards.cards then
+      API.send_error_response(
+        "Card index out of range",
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { index = args.index, valid_range = "0-" .. tostring(#G.pack_cards.cards - 1) }
+      )
+      return
+    end
+
+    -- Get the selected card from the pack
+    local selected_card = G.pack_cards.cards[card_index]
+
+    -- Highlight the selected card
+    -- selected_card.highlighted = true
+
+    -- If this is a consumable (Tarot/Planet/Spectral) and cards parameter is provided,
+    -- -- highlight the hand cards that the consumable will be used on
+    -- if args.cards and #args.cards > 0 and selected_card.ability and
+    --    (selected_card.ability.set == "Tarot" or selected_card.ability.set == "Planet" or selected_card.ability.set == "Spectral") then
+    --   -- Validate that hand cards exist
+    --   if not G.hand or not G.hand.cards or #G.hand.cards == 0 then
+    --     API.send_error_response(
+    --       "No hand cards available to use consumable on",
+    --       ERROR_CODES.MISSING_GAME_OBJECT,
+    --       { hand_cards_available = false }
+    --     )
+    --     return
+    --   end
+
+      -- Convert card indices from 0-based to 1-based and highlight them
+    --   for _, hand_card_index in ipairs(args.cards) do
+    --     local lua_hand_index = hand_card_index + 1
+    --     if lua_hand_index < 1 or lua_hand_index > #G.hand.cards then
+    --       API.send_error_response(
+    --         "Hand card index out of range",
+    --         ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+    --         { index = hand_card_index, valid_range = "0-" .. tostring(#G.hand.cards - 1) }
+    --       )
+    --       return
+    --     end
+    --     G.hand.cards[lua_hand_index].highlighted = true
+    --   end
+    -- end
+
+    -- Find and click the "Select" button
+    local select_button = G.pack_cards:get_UIE_by_ID("select_button")
+    if not select_button then
+      API.send_error_response("Select button not found in pack UI", ERROR_CODES.MISSING_GAME_OBJECT, {})
+      return
+    end
+
+    -- Click the select button to confirm selection
+    G.FUNCS.use_card(select_button.config.ref_table)
+
+    ---@type PendingRequest
+    API.pending_requests["open_pack"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS["open_pack"]["select_cards"]()
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+  elseif action == "skip" then
+    -- Validate that pack cards exist
+    if not G.pack_cards or not G.pack_cards.cards then
+      API.send_error_response(
+        "No pack available to skip",
+        ERROR_CODES.MISSING_GAME_OBJECT,
+        { pack_cards_available = false }
+      )
+      return
+    end
+
+    -- Find and click the "Skip" button
+    local skip_button = G.pack_cards:get_UIE_by_ID("skip_button")
+    if not skip_button then
+      API.send_error_response("Skip button not found in pack UI", ERROR_CODES.MISSING_GAME_OBJECT, {})
+      return
+    end
+
+    -- Click the skip button
+    G.FUNCS.use_card(skip_button.config.ref_table)
+
+    ---@type PendingRequest
+    API.pending_requests["open_pack"] = {
+      condition = function()
+        return utils.COMPLETION_CONDITIONS["open_pack"]["skip"]()
+      end,
+      action = function()
+        local game_state = utils.get_game_state()
+        API.send_response(game_state)
+      end,
+    }
+  else
+    API.send_error_response("Invalid action for open_pack", ERROR_CODES.INVALID_ACTION, {
+      action = action,
+      valid_actions = { "select_card", "skip" },
+    })
     return
   end
 end
@@ -1078,6 +1279,7 @@ end
 
 ---Uses a consumable at the specified index
 ---Call G.FUNCS.use_card() to use the consumable at the given index
+---Some consumables require card selection from the hand. Provide optional "cards" parameter for these.
 ---@param args UseConsumableArgs The use consumable action arguments
 API.functions["use_consumable"] = function(args)
   -- Validate required parameters
@@ -1147,6 +1349,22 @@ API.functions["use_consumable"] = function(args)
       { index = args.index }
     )
     return
+  end
+
+  -- If cards parameter is provided, select those cards from hand before using consumable
+  if args.cards and type(args.cards) == "table" and #args.cards > 0 then
+    -- Clear any existing highlights
+    if G.hand then
+      G.hand:unhighlight_all()
+    end
+
+    -- Convert from 0-based to 1-based indexing and select cards
+    for _, card_index in ipairs(args.cards) do
+      local lua_index = card_index + 1
+      if G.hand and G.hand.cards and G.hand.cards[lua_index] then
+        G.hand.cards[lua_index]:click()
+      end
+    end
   end
 
   -- Create a mock UI element to call G.FUNCS.use_card

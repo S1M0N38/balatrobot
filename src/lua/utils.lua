@@ -547,6 +547,41 @@ function utils.get_game_state()
     }
   end
 
+  local pack_cards = nil
+  if G.pack_cards then
+    local cards = {}
+    if G.pack_cards.cards then
+      for i, card in pairs(G.pack_cards.cards) do
+        cards[i] = {
+          ability = {
+            set = card.ability.set,
+            effect = card.ability.effect,
+            name = card.ability.name,
+          },
+          label = card.label,
+          cost = card.cost,
+          sell_cost = card.sell_cost,
+          sort_id = card.sort_id,
+          config = {
+            center_key = card.config.center_key,
+          },
+          debuff = card.debuff,
+          facing = card.facing,
+          highlighted = card.highlighted,
+          seal = card.seal,
+          edition = card.edition,
+        }
+      end
+    end
+    pack_cards = {
+      cards = cards,
+      config = G.pack_cards.config and {
+        card_count = G.pack_cards.config.card_count,
+        card_limit = G.pack_cards.config.card_limit,
+      } or nil,
+    }
+  end
+
   return {
     state = G.STATE,
     game = game,
@@ -556,6 +591,7 @@ function utils.get_game_state()
     shop_vouchers = shop_vouchers,
     shop_booster = shop_booster,
     consumables = consumables,
+    pack_cards = pack_cards, -- Cards available in an opened booster pack
     blinds = utils.get_blinds_info(),
   }
 end
@@ -992,6 +1028,45 @@ utils.COMPLETION_CONDITIONS = {
       local elapsed = socket.gettime() - condition_timestamps.shop_redeem_voucher
       return elapsed > 0.10
     end,
+    buy_booster = function()
+      -- Check if we've left the shop state (pack purchase initiated)
+      -- Then wait for pack_cards to be ready
+      -- State 999 is used for all pack types by the mod injector
+
+      -- First, check if we've left the shop
+      local left_shop = G.STATE ~= G.STATES.SHOP
+
+      if not left_shop then
+        -- Still in shop, keep waiting
+        condition_timestamps.shop_buy_booster = nil
+        return false
+      end
+
+      -- We've left the shop, now check if pack_cards exists and is ready
+      local pack_cards_ready = G.pack_cards and G.pack_cards.cards and #G.pack_cards.cards > 0
+
+      -- State 999 is the universal pack state
+      local in_pack_state = G.STATE == 999
+      local base_condition = in_pack_state
+        and pack_cards_ready
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Not ready yet, keep waiting
+        condition_timestamps.shop_buy_booster = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.shop_buy_booster then
+        condition_timestamps.shop_buy_booster = socket.gettime()
+      end
+
+      -- Check if 0.5 seconds have passed to ensure pack is fully loaded
+      local elapsed = socket.gettime() - condition_timestamps.shop_buy_booster
+      return elapsed > 0.50
+    end,
   },
   sell_joker = {
     [""] = function()
@@ -1079,6 +1154,54 @@ utils.COMPLETION_CONDITIONS = {
       -- Check if 0.5 seconds have passed (nature of start_run)
       local elapsed = socket.gettime() - condition_timestamps.load_save
       return elapsed > 0.50
+    end,
+  },
+  open_pack = {
+    ["select_cards"] = function()
+      -- Check if we've left the pack state and returned to a normal game state
+      -- State 999 is the universal pack state
+
+      local base_condition = G.STATE ~= 999
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.open_pack_select = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.open_pack_select then
+        condition_timestamps.open_pack_select = socket.gettime()
+      end
+
+      -- Check if 0.2 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.open_pack_select
+      return elapsed > 0.20
+    end,
+    ["skip"] = function()
+      -- Check if we've left the pack state
+      -- State 999 is the universal pack state
+
+      local base_condition = G.STATE ~= 999
+        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
+        and G.STATE_COMPLETE
+
+      if not base_condition then
+        -- Reset timestamp if base condition is not met
+        condition_timestamps.open_pack_skip = nil
+        return false
+      end
+
+      -- Base condition is met, start timing
+      if not condition_timestamps.open_pack_skip then
+        condition_timestamps.open_pack_skip = socket.gettime()
+      end
+
+      -- Check if 0.1 seconds have passed
+      local elapsed = socket.gettime() - condition_timestamps.open_pack_skip
+      return elapsed > 0.10
     end,
   },
 }
