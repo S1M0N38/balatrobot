@@ -80,6 +80,10 @@
 ---@class SellConsumableArgs
 ---@field index number The index of the consumable to sell (0-based)
 
+---@class UseConsumableArgs
+---@field index number The index of the consumable to use (0-based)
+---@field cards? number[] Optional array of card indices to target (0-based)
+
 ---@class LoadSaveArgs
 ---@field save_path string Path to the save file relative to Love2D save directory (e.g., "3/save.jkr")
 

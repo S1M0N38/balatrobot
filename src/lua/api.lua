@@ -112,22 +112,38 @@ function API.update(_)
     if raw_data then
       local ok, data = pcall(json.decode, raw_data)
       if not ok then
-        API.send_error_response("Invalid JSON", ERROR_CODES.INVALID_JSON)
+        API.send_error_response(
+          "Invalid JSON: message could not be parsed. Send one JSON object per line with fields 'name' and 'arguments'",
+          ERROR_CODES.INVALID_JSON,
+          nil
+        )
         return
       end
       ---@cast data APIRequest
       if data.name == nil then
-        API.send_error_response("Message must contain a name", ERROR_CODES.MISSING_NAME)
+        API.send_error_response(
+          "Message must contain a name. Include a 'name' field, e.g. 'get_game_state'",
+          ERROR_CODES.MISSING_NAME,
+          nil
+        )
       elseif data.arguments == nil then
-        API.send_error_response("Message must contain arguments", ERROR_CODES.MISSING_ARGUMENTS)
+        API.send_error_response(
+          "Message must contain arguments. Include an 'arguments' object (use {} if no parameters)",
+          ERROR_CODES.MISSING_ARGUMENTS,
+          nil
+        )
       else
         local func = API.functions[data.name]
         local args = data.arguments
         if func == nil then
-          API.send_error_response("Unknown function name", ERROR_CODES.UNKNOWN_FUNCTION, { name = data.name })
+          API.send_error_response(
+            "Unknown function name. See docs for supported names. Common calls: 'get_game_state', 'start_run', 'shop', 'play_hand_or_discard'",
+            ERROR_CODES.UNKNOWN_FUNCTION,
+            { name = data.name }
+          )
         elseif type(args) ~= "table" then
           API.send_error_response(
-            "Arguments must be a table",
+            "Arguments must be a table. The 'arguments' field must be a JSON object/table (use {} if empty)",
             ERROR_CODES.INVALID_ARGUMENTS,
             { received_type = type(args) }
           )
@@ -301,9 +317,9 @@ API.functions["skip_or_select_blind"] = function(args)
   -- Validate current game state is appropriate for blind selection
   if G.STATE ~= G.STATES.BLIND_SELECT then
     API.send_error_response(
-      "Cannot skip or select blind when not in blind selection",
+      "Cannot skip or select blind when not in blind selection. Wait until gamestate is BLIND_SELECT, or call 'shop' with action 'next_round' to advance out of the shop. Use 'get_game_state' to check the current state.",
       ERROR_CODES.INVALID_GAME_STATE,
-      { current_state = G.STATE }
+      { current_state = G.STATE, expected_state = G.STATES.BLIND_SELECT }
     )
     return
   end
@@ -380,9 +396,9 @@ API.functions["play_hand_or_discard"] = function(args)
   -- Validate current game state is appropriate for playing hand or discarding
   if G.STATE ~= G.STATES.SELECTING_HAND then
     API.send_error_response(
-      "Cannot play hand or discard when not selecting hand",
+      "Cannot play hand or discard when not in selecting hand state. First select the blind: call 'skip_or_select_blind' with action 'select' when selecting blind. Use 'get_game_state' to verify.",
       ERROR_CODES.INVALID_GAME_STATE,
-      { current_state = G.STATE }
+      { current_state = G.STATE, expected_state = G.STATES.SELECTING_HAND }
     )
     return
   end
@@ -399,7 +415,7 @@ API.functions["play_hand_or_discard"] = function(args)
 
   if args.action == "discard" and G.GAME.current_round.discards_left == 0 then
     API.send_error_response(
-      "No discards left to perform discard",
+      "No discards left to perform discard. Play a hand or advance the round; discards will reset next round.",
       ERROR_CODES.NO_DISCARDS_LEFT,
       { discards_left = G.GAME.current_round.discards_left }
     )
@@ -476,10 +492,10 @@ API.functions["rearrange_hand"] = function(args)
   -- Validate current game state is appropriate for rearranging cards
   if G.STATE ~= G.STATES.SELECTING_HAND then
     API.send_error_response(
-      "Cannot rearrange hand when not selecting hand",
-      ERROR_CODES.INVALID_GAME_STATE,
-      { current_state = G.STATE }
-    )
+        "Cannot rearrange hand when not selecting hand. You can only rearrange while selecting your hand. You can check the current gamestate with 'get_game_state'.",
+        ERROR_CODES.INVALID_GAME_STATE,
+        { current_state = G.STATE, expected_state = G.STATES.SELECTING_HAND }
+      )
     return
   end
 
@@ -692,9 +708,9 @@ API.functions["cash_out"] = function(_)
   -- Validate current game state is appropriate for cash out
   if G.STATE ~= G.STATES.ROUND_EVAL then
     API.send_error_response(
-      "Cannot cash out when not in round evaluation",
+      "Cannot cash out when not in round evaluation. Finish playing the hand to reach ROUND_EVAL first.",
       ERROR_CODES.INVALID_GAME_STATE,
-      { current_state = G.STATE }
+      { current_state = G.STATE, expected_state = G.STATES.ROUND_EVAL }
     )
     return
   end
@@ -726,9 +742,9 @@ API.functions["shop"] = function(args)
   -- Validate current game state is appropriate for shop
   if G.STATE ~= G.STATES.SHOP then
     API.send_error_response(
-      "Cannot select shop action when not in shop",
+      "Cannot select shop action when not in shop. Reach the shop by calling 'cash_out' during ROUND_EVAL, or finish a hand to enter evaluation.",
       ERROR_CODES.INVALID_GAME_STATE,
-      { current_state = G.STATE }
+      { current_state = G.STATE, expected_state = G.STATES.SHOP }
     )
     return
   end
@@ -771,7 +787,7 @@ API.functions["shop"] = function(args)
     -- Check if the card can be afforded
     if card.cost > G.GAME.dollars then
       API.send_error_response(
-        "Card is not affordable",
+        "Card is not affordable, choose a purchasable card or advance with 'shop' with action 'next_round'.",
         ERROR_CODES.INVALID_ACTION,
         { index = args.index, cost = card.cost, dollars = G.GAME.dollars }
       )
@@ -843,7 +859,7 @@ API.functions["shop"] = function(args)
 
     if dollars_before < reroll_cost then
       API.send_error_response(
-        "Not enough dollars to reroll",
+        "Not enough dollars to reroll. You may use the 'shop' function with action 'next_round' to advance to the next round.",
         ERROR_CODES.INVALID_ACTION,
         { dollars = dollars_before, reroll_cost = reroll_cost }
       )
@@ -942,7 +958,7 @@ API.functions["shop"] = function(args)
     -- Check if the card can be afforded
     if card.cost > G.GAME.dollars then
       API.send_error_response(
-        "Card is not affordable",
+        "Card is not affordable. Choose a cheaper card or advance with 'shop' with action 'next_round'.",
         ERROR_CODES.INVALID_ACTION,
         { index = args.index, cost = card.cost, dollars = G.GAME.dollars }
       )
@@ -1341,13 +1357,107 @@ API.functions["use_consumable"] = function(args)
     return
   end
 
+  -- Get consumable's card requirements
+  local max_cards = consumable_card.ability.consumeable.max_highlighted
+  local min_cards = consumable_card.ability.consumeable.min_highlighted or 1
+  local consumable_name = consumable_card.ability.name or "Unknown"
+  local required_cards = max_cards ~= nil
+
+  -- Validate cards parameter type if provided
+  if args.cards ~= nil then
+    if type(args.cards) ~= "table" then
+      API.send_error_response(
+        "Invalid parameter type for cards. Expected array, got " .. tostring(type(args.cards)),
+        ERROR_CODES.INVALID_PARAMETER,
+        { parameter = "cards", expected_type = "array" }
+      )
+      return
+    end
+
+    -- Validate all elements are numbers
+    for i, card_index in ipairs(args.cards) do
+      if type(card_index) ~= "number" then
+        API.send_error_response(
+          "Invalid card index type. Expected number, got " .. tostring(type(card_index)),
+          ERROR_CODES.INVALID_PARAMETER,
+          { index = i - 1, value_type = type(card_index) }
+        )
+        return
+      end
+    end
+  end
+
+  -- The consumable does not require any card selection
+  if not required_cards and args.cards then
+    if #args.cards > 0 then
+      API.send_error_response(
+        "The selected consumable does not require card selection. Cards array must be empty or no cards array at all.",
+        ERROR_CODES.INVALID_PARAMETER,
+        { consumable_name = consumable_name }
+      )
+      return
+    end
+    -- If cards=[] (empty), that's fine, just skip the card selection logic
+  end
+
+  if required_cards then
+    if G.STATE ~= G.STATES.SELECTING_HAND then
+      API.send_error_response(
+        "Cannot use consumable with cards when there are no cards to select. Expects SELECTING_HAND state.",
+        ERROR_CODES.INVALID_GAME_STATE,
+        { current_state = G.STATE, required_state = G.STATES.SELECTING_HAND }
+      )
+      return
+    end
+
+    local num_cards = args.cards == nil and 0 or #args.cards
+    if num_cards < min_cards or num_cards > max_cards then
+      local range_msg = min_cards == max_cards and ("exactly " .. min_cards) or (min_cards .. "-" .. max_cards)
+      API.send_error_response(
+        "Invalid number of cards for "
+          .. consumable_name
+          .. ". Expected "
+          .. range_msg
+          .. ", got "
+          .. tostring(num_cards),
+        ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+        { cards_count = num_cards, min_cards = min_cards, max_cards = max_cards, consumable_name = consumable_name }
+      )
+      return
+    end
+
+    -- Convert from 0-based to 1-based indexing
+    for i, card_index in ipairs(args.cards) do
+      args.cards[i] = card_index + 1
+    end
+
+    -- Check that all cards exist and are selectable
+    for _, card_index in ipairs(args.cards) do
+      if not G.hand or not G.hand.cards or not G.hand.cards[card_index] then
+        API.send_error_response(
+          "Invalid card index",
+          ERROR_CODES.INVALID_CARD_INDEX,
+          { card_index = card_index - 1, hand_size = G.hand and G.hand.cards and #G.hand.cards or 0 }
+        )
+        return
+      end
+    end
+
+    -- Clear any existing highlights before selecting new cards
+    if G.hand then
+      G.hand:unhighlight_all()
+    end
+
+    -- Select cards for the consumable to target
+    for _, card_index in ipairs(args.cards) do
+      G.hand.cards[card_index]:click()
+    end
+  end
+
   -- Check if the consumable can be used
   if not consumable_card:can_use_consumeable() then
-    API.send_error_response(
-      "Consumable cannot be used at this time",
-      ERROR_CODES.INVALID_ACTION,
-      { index = args.index }
-    )
+    local error_msg = "Consumable cannot be used for unknown reason."
+    API.send_error_response(error_msg, ERROR_CODES.INVALID_ACTION, {})
     return
   end
 

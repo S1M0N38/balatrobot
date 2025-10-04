@@ -34,7 +34,9 @@ class TestProtocolErrors:
 
         response = receive_api_message(tcp_client)
         assert_error_response(
-            response, "Invalid JSON", expected_error_code=ErrorCode.INVALID_JSON.value
+            response,
+            "Invalid JSON",
+            expected_error_code=ErrorCode.INVALID_JSON.value,
         )
 
     def test_missing_name_field_error(self, tcp_client: socket.socket) -> None:
@@ -148,7 +150,9 @@ class TestProtocolErrors:
         tcp_client.send(b"{ invalid }\n")
         response1 = receive_api_message(tcp_client)
         assert_error_response(
-            response1, "Invalid JSON", expected_error_code=ErrorCode.INVALID_JSON.value
+            response1,
+            "Invalid JSON",
+            expected_error_code=ErrorCode.INVALID_JSON.value,
         )
 
         # 2. Missing name
