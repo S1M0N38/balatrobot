@@ -1461,22 +1461,6 @@ API.functions["use_consumable"] = function(args)
     return
   end
 
-  -- If cards parameter is provided, select those cards from hand before using consumable
-  if args.cards and type(args.cards) == "table" and #args.cards > 0 then
-    -- Clear any existing highlights
-    if G.hand then
-      G.hand:unhighlight_all()
-    end
-
-    -- Convert from 0-based to 1-based indexing and select cards
-    for _, card_index in ipairs(args.cards) do
-      local lua_index = card_index + 1
-      if G.hand and G.hand.cards and G.hand.cards[lua_index] then
-        G.hand.cards[lua_index]:click()
-      end
-    end
-  end
-
   -- Create a mock UI element to call G.FUNCS.use_card
   local mock_element = {
     config = {
