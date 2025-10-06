@@ -66,10 +66,13 @@
 ---@field consumables number[] Array of consumable indices for every consumable (0-based)
 
 ---@class ShopActionArgs
----@field action "next_round" | "buy_card" | "reroll" | "redeem_voucher" | "buy_and_use_card" The action to perform
----@field index? number The index of the card to act on (buy, buy_and_use, redeem, open) (0-based)
+---@field action "next_round" | "buy_card" | "reroll" | "redeem_voucher" | "buy_and_use_card" | "buy_booster" The action to perform
+---@field index? number The index of the card to act on (buy, buy_and_use, redeem, buy_booster) (0-based)
 
--- TODO: add the other action "open_pack"
+---@class OpenPackArgs
+---@field action "select_card" | "skip" The action to perform on the pack
+---@field index? number The index of the card to select from the pack (0-based, required for select_card)
+---@field cards? number[] Array of hand card indices to use the consumable on (0-based, optional, only for consumables)
 
 ---@class SellJokerArgs
 ---@field index number The index of the joker to sell (0-based)
