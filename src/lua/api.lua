@@ -492,10 +492,10 @@ API.functions["rearrange_hand"] = function(args)
   -- Validate current game state is appropriate for rearranging cards
   if G.STATE ~= G.STATES.SELECTING_HAND then
     API.send_error_response(
-        "Cannot rearrange hand when not selecting hand. You can only rearrange while selecting your hand. You can check the current gamestate with 'get_game_state'.",
-        ERROR_CODES.INVALID_GAME_STATE,
-        { current_state = G.STATE, expected_state = G.STATES.SELECTING_HAND }
-      )
+      "Cannot rearrange hand when not selecting hand. You can only rearrange while selecting your hand. You can check the current gamestate with 'get_game_state'.",
+      ERROR_CODES.INVALID_GAME_STATE,
+      { current_state = G.STATE, expected_state = G.STATES.SELECTING_HAND }
+    )
     return
   end
 
