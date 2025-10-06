@@ -1063,9 +1063,12 @@ utils.COMPLETION_CONDITIONS = {
         condition_timestamps.shop_buy_booster = socket.gettime()
       end
 
-      -- Check if 0.5 seconds have passed to ensure pack is fully loaded
+      -- Wait for pack cards to be fully emplaced (cards are added in delayed events)
+      -- The game uses 1.3*sqrt(GAMESPEED) delays twice before emplacing cards
+      -- At default speed (GAMESPEED=1), this is ~2.6s total
+      -- We need to wait longer to ensure cards are fully loaded
       local elapsed = socket.gettime() - condition_timestamps.shop_buy_booster
-      return elapsed > 0.50
+      return elapsed > 1.50
     end,
   },
   sell_joker = {
@@ -1161,9 +1164,7 @@ utils.COMPLETION_CONDITIONS = {
       -- Check if we've left the pack state and returned to a normal game state
       -- State 999 is the universal pack state
 
-      local base_condition = G.STATE ~= 999
-        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-        and G.STATE_COMPLETE
+      local base_condition = G.STATE ~= 999 and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
 
       if not base_condition then
         -- Reset timestamp if base condition is not met
@@ -1184,9 +1185,7 @@ utils.COMPLETION_CONDITIONS = {
       -- Check if we've left the pack state
       -- State 999 is the universal pack state
 
-      local base_condition = G.STATE ~= 999
-        and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD
-        and G.STATE_COMPLETE
+      local base_condition = G.STATE ~= 999 and #G.E_MANAGER.queues.base < EVENT_QUEUE_THRESHOLD and G.STATE_COMPLETE
 
       if not base_condition then
         -- Reset timestamp if base condition is not met

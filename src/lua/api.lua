@@ -1116,51 +1116,133 @@ API.functions["open_pack"] = function(args)
       )
       return
     end
-
     -- Get the selected card from the pack
     local selected_card = G.pack_cards.cards[card_index]
 
-    -- Highlight the selected card
-    -- selected_card.highlighted = true
-
-    -- If this is a consumable (Tarot/Planet/Spectral) and cards parameter is provided,
-    -- -- highlight the hand cards that the consumable will be used on
-    -- if args.cards and #args.cards > 0 and selected_card.ability and
-    --    (selected_card.ability.set == "Tarot" or selected_card.ability.set == "Planet" or selected_card.ability.set == "Spectral") then
-    --   -- Validate that hand cards exist
-    --   if not G.hand or not G.hand.cards or #G.hand.cards == 0 then
-    --     API.send_error_response(
-    --       "No hand cards available to use consumable on",
-    --       ERROR_CODES.MISSING_GAME_OBJECT,
-    --       { hand_cards_available = false }
-    --     )
-    --     return
-    --   end
-
-      -- Convert card indices from 0-based to 1-based and highlight them
-    --   for _, hand_card_index in ipairs(args.cards) do
-    --     local lua_hand_index = hand_card_index + 1
-    --     if lua_hand_index < 1 or lua_hand_index > #G.hand.cards then
-    --       API.send_error_response(
-    --         "Hand card index out of range",
-    --         ERROR_CODES.PARAMETER_OUT_OF_RANGE,
-    --         { index = hand_card_index, valid_range = "0-" .. tostring(#G.hand.cards - 1) }
-    --       )
-    --       return
-    --     end
-    --     G.hand.cards[lua_hand_index].highlighted = true
-    --   end
-    -- end
-
-    -- Find and click the "Select" button
-    local select_button = G.pack_cards:get_UIE_by_ID("select_button")
-    if not select_button then
-      API.send_error_response("Select button not found in pack UI", ERROR_CODES.MISSING_GAME_OBJECT, {})
-      return
+    -- Check if the card can be selected (for jokers, check space availability)
+    if selected_card.ability.set == "Joker" then
+      -- Check if there's room for the joker (or if it has negative edition which doesn't take space)
+      local has_negative = selected_card.edition and selected_card.edition.negative
+      if not has_negative and #G.jokers.cards >= G.jokers.config.card_limit then
+        API.send_error_response(
+          "Cannot select joker: joker slots are full",
+          ERROR_CODES.INVALID_ACTION,
+          { index = args.index, joker_slots_full = true }
+        )
+        return
+      end
     end
 
-    -- Click the select button to confirm selection
-    G.FUNCS.use_card(select_button.config.ref_table)
+    -- Handle consumables (Tarot/Planet/Spectral) that require card selection
+    if selected_card.ability.consumeable then
+      -- Get consumable's card requirements
+      local max_cards = selected_card.ability.consumeable.max_highlighted
+      local min_cards = selected_card.ability.consumeable.min_highlighted or 1
+      local consumable_name = selected_card.ability.name or "Unknown"
+      local required_cards = max_cards ~= nil
+
+      -- Validate cards parameter type if provided
+      if args.cards ~= nil then
+        if type(args.cards) ~= "table" then
+          API.send_error_response(
+            "Invalid parameter type for cards. Expected array, got " .. tostring(type(args.cards)),
+            ERROR_CODES.INVALID_PARAMETER,
+            { parameter = "cards", expected_type = "array" }
+          )
+          return
+        end
+
+        -- Validate all elements are numbers
+        for i, card_idx in ipairs(args.cards) do
+          if type(card_idx) ~= "number" then
+            API.send_error_response(
+              "Invalid card index type. Expected number, got " .. tostring(type(card_idx)),
+              ERROR_CODES.INVALID_PARAMETER,
+              { index = i - 1, value_type = type(card_idx) }
+            )
+            return
+          end
+        end
+      end
+
+      -- The consumable does not require any card selection
+      if not required_cards and args.cards then
+        if #args.cards > 0 then
+          API.send_error_response(
+            "The selected consumable does not require card selection. Cards array must be empty or no cards array at all.",
+            ERROR_CODES.INVALID_PARAMETER,
+            { consumable_name = consumable_name }
+          )
+          return
+        end
+        -- If cards=[] (empty), that's fine, just skip the card selection logic
+      end
+
+      if required_cards then
+        if G.STATE ~= 999 then
+          API.send_error_response(
+            "Cannot use consumable with cards when not in pack state. Pack state is required for card selection.",
+            ERROR_CODES.INVALID_GAME_STATE,
+            { current_state = G.STATE, required_state = 999 }
+          )
+          return
+        end
+
+        local num_cards = args.cards == nil and 0 or #args.cards
+        if num_cards < min_cards or num_cards > max_cards then
+          local range_msg = min_cards == max_cards and ("exactly " .. min_cards) or (min_cards .. "-" .. max_cards)
+          API.send_error_response(
+            "Invalid number of cards for "
+              .. consumable_name
+              .. ". Expected "
+              .. range_msg
+              .. ", got "
+              .. tostring(num_cards),
+            ERROR_CODES.PARAMETER_OUT_OF_RANGE,
+            { cards_count = num_cards, min_cards = min_cards, max_cards = max_cards, consumable_name = consumable_name }
+          )
+          return
+        end
+
+        -- Convert from 0-based to 1-based indexing
+        local hand_cards = {}
+        for i, card_idx in ipairs(args.cards) do
+          hand_cards[i] = card_idx + 1
+        end
+
+        -- Check that all cards exist and are selectable
+        for _, hand_card_index in ipairs(hand_cards) do
+          if not G.hand or not G.hand.cards or not G.hand.cards[hand_card_index] then
+            API.send_error_response(
+              "Invalid card index",
+              ERROR_CODES.INVALID_CARD_INDEX,
+              { card_index = hand_card_index - 1, hand_size = G.hand and G.hand.cards and #G.hand.cards or 0 }
+            )
+            return
+          end
+        end
+
+        -- Clear any existing highlights before selecting new cards
+        if G.hand then
+          G.hand:unhighlight_all()
+        end
+
+        -- Select cards for the consumable to target
+        for _, hand_card_index in ipairs(hand_cards) do
+          G.hand.cards[hand_card_index]:click()
+        end
+      end
+    end
+
+    -- Use the card directly by calling G.FUNCS.use_card with a mock UI element
+    -- This is the same pattern used throughout the Balatro codebase for programmatic card usage
+    local mock_element = {
+      config = {
+        ref_table = selected_card,
+      },
+    }
+
+    G.FUNCS.use_card(mock_element)
 
     ---@type PendingRequest
     API.pending_requests["open_pack"] = {
@@ -1183,15 +1265,10 @@ API.functions["open_pack"] = function(args)
       return
     end
 
-    -- Find and click the "Skip" button
-    local skip_button = G.pack_cards:get_UIE_by_ID("skip_button")
-    if not skip_button then
-      API.send_error_response("Skip button not found in pack UI", ERROR_CODES.MISSING_GAME_OBJECT, {})
-      return
-    end
-
-    -- Click the skip button
-    G.FUNCS.use_card(skip_button.config.ref_table)
+    -- Call the skip_booster function directly
+    -- The skip button doesn't have a simple ID we can look up,
+    -- so we use the skip_booster function which is what the button calls anyway
+    G.FUNCS.skip_booster({})
 
     ---@type PendingRequest
     API.pending_requests["open_pack"] = {
