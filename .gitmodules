@@ -1,6 +1,3 @@
 [submodule "docs/steamodded"]
 	path = docs/steamodded
 	url = git@github.com:Steamodded/smods.wiki.git
-[submodule "balatro"]
-	path = balatro
-	url = git@github.com:S1M0N38/balatro-docs.git
