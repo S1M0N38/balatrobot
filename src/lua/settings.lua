@@ -27,6 +27,7 @@ end
 local function configure_balatro_speed()
   -- Skip intro and splash screens
   G.SETTINGS.skip_splash = "Yes"
+  G.F_SKIP_TUTORIAL = true
 
   -- Configure audio based on --audio flag
   if config.audio then
