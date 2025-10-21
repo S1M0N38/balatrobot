@@ -3,6 +3,7 @@ local headless = os.getenv("BALATROBOT_HEADLESS") == "1"
 local fast = os.getenv("BALATROBOT_FAST") == "1"
 local audio = os.getenv("BALATROBOT_AUDIO") == "1"
 local port = os.getenv("BALATROBOT_PORT")
+local host = os.getenv("BALATROBOT_HOST")
 
 SETTINGS = {}
 
@@ -184,6 +185,7 @@ end
 -- Main setup function
 SETTINGS.setup = function()
   G.BALATROBOT_PORT = port or "12346"
+  G.BALATROBOT_HOST = host or "127.0.0.1"
 
   -- Apply Love2D performance patches
   apply_love_patches()

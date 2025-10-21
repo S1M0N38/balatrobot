@@ -75,8 +75,9 @@ function API.update(_)
     end
 
     API.server_socket:settimeout(SOCKET_TIMEOUT)
+    local host = G.BALATROBOT_HOST or "127.0.0.1"
     local port = G.BALATROBOT_PORT
-    local success, err = API.server_socket:bind("127.0.0.1", tonumber(port) or 12346)
+    local success, err = API.server_socket:bind(host, tonumber(port) or 12346)
     if not success then
       sendErrorMessage("Failed to bind to port " .. port .. ": " .. tostring(err), "API")
       API.server_socket = nil
@@ -84,7 +85,7 @@ function API.update(_)
     end
 
     API.server_socket:listen(1)
-    sendDebugMessage("TCP server socket created on port " .. port, "API")
+    sendDebugMessage("TCP server socket created on " .. host .. ":" .. port, "API")
   end
 
   -- Accept client connection if we don't have one

@@ -6,9 +6,20 @@ This document provides the TCP API protocol reference for developers who want to
 
 The BalatroBot API establishes a TCP socket connection to communicate with the Balatro game through the BalatroBot Lua mod. The protocol uses a simple JSON request-response model for synchronous communication.
 
-- **Host:** `127.0.0.1` (localhost)
-- **Port:** `12346` (default)
+- **Host:** `127.0.0.1` (default, configurable via `BALATROBOT_HOST`)
+- **Port:** `12346` (default, configurable via `BALATROBOT_PORT`)
 - **Message Format:** JSON
+
+### Configuration
+
+The API server can be configured using environment variables:
+
+- `BALATROBOT_HOST`: The network interface to bind to (default: `127.0.0.1`)
+    - `127.0.0.1`: Localhost only (secure for local development)
+    - `*` or `0.0.0.0`: All network interfaces (required for Docker or remote access)
+- `BALATROBOT_PORT`: The TCP port to listen on (default: `12346`)
+- `BALATROBOT_HEADLESS`: Enable headless mode (`1` to enable)
+- `BALATROBOT_FAST`: Enable fast mode for faster gameplay (`1` to enable)
 
 ### Communication Sequence
 
