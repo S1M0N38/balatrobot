@@ -1,9 +1,9 @@
 site_name: BalatroBot
 site_description: A bot framework for Balatro
 site_author: 'S1M0N38'
-repo_name: 'S1M0N38/balatrobot'
-repo_url: https://github.com/S1M0N38/balatrobot
-site_url: https://s1m0n38.github.io/balatrobot/
+repo_name: 'coder/balatrobot'
+repo_url: https://github.com/coder/balatrobot
+site_url: https://coder.github.io/balatrobot/
 docs_dir: docs/
 theme:
   name: material

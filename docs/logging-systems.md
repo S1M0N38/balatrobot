@@ -40,7 +40,7 @@ Files are saved as: `{mod_path}/runs/YYYYMMDDTHHMMSS.jsonl`
         )
     ```
 
-Examples for runs can be found in the [test suite](https://github.com/S1M0N38/balatrobot/tree/main/tests/runs).
+Examples for runs can be found in the [test suite](https://github.com/coder/balatrobot/tree/main/tests/runs).
 
 ### Format Specification
 

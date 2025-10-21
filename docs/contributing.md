@@ -6,7 +6,7 @@ BalatroBot uses a dual-architecture approach with a Python framework that commun
 
 ## Project Status & Priorities
 
-We track all development work using the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7). This is the best place to see current priorities, ongoing work, and opportunities for contribution.
+We track all development work using the [BalatroBot GitHub Project](https://github.com/orgs/coder/projects). This is the best place to see current priorities, ongoing work, and opportunities for contribution.
 
 ## Getting Started
 
@@ -72,7 +72,7 @@ Before contributing, ensure you have:
 
 1. **Check Issues First** (Highly Encouraged)
 
-    - Browse the [BalatroBot GitHub Project](https://github.com/users/S1M0N38/projects/7)
+    - Browse the [BalatroBot GitHub Project](https://github.com/orgs/coder/projects)
     - Comment on issues you'd like to work on
     - Create new issues for bugs or feature requests
 

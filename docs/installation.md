@@ -22,7 +22,7 @@ BalatroBot is installed like any other Steamodded mod.
     cd %AppData%/Balatro
     mkdir -p Mods
     cd Mods
-    git clone https://github.com/S1M0N38/balatrobot.git
+    git clone https://github.com/coder/balatrobot.git
     ```
 
 === "MacOS"
@@ -31,7 +31,7 @@ BalatroBot is installed like any other Steamodded mod.
     cd "/Users/$USER/Library/Application Support/Balatro"
     mkdir -p Mods
     cd Mods
-    git clone https://github.com/S1M0N38/balatrobot.git
+    git clone https://github.com/coder/balatrobot.git
     ```
 
 === "Linux"
@@ -40,7 +40,7 @@ BalatroBot is installed like any other Steamodded mod.
     cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro
     mkdir -p Mods
     cd Mods
-    git clone https://github.com/S1M0N38/balatrobot.git
+    git clone https://github.com/coder/balatrobot.git
     ```
 
 !!! tip
@@ -53,7 +53,7 @@ BalatroBot is installed like any other Steamodded mod.
         ```sh
         # Clone repository to a custom location
         cd C:\your\custom\path
-        git clone https://github.com/S1M0N38/balatrobot.git
+        git clone https://github.com/coder/balatrobot.git
 
         # Create symlink in Mods directory
         cd %AppData%/Balatro/Mods
@@ -65,7 +65,7 @@ BalatroBot is installed like any other Steamodded mod.
         ```sh
         # Clone repository to a custom location
         cd /your/custom/path
-        git clone https://github.com/S1M0N38/balatrobot.git
+        git clone https://github.com/coder/balatrobot.git
 
         # Create symlink in Mods directory
         cd "/Users/$USER/Library/Application Support/Balatro/Mods"
@@ -77,7 +77,7 @@ BalatroBot is installed like any other Steamodded mod.
         ```sh
         # Clone repository to a custom location
         cd /your/custom/path
-        git clone https://github.com/S1M0N38/balatrobot.git
+        git clone https://github.com/coder/balatrobot.git
 
         # Create symlink in Mods directory
         cd ~/.local/share/Steam/steamapps/compatdata/2379780/pfx/drive_c/users/steamuser/AppData/Roaming/Balatro/Mods
@@ -255,7 +255,7 @@ The bot is working correctly if:
 If you encounter issues during installation or testing:
 
 - **Discord Support**: Join our community at [https://discord.gg/xzBAj4JFVC](https://discord.gg/xzBAj4JFVC) for real-time help
-- **GitHub Issues**: Report bugs or request features by [opening an issue](https://github.com/S1M0N38/balatrobot/issues) on GitHub
+- **GitHub Issues**: Report bugs or request features by [opening an issue](https://github.com/coder/balatrobot/issues) on GitHub
 
 ---
 

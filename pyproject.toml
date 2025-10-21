@@ -21,10 +21,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/S1M0N38/balatrobot"
-Issues = "https://github.com/S1M0N38/balatrobot/issues"
-Repository = "https://github.com/S1M0N38/balatrobot"
-Changelog = "https://github.com/S1M0N38/balatrobot/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/coder/balatrobot"
+Issues = "https://github.com/coder/balatrobot/issues"
+Repository = "https://github.com/coder/balatrobot"
+Changelog = "https://github.com/coder/balatrobot/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
