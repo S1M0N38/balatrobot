@@ -21,6 +21,9 @@ jobs:
         with:
           token: ${{ secrets.MY_RELEASE_PLEASE_TOKEN }}
           release-type: python
+          manifest-file: .release-please-manifest.json
+          bump-minor-pre-major: true
+          # This will make the next release 0.6.0 since we're starting from 0.1.0
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.release_created }}
         with:
