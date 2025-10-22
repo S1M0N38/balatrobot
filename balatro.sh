@@ -7,6 +7,7 @@ declare -a FAILED_PORTS=()
 HEADLESS=false
 FAST=false
 AUDIO=false
+RENDER_ON_API=false
 FORCE_KILL=true
 KILL_ONLY=false
 STATUS_ONLY=false
@@ -35,14 +36,16 @@ Usage: $0 [OPTIONS]
        $0 --status
 
 Options:
-  -p, --port PORT  Specify port for Balatro instance (can be used multiple times)
-                   Default: 12346 if no port specified
-  --headless       Enable headless mode (sets BALATROBOT_HEADLESS=1)
-  --fast           Enable fast mode (sets BALATROBOT_FAST=1)
-  --audio          Enable audio (disabled by default, sets BALATROBOT_AUDIO=1)
-  --kill           Kill all running Balatro instances and exit
-  --status         Show information about running Balatro instances
-  -h, --help       Show this help message
+  -p, --port PORT    Specify port for Balatro instance (can be used multiple times)
+                     Default: 12346 if no port specified
+  --headless         Enable headless mode (sets BALATROBOT_HEADLESS=1)
+  --fast             Enable fast mode (sets BALATROBOT_FAST=1)
+  --audio            Enable audio (disabled by default, sets BALATROBOT_AUDIO=1)
+  --render-on-api    Enable on-demand rendering - draws frame only on API calls
+                     Incompatible with --headless
+  --kill             Kill all running Balatro instances and exit
+  --status           Show information about running Balatro instances
+  -h, --help         Show this help message
 
 Examples:
   $0                            # Start single instance on default port 12346
@@ -50,6 +53,7 @@ Examples:
   $0 -p 12346 -p 12347          # Start two instances on ports 12346 and 12347
   $0 --headless --fast          # Start with headless and fast mode on default port
   $0 --audio                    # Start with audio enabled on default port
+  $0 --render-on-api            # Start with on-demand rendering on default port
   $0 --kill                     # Kill all running Balatro instances
   $0 --status                   # Show running instances
 
@@ -82,6 +86,10 @@ parse_arguments() {
 			;;
 		--audio)
 			AUDIO=true
+			shift
+			;;
+		--render-on-api)
+			RENDER_ON_API=true
 			shift
 			;;
 		--kill)
@@ -134,6 +142,15 @@ parse_arguments() {
 		fi
 	done
 	PORTS=("${unique_ports[@]}")
+
+	# Validate mutually exclusive options
+	if [[ "$RENDER_ON_API" == "true" ]] && [[ "$HEADLESS" == "true" ]]; then
+		echo "Error: --render-on-api and --headless are mutually exclusive" >&2
+		echo "Choose one rendering mode:" >&2
+		echo "  --headless        No rendering at all (most efficient)" >&2
+		echo "  --render-on-api   Render only on API calls" >&2
+		exit 1
+	fi
 }
 
 # Check if a port is available
@@ -251,6 +268,9 @@ start_balatro_instance() {
 	fi
 	if [[ "$AUDIO" == "true" ]]; then
 		export BALATROBOT_AUDIO=1
+	fi
+	if [[ "$RENDER_ON_API" == "true" ]]; then
+		export BALATROBOT_RENDER_ON_API=1
 	fi
 
 	# Set up platform-specific Balatro configuration

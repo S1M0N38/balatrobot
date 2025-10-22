@@ -150,6 +150,10 @@ function API.update(_)
           )
         else
           sendDebugMessage(data.name .. "(" .. json.encode(args) .. ")", "API")
+          -- Trigger frame render if render-on-API mode is enabled
+          if G.BALATROBOT_SHOULD_RENDER ~= nil then
+            G.BALATROBOT_SHOULD_RENDER = true
+          end
           func(args)
         end
       end

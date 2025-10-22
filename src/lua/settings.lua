@@ -2,6 +2,7 @@
 local headless = os.getenv("BALATROBOT_HEADLESS") == "1"
 local fast = os.getenv("BALATROBOT_FAST") == "1"
 local audio = os.getenv("BALATROBOT_AUDIO") == "1"
+local render_on_api = os.getenv("BALATROBOT_RENDER_ON_API") == "1"
 local port = os.getenv("BALATROBOT_PORT")
 local host = os.getenv("BALATROBOT_HOST")
 
@@ -13,6 +14,7 @@ local config = {
   headless = headless,
   fast = fast,
   audio = audio,
+  render_on_api = render_on_api,
 }
 
 -- Apply Love2D patches for performance
@@ -182,8 +184,52 @@ local function configure_headless()
   sendInfoMessage("BalatroBot: Headless mode enabled - graphics rendering disabled")
 end
 
+-- Configure on-demand rendering (render only when API calls are made)
+local function configure_render_on_api()
+  if not config.render_on_api then
+    return
+  end
+
+  -- Global flag to trigger rendering
+  G.BALATROBOT_SHOULD_RENDER = false
+
+  -- Store original rendering functions
+  local original_draw = love.draw
+  local original_present = love.graphics.present
+  local did_render_this_frame = false
+
+  -- Replace love.draw to only render when flag is set
+  ---@diagnostic disable-next-line: duplicate-set-field
+  love.draw = function()
+    if G.BALATROBOT_SHOULD_RENDER then
+      original_draw()
+      did_render_this_frame = true
+      G.BALATROBOT_SHOULD_RENDER = false
+    else
+      did_render_this_frame = false
+    end
+  end
+
+  -- Replace love.graphics.present to only present when rendering happened
+  ---@diagnostic disable-next-line: duplicate-set-field
+  love.graphics.present = function()
+    if did_render_this_frame then
+      original_present()
+      did_render_this_frame = false
+    end
+  end
+
+  sendInfoMessage("BalatroBot: Render-on-API mode enabled - frames only on API calls")
+end
+
 -- Main setup function
 SETTINGS.setup = function()
+  -- Validate mutually exclusive options
+  if config.headless and config.render_on_api then
+    sendErrorMessage("--headless and --render-on-api are mutually exclusive. Choose one rendering mode.", "SETTINGS")
+    error("Configuration error: mutually exclusive rendering modes specified")
+  end
+
   G.BALATROBOT_PORT = port or "12346"
   G.BALATROBOT_HOST = host or "127.0.0.1"
 
@@ -195,4 +241,7 @@ SETTINGS.setup = function()
 
   -- Apply headless optimizations if needed
   configure_headless()
+
+  -- Apply render-on-API optimizations if needed
+  configure_render_on_api()
 end

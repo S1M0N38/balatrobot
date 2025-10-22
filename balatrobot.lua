@@ -4,13 +4,14 @@ assert(SMODS.load_file("src/lua/api.lua"))()
 assert(SMODS.load_file("src/lua/log.lua"))()
 assert(SMODS.load_file("src/lua/settings.lua"))()
 
--- Initialize API
+-- Apply all configuration and Love2D patches FIRST
+-- This must run before API.init() to set G.BALATROBOT_PORT
+SETTINGS.setup()
+
+-- Initialize API (depends on G.BALATROBOT_PORT being set)
 API.init()
 
 -- Initialize Logger
 LOG.init()
-
--- Apply all configuration and Love2D patches
-SETTINGS.setup()
 
 sendInfoMessage("BalatroBot loaded - version " .. SMODS.current_mod.version, "BALATROBOT")
