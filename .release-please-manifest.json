@@ -1,0 +1,7 @@
+{
+  ".": {
+    "release-type": "python",
+    "include-v-in-tag": true,
+    "version": "0.6.0"
+  }
+}
