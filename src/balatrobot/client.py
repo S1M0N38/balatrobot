@@ -479,5 +479,5 @@ class BalatroClient:
         else:
             source_path = Path(screenshot_response["path"])
             dest_path = path
-            source_path.rename(dest_path)
+            shutil.move(source_path, dest_path)
             return dest_path
