@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/coder/balatrobot/compare/v0.6.1...v0.7.0) (2025-10-23)
+
+
+### Features
+
+* add new description field to card objects ([0a55df6](https://github.com/coder/balatrobot/commit/0a55df6bd6f5923f397197be729e681ea272a37f))
+
+
+### Bug Fixes
+
+* typo in field in game state ([3f111b2](https://github.com/coder/balatrobot/commit/3f111b283a2578412b34a4e36b19201107e0bd0d))
+
 ## [0.6.1](https://github.com/coder/balatrobot/compare/v0.6.0...v0.6.1) (2025-10-23)
 
 
