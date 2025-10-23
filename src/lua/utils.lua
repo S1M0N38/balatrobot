@@ -323,6 +323,7 @@ function utils.get_game_state()
             set = card.ability.set,
           },
           label = card.label,
+          descriptoin = utils.get_card_ui_description(card),
           cost = card.cost,
           sell_cost = card.sell_cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
@@ -356,6 +357,7 @@ function utils.get_game_state()
         },
         -- ability = table of card abilities effect, mult, extra_value
         label = card.label, -- str (default "Base Card") | ... | ... | ?
+        description = utils.get_card_ui_description(card),
         -- playing_card = card.config.card.playing_card, -- int. The card index in the deck for the current round ?
         -- sell_cost = card.sell_cost, -- int (default 1). The dollars you get if you sell this card ?
         sort_id = card.sort_id, -- int. Unique identifier for this card instance
@@ -419,6 +421,7 @@ function utils.get_game_state()
             set = card.ability.set, -- str. The set of the card: Joker, Planet, Voucher, Booster, or Consumable
           },
           label = card.label,
+          description = utils.get_card_ui_description(card), -- str. Full computed description text from UI
           cost = card.cost,
           sell_cost = card.sell_cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
@@ -465,6 +468,7 @@ function utils.get_game_state()
           debuff = card.debuff, -- bool. True if the card is a debuff
           cost = card.cost, -- int. The cost of the card
           label = card.label, -- str. The label of the card
+          description = utils.get_card_ui_description(card),
           facing = card.facing, -- str. The facing of the card: front | back
           highlighted = card.highlighted, -- bool. True if the card is highlighted
           sell_cost = card.sell_cost, -- int. The sell cost of the card
@@ -501,6 +505,7 @@ function utils.get_game_state()
           debuff = card.debuff,
           cost = card.cost,
           label = card.label,
+          description = utils.get_card_ui_description(card),
           facing = card.facing,
           highlighted = card.highlighted,
           sell_cost = card.sell_cost,
@@ -536,6 +541,7 @@ function utils.get_game_state()
           },
           cost = card.cost,
           label = card.label,
+          description = utils.get_card_ui_description(card),
           highlighted = card.highlighted,
           sell_cost = card.sell_cost,
         }
@@ -690,6 +696,48 @@ function utils.get_blinds_info()
   -- Boss blind has no tags (tag_name and tag_effect remain empty strings)
 
   return blinds
+end
+
+-- ==========================================================================
+-- Cards Effects
+-- ==========================================================================
+
+---Gets the description text for a card by reading from its UI elements
+---@param card table The card object
+---@return string description The description text from UI
+function utils.get_card_ui_description(card)
+  -- Generate the UI structure (same as hover tooltip)
+  local ui_table = card:generate_UIBox_ability_table()
+  if not ui_table then
+    return ""
+  end
+
+  -- Extract all text nodes from the UI tree
+  local texts = {}
+
+  -- The UI table has main/info/type sections
+  if ui_table.main then
+    for _, line in ipairs(ui_table.main) do
+      local line_texts = {}
+      for _, section in ipairs(line) do
+        if section.config and section.config.text then
+          -- normal text and colored text
+          line_texts[#line_texts + 1] = section.config.text
+        elseif section.nodes then
+          for _, node in ipairs(section.nodes) do
+            if node.config and node.config.text then
+              -- hightlighted text
+              line_texts[#line_texts + 1] = node.config.text
+            end
+          end
+        end
+      end
+      texts[#texts + 1] = table.concat(line_texts, "")
+    end
+  end
+
+  -- Join text lines with spaces (in the game these are separated by newlines)
+  return table.concat(texts, " ")
 end
 
 -- ==========================================================================
