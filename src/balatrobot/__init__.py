@@ -5,7 +5,7 @@ from .enums import Actions, Decks, Stakes, State
 from .exceptions import BalatroError
 from .models import G
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __all__ = [
     # Main client
     "BalatroClient",
