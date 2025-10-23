@@ -1474,29 +1474,9 @@ API.functions["screenshot"] = function(args)
   -- Capture screenshot using LÖVE 11.0+ API
   love.graphics.captureScreenshot(function(imagedata)
     if imagedata then
-      -- Scale down the image to reduce file size (10% of original size)
-      local original_width = imagedata:getWidth()
-      local original_height = imagedata:getHeight()
-      local scale_factor = 0.2
-      local new_width = math.floor(original_width * scale_factor)
-      local new_height = math.floor(original_height * scale_factor)
-
-      -- Create a new scaled ImageData
-      local scaled_imagedata = love.image.newImageData(new_width, new_height)
-
-      -- Scale the image by sampling pixels
-      for y = 0, new_height - 1 do
-        for x = 0, new_width - 1 do
-          local src_x = math.floor(x / scale_factor)
-          local src_y = math.floor(y / scale_factor)
-          local r, g, b, a = imagedata:getPixel(src_x, src_y)
-          scaled_imagedata:setPixel(x, y, r, g, b, a)
-        end
-      end
-
       -- Save the screenshot as PNG to LÖVE's write directory
       local png_success, png_err = pcall(function()
-        scaled_imagedata:encode("png", screenshot_filename)
+        imagedata:encode("png", screenshot_filename)
       end)
 
       if png_success then
