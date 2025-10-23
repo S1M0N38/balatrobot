@@ -20,7 +20,7 @@ class TestBalatroClient:
 
         assert client.host == "127.0.0.1"
         assert client.port == port
-        assert client.timeout == 30.0
+        assert client.timeout == 60.0
         assert client.buffer_size == 65536
         assert client._socket is None
         assert client._connected is False
@@ -28,7 +28,7 @@ class TestBalatroClient:
     def test_client_class_attributes(self):
         """Test client class attributes are set correctly."""
         assert BalatroClient.host == "127.0.0.1"
-        assert BalatroClient.timeout == 30.0
+        assert BalatroClient.timeout == 60.0
         assert BalatroClient.buffer_size == 65536
 
     def test_context_manager_with_game_running(self, port):

@@ -11,7 +11,7 @@ import pytest
 
 # Connection settings
 HOST = "127.0.0.1"
-TIMEOUT: float = 30.0  # timeout for socket operations in seconds
+TIMEOUT: float = 60.0  # timeout for socket operations in seconds
 BUFFER_SIZE: int = 65536  # 64KB buffer for TCP messages
 
 

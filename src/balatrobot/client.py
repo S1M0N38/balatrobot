@@ -35,7 +35,7 @@ class BalatroClient:
     """
 
     host = "127.0.0.1"
-    timeout = 30.0
+    timeout = 60.0
     buffer_size = 65536
 
     def __init__(self, port: int = 12346):
