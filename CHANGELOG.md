@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/coder/balatrobot/compare/v0.6.0...v0.6.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* increase timeout for balatrobot client to 60 seconds ([edf26e2](https://github.com/coder/balatrobot/commit/edf26e29c845a12de65f1fab2ce117643000edd6))
+
 ## 0.6.0 (2025-10-22)
 
 
