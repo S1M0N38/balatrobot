@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.1](https://github.com/coder/balatrobot/compare/v0.7.0...v0.7.1) (2025-10-23)
+
+
+### Bug Fixes
+
+* remove resize from screenshot ([83876d7](https://github.com/coder/balatrobot/commit/83876d70018098c0368f4388360ef9ac0228cb5c))
+
+
+### Documentation
+
+* add pypi badge ([accb2df](https://github.com/coder/balatrobot/commit/accb2df7ee98c540170328aa51e30a96bb33d010))
+
 ## [0.7.0](https://github.com/coder/balatrobot/compare/v0.6.1...v0.7.0) (2025-10-23)
 
 
