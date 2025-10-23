@@ -323,7 +323,7 @@ function utils.get_game_state()
             set = card.ability.set,
           },
           label = card.label,
-          descriptoin = utils.get_card_ui_description(card),
+          description = utils.get_card_ui_description(card),
           cost = card.cost,
           sell_cost = card.sell_cost,
           sort_id = card.sort_id, -- Unique identifier for this card instance (used for rearranging)
