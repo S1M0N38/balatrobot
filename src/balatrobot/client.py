@@ -35,16 +35,18 @@ class BalatroClient:
     """
 
     host = "127.0.0.1"
-    timeout = 60.0
+    timeout = 300.0
     buffer_size = 65536
 
-    def __init__(self, port: int = 12346):
+    def __init__(self, port: int = 12346, timeout: float | None = None):
         """Initialize BalatroBot client
 
         Args:
             port: Port number to connect to (default: 12346)
+            timeout: Socket timeout in seconds (default: 300.0)
         """
         self.port = port
+        self.timeout = timeout if timeout is not None else self.timeout
         self._socket: socket.socket | None = None
         self._connected = False
         self._message_buffer = b""  # Buffer for incomplete messages

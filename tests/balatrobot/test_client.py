@@ -20,7 +20,7 @@ class TestBalatroClient:
 
         assert client.host == "127.0.0.1"
         assert client.port == port
-        assert client.timeout == 60.0
+        assert client.timeout == 300.0
         assert client.buffer_size == 65536
         assert client._socket is None
         assert client._connected is False
@@ -28,8 +28,21 @@ class TestBalatroClient:
     def test_client_class_attributes(self):
         """Test client class attributes are set correctly."""
         assert BalatroClient.host == "127.0.0.1"
-        assert BalatroClient.timeout == 60.0
+        assert BalatroClient.timeout == 300.0
         assert BalatroClient.buffer_size == 65536
+
+    def test_custom_timeout_parameter(self):
+        """Test that custom timeout parameter can be set."""
+        custom_timeout = 120.0
+        client = BalatroClient(port=12346, timeout=custom_timeout)
+
+        assert client.timeout == custom_timeout
+
+    def test_none_timeout_uses_default(self):
+        """Test that None timeout uses the class default."""
+        client = BalatroClient(port=12346, timeout=None)
+
+        assert client.timeout == 300.0
 
     def test_context_manager_with_game_running(self, port):
         """Test context manager functionality with game running."""
