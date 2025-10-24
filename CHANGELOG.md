@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/coder/balatrobot/compare/v0.7.1...v0.7.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* increase TCP socket timeout from 60s to 300s ([de3ba54](https://github.com/coder/balatrobot/commit/de3ba54656e1a378cb7e93dc1a6798e0eb946ed6))
+
 ## [0.7.1](https://github.com/coder/balatrobot/compare/v0.7.0...v0.7.1) (2025-10-23)
 
 
