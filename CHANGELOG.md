@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/coder/balatrobot/compare/v0.7.2...v0.7.3) (2025-10-25)
+
+
+### Bug Fixes
+
+* use comma-separated list of ports ([42a566a](https://github.com/coder/balatrobot/commit/42a566a85bf119c5657e89de0fca73d194aad62b))
+
 ## [0.7.2](https://github.com/coder/balatrobot/compare/v0.7.1...v0.7.2) (2025-10-24)
 
 
