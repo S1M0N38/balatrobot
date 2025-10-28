@@ -6,6 +6,7 @@ import platform
 import re
 import shutil
 import socket
+import time
 from pathlib import Path
 from typing import Self
 
@@ -186,6 +187,9 @@ class BalatroClient:
         logger.debug(f"Sending API request: {name}")
 
         try:
+            # Start timing measurement
+            start_time = time.perf_counter()
+
             # Send request
             message = request.model_dump_json() + "\n"
             self._socket.send(message.encode())
@@ -216,6 +220,18 @@ class BalatroClient:
             logger.debug(f"API request {name} completed successfully")
             return response_data
 
+        except socket.timeout as e:
+            # Calculate elapsed time and log timeout
+            elapsed_time = time.perf_counter() - start_time
+            logger.warning(
+                f"Timeout on API request {name}: took {elapsed_time:.3f}s, "
+                f"exceeded timeout of {self.timeout}s (port: {self.port})"
+            )
+            raise ConnectionFailedError(
+                f"Socket timeout during communication: {e}",
+                error_code="E008",
+                context={"error": str(e), "elapsed_time": elapsed_time},
+            ) from e
         except socket.error as e:
             logger.error(f"Socket error during API request {name}: {e}")
             raise ConnectionFailedError(
