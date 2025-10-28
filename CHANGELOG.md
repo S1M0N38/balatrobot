@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.4](https://github.com/coder/balatrobot/compare/v0.7.3...v0.7.4) (2025-10-28)
+
+
+### Bug Fixes
+
+* add timeout to socket.recv ([12d086a](https://github.com/coder/balatrobot/commit/12d086a80294f08fe449012c2a3a27708d7aada0))
+
 ## [0.7.3](https://github.com/coder/balatrobot/compare/v0.7.2...v0.7.3) (2025-10-25)
 
 
