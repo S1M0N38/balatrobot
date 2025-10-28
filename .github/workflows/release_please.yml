@@ -66,11 +66,17 @@ jobs:
       - name: Notify consumer repo of new balatrobot release
         if: ${{ steps.release.outputs.release_created }}
         env:
-          TARGET_REPO: "coder/balatrollm"
-          TARGET_TOKEN: ${{ secrets.TARGET_REPO_PAT }}
+          BALATROLLM_REPO: "coder/balatrollm"
+          BALATROLLM_TOKEN: ${{ secrets.BALATROLLM_TOKEN }}
+          BALATRO_REPO: "S1M0N38/balatro"
+          BALATRO_TOKEN: ${{ secrets.BALATRO_TOKEN }}
         run: |
           VERSION="${{ steps.release.outputs.version }}"
           curl -X POST -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token $TARGET_TOKEN" \
-            https://api.github.com/repos/$TARGET_REPO/dispatches \
+            -H "Authorization: token $BALATROLLM_TOKEN" \
+            https://api.github.com/repos/$BALATROLLM_REPO/dispatches \
+            -d "{\"event_type\":\"balatrobot_release\",\"client_payload\":{\"version\":\"$VERSION\"}}"
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token $BALATRO_TOKEN" \
+            https://api.github.com/repos/$BALATRO_REPO/dispatches \
             -d "{\"event_type\":\"balatrobot_release\",\"client_payload\":{\"version\":\"$VERSION\"}}"
