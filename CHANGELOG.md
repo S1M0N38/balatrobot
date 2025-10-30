@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.5](https://github.com/coder/balatrobot/compare/v0.7.4...v0.7.5) (2025-10-30)
+
+
+### Bug Fixes
+
+* prevent memory leaks generating UI descriptions ([e8d62e1](https://github.com/coder/balatrobot/commit/e8d62e1146fd156e44b1af4d124270bbda5b2c16))
+
 ## [0.7.4](https://github.com/coder/balatrobot/compare/v0.7.3...v0.7.4) (2025-10-28)
 
 
