@@ -14,7 +14,7 @@
   "badge_colour": "4CAF50",
   "badge_text_colour": "FFFFFF",
   "display_name": "BB",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "dependencies": [
     "Steamodded (>=1.*)"
   ]
