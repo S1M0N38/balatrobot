@@ -707,7 +707,9 @@ end
 ---@return string description The description text from UI
 function utils.get_card_ui_description(card)
   -- Generate the UI structure (same as hover tooltip)
-  local ui_table = card:generate_UIBox_ability_table()
+  card:hover()
+  card:stop_hover()
+  local ui_table = card.ability_UIBox_table
   if not ui_table then
     return ""
   end
