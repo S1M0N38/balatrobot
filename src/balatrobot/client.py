@@ -492,10 +492,18 @@ class BalatroClient:
         """
         screenshot_response = self.send_message("screenshot", {})
 
+        # TODO: DEJANK
+        screenshot_response_path = Path(
+            str(screenshot_response["path"]).replace(
+                "C:",
+                "/home/stephen/.steam/steam/steamapps/compatdata/2379780/pfx/drive_c",
+            )
+        )
+
         if path is None:
-            return Path(screenshot_response["path"])
+            return screenshot_response_path
         else:
-            source_path = Path(screenshot_response["path"])
+            source_path = Path(screenshot_response_path)
             dest_path = path
             shutil.move(source_path, dest_path)
             return dest_path
